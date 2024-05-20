@@ -128,3 +128,7 @@ dist
 .yarn/build-state.yml
 .yarn/install-state.gz
 .pnp.*
+
+www/js/
+platforms/electron/build/
+platforms/electron/www/
