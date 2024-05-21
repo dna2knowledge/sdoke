@@ -14,14 +14,20 @@ function initStat() {
 function initDispatcher(ui) {
    eb.on('switch-tab', function (tab) {
       if (sharedStat.tab === tab) return;
-      ui.navButtons.forEach(function (z) { km(z.dom, 'active'); });
+      ui.navButtons.forEach(function (z) {
+         km(z.dom, 'active');
+         kp(z.tabU.dom, 'hide');
+      });
+      let navButton;
       switch(tab) {
-      case 'view': kp(ui.navButtons[0].dom, 'active'); break;
-      case 'index': kp(ui.navButtons[1].dom, 'active'); break;
-      case 'search': kp(ui.navButtons[2].dom, 'active'); break;
-      case 'settings': kp(ui.navButtons[3].dom, 'active'); break;
-      default: tab = 'view'; kp(ui.navButtons[0].dom, 'active');
+      case 'view': navButton = ui.navButtons[0]; break;
+      case 'index': navButton = ui.navButtons[1]; break;
+      case 'search': navButton = ui.navButtons[2]; break;
+      case 'settings': navButton = ui.navButtons[3]; break;
+      default: tab = 'view'; navButton = ui.navButtons[0];
       }
+      kp(navButton.dom, 'active');
+      km(navButton.tabU.dom, 'hide');
       sharedStat.tab.active = tab;
    });
 }

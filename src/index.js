@@ -25,6 +25,7 @@ function onDeviceReady() {
     // Cordova is now initialized. Have fun!
 
     console.log('Running cordova-' + cordova.platformId + '@' + cordova.version);
+    //document.getElementById('deviceready').classList.add('ready');
     window.sdokeStart();
 }
 
@@ -33,6 +34,10 @@ function onDeviceReady() {
    const dp = require('./ctrl/dispatch');
    const App = require('./ui/main-frame');
    const NavIconButton = require('./ui/nav-icon-button');
+   const TabView = require('./ui/tab-view');
+   const TabIndex = require('./ui/tab-index');
+   const TabSearch = require('./ui/tab-search');
+   const TabSettings = require('./ui/tab-settings');
 
    function sdokeStart() {
       while (document.body.children.length) {
@@ -52,7 +57,19 @@ function onDeviceReady() {
       navButtons[1].tab = 'index';
       navButtons[2].tab = 'search';
       navButtons[3].tab = 'settings';
-      navButtons.forEach(function (z) { dom.$p(app.ui.nav, z.dom); });
+      const tabView = new TabView();
+      const tabIndex = new TabIndex();
+      const tabSearch = new TabSearch();
+      const tabSettings = new TabSettings();
+      navButtons[0].tabU = tabView;
+      navButtons[1].tabU = tabIndex;
+      navButtons[2].tabU = tabSearch;
+      navButtons[3].tabU = tabSettings;
+      navButtons.forEach(function (z) {
+         dom.$p(app.ui.nav, z.dom);
+         dom.kp(z.tabU.dom, 'hide');
+         dom.$p(app.ui.view, z.tabU.dom);
+      });
 
       const ui = {
          app,

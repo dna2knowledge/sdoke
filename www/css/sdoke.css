@@ -1,6 +1,15 @@
 body {
    overflow: hidden;
 }
+
+.hide {
+   display: none;
+}
+.disable {
+   opacity: 0.5;
+   pointer-events: none;
+}
+
 .s-app {
    min-width: 300px;
    width: calc(100vw - 20px);
