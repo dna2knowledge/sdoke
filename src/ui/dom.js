@@ -9,6 +9,8 @@ const api = {
    $c: function (elem) { while (elem.children.length) api.$m(elem, elem.children[0]); elem.textContent = ''; },
    kp: function (elem, k) { elem.classList.add(k); },
    km: function (elem, k) { elem.classList.remove(k); },
+   on: function (elem, name, fn) { elem.addEventListener(name, fn) },
+   off: function (elem, name, fn) { elem.removeEventListener(name, fn) },
 };
 
 module.exports = api;

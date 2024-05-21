@@ -25,5 +25,41 @@ function onDeviceReady() {
     // Cordova is now initialized. Have fun!
 
     console.log('Running cordova-' + cordova.platformId + '@' + cordova.version);
-    document.getElementById('deviceready').classList.add('ready');
+    window.sdokeStart();
 }
+
+(function () {
+   const dom = require('./ui/dom');
+   const dp = require('./ctrl/dispatch');
+   const App = require('./ui/main-frame');
+   const NavIconButton = require('./ui/nav-icon-button');
+
+   function sdokeStart() {
+      while (document.body.children.length) {
+         const c = document.body.children[0];
+         if (c.tagName === 'SCRIPT') break;
+         dom.$m(document.body, c);
+      }
+      const app = new App();
+      dom.$p(document.body, app.dom);
+      const navButtons = [
+         new NavIconButton('af-chart.svg', 'View'),
+         new NavIconButton('af-tags.svg', 'Index'),
+         new NavIconButton('af-dollar-search.svg', 'Search'),
+         new NavIconButton('af-gear.svg', 'Settings'),
+      ];
+      navButtons[0].tab = 'view';
+      navButtons[1].tab = 'index';
+      navButtons[2].tab = 'search';
+      navButtons[3].tab = 'settings';
+      navButtons.forEach(function (z) { dom.$p(app.ui.nav, z.dom); });
+
+      const ui = {
+         app,
+         navButtons,
+      };
+      dp.init(ui);
+   }
+
+   window.sdokeStart = sdokeStart;
+})();
