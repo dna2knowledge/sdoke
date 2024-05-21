@@ -261,6 +261,8 @@ async function getRtFromTencent(codes) {
             // ctp[47] 涨停价
             // ctp[48] 跌停价
             // ctp[49] ?
+            // ...
+            // ctp[86] ?
          };
          ret.push(item);
       });
