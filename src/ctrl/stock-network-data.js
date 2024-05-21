@@ -173,13 +173,13 @@ async function getHistoryFromTencent(code, startDate) {
 
    function transform(list) {
       return list.map(x => ({
-         date: x[0],
-         st: x[1],
-         ed: x[2],
-         max: x[3],
-         min: x[4],
-         amount: Math.round(x[5] * 100),
-         money: x[8],
+         T: new Date(x[0]).getTime(),
+         O: x[1],
+         C: x[2],
+         H: x[3],
+         L: x[4],
+         V: Math.round(x[5] * 100),
+         m: x[8],
       }));
    }
 
