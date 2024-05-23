@@ -2,9 +2,8 @@ body {
    overflow: hidden;
 }
 
-.hide {
-   display: none;
-}
+div.hide { display: none; }
+.hide { display: none; }
 .disable {
    opacity: 0.5;
    pointer-events: none;
@@ -45,11 +44,9 @@ body {
 }
 
 .s-tab-view-nodata {
-   margin: 20px;
-   padding: 10px;
    border: 3px dashed #ccc;
-   width: calc(100% - 60px);
-   height: calc(100% - 60px);
+   width: 100%;
+   height: 100%;
    display: flex;
    justify-content: center;
 }
@@ -57,9 +54,60 @@ body {
    margin: auto;
    text-align: center;
 }
+.s-tab {
+   width: calc(100% - 40px);
+   padding: 20px;
+}
+.s-flex { display: flex; }
+.s-flex.inline { display: inline-flex; }
+.s-flex.col { flex-direction: column; }
+.s-full-w { width: 100%; }
+.s-full-h { height: 100%; }
+.s-scrollable { height: 0px; flex: 1 0 auto; overflow-y: auto; }
 
 .s-gray {
    color: #ccc;
+}
+.s-number {
+   width: 50px;
+   text-align: center;
+}
+.s-code {
+   width: 60px;
+   text-align: right;
+   margin-right: 5px;
+   cursor: pointer;
+}
+.s-text {
+   width: 65px;
+   text-align: right;
+   margin-right: 5px;
+   cursor: pointer;
+}
+.s-number.red { color: red }
+.s-number.green { color: lime; }
+.s-number.gray { color: #ccc; }
+.s-number-rate {
+   width: 60px;
+   text-align: center;
+}
+.s-number-rate.red { color: red; }
+.s-number-rate.green { color: lime; }
+.s-number-rate.gray { color: #ccc; }
+.s-list-item:hover {
+   opacity: 0.8;
+}
+.s-fav {
+   width: 12px;
+   height: 12px;
+   margin-right: 5px;
+   border: none;
+   margin-top: 2px;
+   background-repeat: no-repeat;
+   background-image: url("../img/af-star-outline.svg");
+}
+.s-fav.fav-ed {
+   background-image: url("../img/af-star.svg");
 }
 
 .nav-icon-button {
@@ -87,24 +135,13 @@ body {
    text-align: center;
 }
 
-.nodata-icon-button {
-   padding: 4px;
-   margin: 10px;
-   display: flex;
-   flex-direction: column;
-   justify-items: center;
-   cursor: pointer;
-   opacity: 0.8;
-}
-.nodata-icon-button:hover {
-   opacity: 1;
-}
-.nodata-icon-button > img {
-   margin: 0 auto;
-   display: block;
-   width: 24px;
-   height: 24px;
-}
-.nodata-icon-button > div {
-   text-align: center;
+.loading {
+   pointer-events: none;
+   user-select: none;
+   background-color: white;
+   opacity: 0.3;
+   width: 100%;
+   height: 100%;
+   position: absolute;
+   z-index: 100;
 }
