@@ -17,7 +17,7 @@ listx: [
       bj: true,
       sh: true,
       sz: true,
-      primary: true,
+      primary: false,
       fav: false,
    },
    prevUri: null,
