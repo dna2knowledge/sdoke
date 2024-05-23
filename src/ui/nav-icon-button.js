@@ -6,9 +6,9 @@ function NavIconButton(icon, name) {
    const title = o('div');
    img.src = `./img/${icon}`;
    title.textContent = name;
+   kp(dom, 'nav-icon-button');
    $p(dom, img);
    $p(dom, title);
-   kp(dom, 'nav-icon-button');
    this.dom = dom;
 }
 
