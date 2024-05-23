@@ -1,6 +1,10 @@
 const eb = require('./eventbus');
 const { kp, km, on, off } = require('../ui/dom');
 const sharedStat = require('./stat-shared');
+const stat = require('./stat-view');
+
+const db = require('../debug/faked-db');
+const stocknet = require('../debug/faked-stock-network-data');
 
 function initEvents(ui) {
    ui.navButtons.forEach(function (navButton, i) {
@@ -12,24 +16,80 @@ function initStat() {
 }
 
 function initDispatcher(ui) {
-   eb.on('switch-tab', function (tab) {
-      if (sharedStat.tab === tab) return;
-      ui.navButtons.forEach(function (z) {
-         km(z.dom, 'active');
-         kp(z.tabU.dom, 'hide');
-      });
-      let navButton;
-      switch(tab) {
-      case 'view': navButton = ui.navButtons[0]; break;
-      case 'index': navButton = ui.navButtons[1]; break;
-      case 'search': navButton = ui.navButtons[2]; break;
-      case 'settings': navButton = ui.navButtons[3]; break;
-      default: tab = 'view'; navButton = ui.navButtons[0];
-      }
-      kp(navButton.dom, 'active');
-      km(navButton.tabU.dom, 'hide');
-      sharedStat.tab.active = tab;
+   eb.on('network.fetch.stock-all', onFetchAllStock);
+   eb.on('network.fetch.stock-one', onFetchOneStock);
+   eb.on('switch-tab', onSwitchTab.bind(ui));
+}
+
+function onSwitchTab(tab) {
+   if (sharedStat.tab === tab) return;
+   this.navButtons.forEach(function (z) {
+      km(z.dom, 'active');
+      kp(z.tabU.dom, 'hide');
    });
+   let navButton;
+   switch(tab) {
+   case 'view': navButton = this.navButtons[0]; break;
+   case 'index': navButton = this.navButtons[1]; break;
+   case 'search': navButton = this.navButtons[2]; break;
+   case 'settings': navButton = this.navButtons[3]; break;
+   default: tab = 'view'; navButton = this.navButtons[0];
+   }
+   kp(navButton.dom, 'active');
+   eb.emit(`tab.show.${tab}`);
+   km(navButton.tabU.dom, 'hide');
+   sharedStat.tab.active = tab;
+}
+
+async function onFetchOneStock(item) {
+   if (!item || !item.code) return false;
+   let p, origin;
+   if (stat.network[item.code]) {
+      p = stat.network[item.code];
+      origin = false;
+   } else {
+      p = stocknet.tencent.getHistory(item.code);
+      stat.network[item.code] = p;
+      origin = true;
+   }
+   const r = await p;
+   if (origin) delete stat.network[item.code];
+   // TODO read itemHistory from db
+   const itemHistory = {
+      data: []
+   };
+   const map = itemHistory.data.reduce(function (a, z) {
+      a[z.ts] = z;
+      return a;
+   }, {});
+   const ts0 = new Date(new Date().toISOString().split('T')[0]).getTime();
+   r.forEach(function (z) {
+      // XXX ignore or update data; currently we just update today's data and ignore before
+      if (z.ts === ts0 && map[z.ts]) Object.assign(map[z.ts], z);
+      if (map[z.ts]) return;
+      itemHistory.data.push(z);
+   });
+   itemHistory.data = itemHistory.data.sort(function (a, b) { return a.ts - b.ts; });
+   // TODO save itemHistory to db
+   const latest = itemHistory.data[itemHistory.data.length-1];
+   if (latest !== item.latest) {
+      const listItem = {
+         fav: !!item.fav,
+         code: item.code,
+         name: item.name,
+         latest: latest,
+      };
+      eb.emit('update.stock-item', listItem);
+   }
+   eb.emit('update.stock-chart', itemHistory);
+}
+
+async function onFetchAllStock(list) {
+   for (let i = 0, n = list.length; i < n; i++) {
+      try {
+         await onFetchOneStock(list[i]);
+      } catch(_) { /* TODO erro handling */ }
+   }
 }
 
 function init(ui) {
