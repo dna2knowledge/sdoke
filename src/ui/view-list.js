@@ -171,6 +171,9 @@ function genOnFilterSwitchChange(self, key) {
 }
 function onUpdateItemData(item) {
    if (!item) return;
+   const m0 = stat.list.find(function (z) { return z.code === item.code; });
+   if (!m0) return;
+   Object.assign(m0, item);
    const m = this.ui.items.find(function (z) { return z.data.code === item.code; });
    if (!m) return;
    m.data = Object.assign(m.data || {}, item);
