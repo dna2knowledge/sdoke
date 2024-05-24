@@ -64,6 +64,7 @@ ViewList.prototype = {
       this.defer.onFilterClick.primary = genOnFilterSwitchChange(this, 'primary');
       this.defer.onFilterClick.fav = genOnFilterSwitchChange(this, 'fav');
       this.defer.onRefreshClick = onRefreshClick.bind(this);
+      on(this.ui.bar.refresh.dom, 'click', this.defer.onRefreshClick);
       on(this.ui.bar.bj.dom, 'click', this.defer.onFilterClick.bj);
       on(this.ui.bar.sh.dom, 'click', this.defer.onFilterClick.sh);
       on(this.ui.bar.sz.dom, 'click', this.defer.onFilterClick.sz);
@@ -72,6 +73,7 @@ ViewList.prototype = {
    },
    dispose: function () {
       eb.off('render.view-list', this.defer.onRenderViewList);
+      off(this.ui.bar.refresh.dom, 'click', this.defer.onRefreshClick);
       off(this.ui.bar.bj.dom, 'click', this.defer.onFilterClick.bj);
       off(this.ui.bar.sh.dom, 'click', this.defer.onFilterClick.sh);
       off(this.ui.bar.sz.dom, 'click', this.defer.onFilterClick.sz);
