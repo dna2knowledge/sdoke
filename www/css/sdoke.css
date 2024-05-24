@@ -64,10 +64,9 @@ div.hide { display: none; }
 .s-full-w { width: 100%; }
 .s-full-h { height: 100%; }
 .s-scrollable { height: 0px; flex: 1 0 auto; overflow-y: auto; }
+.s-text-center { text-align: center; }
 
-.s-gray {
-   color: #ccc;
-}
+.s-gray { color: #ccc; }
 .s-number {
    width: 50px;
    text-align: center;

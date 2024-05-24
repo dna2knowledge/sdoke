@@ -8,14 +8,18 @@ function ViewList() {
    const dom = o('div');
    const bar = o('div');
    const list = o('div');
+   const nodata = o('div');
    const refresh = new NavIconButton('af-rotate.svg', 'Refresh');
    const bjswitch = new NavIconButton('af-city.svg', 'Beijing');
    const shswitch = new NavIconButton('af-city.svg', 'Shanghai');
    const szswitch = new NavIconButton('af-city.svg', 'Shenzhen');
    const primaryswitch = new NavIconButton('af-city.svg', 'Primary');
    const favswitch = new NavIconButton('af-star.svg', 'Favorite');
+   nodata.textContent = 'No matched items.';
    kp(bar, 's-flex');
    kp(list, 's-scrollable');
+   kp(nodata, 's-text-center');
+   kp(nodata, 'hide');
    kp(bjswitch.dom, 'active');
    kp(shswitch.dom, 'active');
    kp(szswitch.dom, 'active');
@@ -29,6 +33,7 @@ function ViewList() {
    $p(bar, szswitch.dom);
    $p(bar, primaryswitch.dom);
    $p(bar, favswitch.dom);
+   $p(list, nodata);
    $p(dom, bar);
    $p(dom, list);
    this.dom = dom;
@@ -41,6 +46,7 @@ function ViewList() {
          primary: primaryswitch,
          fav: favswitch,
       },
+      nodata: nodata,
       list: list,
       items: [],
    };
@@ -84,14 +90,54 @@ ViewList.prototype = {
       this.ui.items.forEach(function (z) {
          z.dispose();
       });
+      this.ui.items.splice(0, this.ui.items.length);
+
       // TODO: work with filters
       this.filtered = stat.list.slice();
-      this.ui.items.splice(0, this.ui.items.length);
-      for (let i = 0, n = this.filtered.length; i < n; i++) {
-         const item = this.filtered[i];
-         const itemui = new ViewListItem(item);
-         this.ui.items.push(itemui);
-         $p(this.ui.list, itemui.dom);
+      if (stat.filter.fav) {
+         this.filtered = this.filtered.filter(function(z) {
+            return z.fav;
+         });
+      }
+      if (stat.filter.primary) {
+         this.filtered = this.filtered.filter(function (z) {
+            if (z.name.indexOf('ST') >= 0) return false;
+            if (z.name.indexOf('XR') >= 0) return false;
+            if (z.name.indexOf('XD') >= 0) return false;
+            if (z.name.indexOf('DR') >= 0) return false;
+            if (z.code.startsWith('sh688')) return false;
+            if (z.code.startsWith('sh9')) return false;
+            if (z.code.startsWith('sz3')) return false;
+            if (z.code.startsWith('sz2')) return false;
+            return true;
+         });
+      }
+      if (!stat.filter.bj) {
+         this.filtered = this.filtered.filter(function (z) {
+            return !z.code.startsWith('bj');
+         });
+      }
+      if (!stat.filter.sh) {
+         this.filtered = this.filtered.filter(function (z) {
+            return !z.code.startsWith('sh');
+         });
+      }
+      if (!stat.filter.sz) {
+         this.filtered = this.filtered.filter(function (z) {
+            return !z.code.startsWith('sz');
+         });
+      }
+
+      if (this.filtered.length) {
+         kp(this.ui.nodata, 'hide');
+         for (let i = 0, n = this.filtered.length; i < n; i++) {
+            const item = this.filtered[i];
+            const itemui = new ViewListItem(item);
+            this.ui.items.push(itemui);
+            $p(this.ui.list, itemui.dom);
+         }
+      } else {
+         km(this.ui.nodata, 'hide');
       }
    }
 };
