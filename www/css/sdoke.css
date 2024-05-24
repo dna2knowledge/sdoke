@@ -97,6 +97,7 @@ div.hide { display: none; }
 .s-list-item:hover {
    opacity: 0.8;
 }
+.s-list-item-overview-data { user-select: text; }
 .s-fav {
    width: 12px;
    height: 12px;

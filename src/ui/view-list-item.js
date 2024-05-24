@@ -16,6 +16,7 @@ function ViewListItem(item) {
    kp(code, 's-code');
    kp(name, 's-text');
    kp(latest, 's-flex');
+   kp(latest, 's-list-item-overview-data');
    if (item.latest) {
       const spanL = o('div');
       const spanO = o('div');
