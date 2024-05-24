@@ -131,6 +131,7 @@ ViewListItem.prototype = {
 
 function onClick() {
    stat.uri = `/${this.data.code}`;
+   eb.emit('render.view-one', this.data);
    eb.emit('tab.show.view');
 }
 

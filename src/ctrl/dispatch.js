@@ -54,8 +54,11 @@ async function onFetchOneStock(item) {
    }
    const r = await p;
    if (origin) delete stat.network[item.code];
+
    // TODO read itemHistory from db
    const itemHistory = {
+      code: item.code,
+      name: item.name,
       data: []
    };
    const map = itemHistory.data.reduce(function (a, z) {
@@ -71,6 +74,7 @@ async function onFetchOneStock(item) {
    });
    itemHistory.data = itemHistory.data.sort(function (a, b) { return a.ts - b.ts; });
    // TODO save itemHistory to db
+
    const latest = itemHistory.data[itemHistory.data.length-1];
    if (latest !== item.latest) {
       const listItem = {
