@@ -21,7 +21,7 @@ listx: [
       sh: true,
       sz: true,
       primary: false,
-      fav: false,
+      fav: false
    },
    prevUri: null,
    uri: '',
