@@ -45,7 +45,7 @@ async function getBjList() {
 }
 
 async function getHistoryFromTencent(code, startDate) {
-   let t = (startDate || new Date()).getTime();
+   let t = (startDate || new Date()).getTime() - 600 * 3600 * 1000 * 24;
    const r = [];
    let last = { O: Math.random() * 200 };
    last.C = last.O * (1 + Math.random() * 0.2 - 0.1);
@@ -58,9 +58,9 @@ async function getHistoryFromTencent(code, startDate) {
       if (item.H < Math.max(item.O, item.C)) item.H = Math.max(item.O, item.C);
       if (item.L > Math.min(item.O, item.C)) item.L = Math.min(item.O, item.C);
       item.m = (item.H + item.L) / 2 * item.V;
-      t -= 3600 * 1000 * 24;
+      t += 3600 * 1000 * 24;
       last = item;
-      r.unshift(item);
+      r.push(item);
    }
    await wait(Math.round(Math.random() * 3) * 1000);
    return r;
