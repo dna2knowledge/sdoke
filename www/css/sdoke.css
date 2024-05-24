@@ -109,6 +109,9 @@ div.hide { display: none; }
 .s-fav.fav-ed {
    background-image: url("../img/af-star.svg");
 }
+.s-view-canvas {
+   width: 100%;
+}
 
 .nav-icon-button {
    padding: 2px;

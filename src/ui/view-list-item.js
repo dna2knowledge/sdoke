@@ -130,7 +130,9 @@ ViewListItem.prototype = {
 };
 
 function onClick() {
-   stat.uri = `/${this.data.code}`;
+   const uri = `/${this.data.code}`;
+   if (stat.uri === uri) return;
+   stat.uri = uri;
    eb.emit('render.view-one', this.data);
    eb.emit('tab.show.view');
 }
