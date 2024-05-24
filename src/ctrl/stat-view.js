@@ -23,6 +23,9 @@ listx: [
       primary: false,
       fav: false
    },
+   view: {
+      unit: 'd', // d = day, w = week, m = month
+   },
    prevUri: null,
    uri: '',
    dirty: true,

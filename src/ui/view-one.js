@@ -1,4 +1,4 @@
-const { o, kp, $p, on, off } = require('./dom');
+const { o, kp, km, $p, on, off } = require('./dom');
 const eb = require('../ctrl/eventbus');
 const NavIconButton = require('./nav-icon-button');
 const ViewListItem = require('./view-list-item');
@@ -29,7 +29,10 @@ function ViewOne() {
    this.ui = {
       bar: {
          back: back,
-         refresh: refresh
+         refresh: refresh,
+         day: day,
+         week: week,
+         month: month
       },
       overview: overview,
       canvas: canvas
@@ -51,28 +54,100 @@ ViewOne.prototype = {
       this.defer.onUpdate = onUpdate.bind(this);
       this.defer.onRender = onRender.bind(this);
       this.defer.onResize = onResize.bind(this);
+      this.defer.onDayUnit = genOnUnitChange('d', this);
+      this.defer.onWeekUnit = genOnUnitChange('w', this);
+      this.defer.onMonthUnit = genOnUnitChange('m', this);
       eb.on('update.stock-chart', this.defer.onUpdate);
       eb.on('render.view-one', this.defer.onRender);
       eb.on('resize.view-one', this.defer.onResize);
       on(this.ui.bar.back.dom, 'click', this.defer.onBackClick);
+      on(this.ui.bar.day.dom, 'click', this.defer.onDayUnit);
+      on(this.ui.bar.week.dom, 'click', this.defer.onWeekUnit);
+      on(this.ui.bar.month.dom, 'click', this.defer.onMonthUnit);
    },
    dispose: function () {
       eb.off('update.stock-chart', this.defer.onUpdate);
       eb.off('render.view-one', this.defer.onRender);
       eb.off('resize.view-one', this.defer.onResize);
       off(this.ui.bar.back.dom, 'click', this.defer.onBackClick);
+      off(this.ui.bar.day.dom, 'click', this.defer.onDayUnit);
+      off(this.ui.bar.week.dom, 'click', this.defer.onWeekUnit);
+      off(this.ui.bar.month.dom, 'click', this.defer.onMonthUnit);
    },
    updateCalc: function () {
       this.calc = {};
+      if (!stat.one.data || !stat.one.data.length) return;
       // TODO read this.config and get data range
-      let bi = stat.one.data.length, ai = bi - 250;
-      if (ai < 0) ai = 0;
-      this.calc.data = stat.one.data.slice(ai, bi);
+      const cap = 250;
+      switch (stat.view.unit) {
+      case 'd': {
+         let bi = stat.one.data.length, ai = bi - cap;
+         if (ai < 0) ai = 0;
+         this.calc.data = stat.one.data.slice(ai, bi);
+         break;
+      }
+      case 'w': {
+         this.calc.data = [];
+         let ts = new Date(stat.one.data[stat.one.data.length-1].T);
+         let last = {
+            T: new Date(
+               ts.getTime() - ts.getDay() * 24 * 3600 * 1000
+            ).getTime(),
+            O: undefined, C: undefined, H: undefined, L: undefined, V: 0, m: 0
+         };
+         this.calc.data.push(last);
+         for (let i = stat.one.data.length-1; i >= 0; i--) {
+            const one = stat.one.data[i];
+            if (one.T <= last.T) {
+               if (this.calc.data.length >= cap) break;
+               last = { T: last.T, O: undefined, C: undefined, H: undefined, L: undefined, V: 0, m: 0 };
+               this.calc.data.push(last);
+               while (one.T <= last.T) last.T -= 24 * 3600 * 1000 * 7;
+            }
+            last.O = one.O;
+            if (isNaN(last.C)) last.C = one.C;
+            if (isNaN(last.H) || last.H < one.H) last.H = one.H;
+            if (isNaN(last.L) || last.L > one.L) last.L = one.L;
+            last.V += one.V;
+            last.m += one.m;
+         }
+         this.calc.data.reverse();
+         break;
+      }
+      case 'm': {
+         this.calc.data = [];
+         let tsm0 = new Date(stat.one.data[stat.one.data.length-1].T).getMonth();
+         let last = { T: undefined, O: undefined, C: undefined, H: undefined, L: undefined, V: 0, m: 0 };
+         this.calc.data.push(last);
+         for (let i = stat.one.data.length-1; i >= 0; i--) {
+            const one = stat.one.data[i];
+            const tsm = new Date(one.T).getMonth();
+            if (tsm !== tsm0) {
+               if (this.calc.data.length >= cap) break;
+               tsm0 = tsm;
+               last = { T: undefined, O: undefined, C: undefined, H: undefined, L: undefined, V: 0, m: 0 };
+               this.calc.data.push(last);
+            }
+            last.T = one.T;
+            last.O = one.O;
+            if (isNaN(last.C)) last.C = one.C;
+            if (isNaN(last.H) || last.H < one.H) last.H = one.H;
+            if (isNaN(last.L) || last.L > one.L) last.L = one.L;
+            last.V += one.V;
+            last.m += one.m;
+         }
+         this.calc.data.reverse();
+         break;
+      } }
 
       // TODO fill real strategy data
       this.calc.strategy = this.calc.data.map(function (_) {
          if (Math.random() > 0.5) return null;
-         return Math.random() * 2 - 1;
+         if (Math.random() > 0.5) {
+            return Math.random() > 0.5 ? 1 : 0.5;
+         } else {
+            return Math.random() > 0.5 ? -1 : -0.5;
+         }
       });
 
       let min = Infinity, max = -Infinity;
@@ -131,14 +206,14 @@ function paintLine(pen, x, y1, y2) {
    pen.stroke();
 }
 
-function paintCandleLine(pen, x, yst, yed, ymin, ymax, color) {
-   pen.strokeStyle = color;
+function paintCandleLine(pen, x, h, l, L, H, c1, c2) {
    pen.save();
-   pen.lineWidth = 1;
-   if (ymin > yed) paintLine(pen, x, ymin, yed);
-   if (ymax < yst) paintLine(pen, x, yst, ymax);
+   pen.strokeStyle = c1;
+   if (L > l) paintLine(pen, x, L, l);
+   if (H < h) paintLine(pen, x, h, H);
    pen.restore();
-   paintLine(pen, x, yed+2, yst);
+   pen.strokeStyle = c2;
+   paintLine(pen, x, l+2, h);
 }
 
 function paintBasic(pen, w, h, comp) {
@@ -156,11 +231,14 @@ function paintBasic(pen, w, h, comp) {
    pen.fillStyle = comp.theme.color;
    const maxt = `${calc.max.toFixed(2)}`;
    const mint = `${calc.min.toFixed(2)}`;
+   const title = 'price';
    let box;
+   box = pen.measureText(title);
+   pen.fillText(title, shiftw-5-box.width, 0);
    box = pen.measureText(maxt);
-   pen.fillText(maxt, -box.width, 12);
+   pen.fillText(maxt, shiftw-5-box.width, 12);
    box = pen.measureText(mint);
-   pen.fillText(mint, -box.width, 300);
+   pen.fillText(mint, shiftw-5-box.width, 300);
 
    const hx = max - min;
    if (hx === 0) {
@@ -184,19 +262,19 @@ function paintBasic(pen, w, h, comp) {
             const cr = lastitem ? ((item.C - lastitem.C) / lastitem.C) : 0;
             if (cr < -0.099) {
                const yex =  Math.round(h0 * (1 - (lastitem.C - min)/hx));
-               pen.strokeStyle = '#6f6'; paintLine(pen, x, yst, yex);
+               pen.strokeStyle = 'green'; paintLine(pen, x, yst, yex);
             } else if (cr > 0.099) {
                const yex =  Math.round(h0 * (1 - (lastitem.C - min)/hx));
-               pen.strokeStyle = '#f66'; paintLine(pen, x, yst, yex);
+               pen.strokeStyle = 'red'; paintLine(pen, x, yst, yex);
             } else {
                pen.strokeStyle = 'gray'; paintLine(pen, x, yst, yst+2);
             }
          } else if (yst > yed) {
-            paintCandleLine(pen, x, yed, yst, ymin, ymax, '#f66');
+            paintCandleLine(pen, x, yed, yst, ymin, ymax, '#f66', 'red');
          } else if (yst < yed) {
-            paintCandleLine(pen, x, yst, yed, ymin, ymax, '#6f6');
+            paintCandleLine(pen, x, yst, yed, ymin, ymax, '#6f6', 'green');
          } else {
-            paintCandleLine(pen, x, yst, yed, ymin, ymax, 'gray');
+            paintCandleLine(pen, x, yst, yed, ymin, ymax, 'gray', 'gray');
          }
          lastitem = item;
       });
@@ -226,8 +304,8 @@ function paintS(pen, w, h, comp) {
 
    function calcSignal(val) {
       if (val === 0) return '';
-      if (val > 0) return `rgb(255,255,0,${val})`;
-      return `rgb(173,216,230,${-val})`;
+      if (val > 0) return `rgb(255,221,221,${val})`;
+      return `rgb(221,255,221,${-val})`;
    }
 }
 
@@ -245,11 +323,9 @@ function paintV(pen, w, h, comp) {
    pen.fillStyle = comp.theme.color;
    const maxt = `${calc.Vmax.toFixed(0)}`;
    const mint = `${calc.Vmin.toFixed(0)}`;
-   let box;
-   box = pen.measureText(maxt);
-   pen.fillText(maxt, -box.width, 12);
-   box = pen.measureText(mint);
-   pen.fillText(mint, -box.width, 50);
+   pen.fillText('Vol.', w0+shiftw+5, 0);
+   pen.fillText(maxt, w0+shiftw+5, 12);
+   pen.fillText(mint, w0+shiftw+5, 50);
 
    pen.lineWidth = lx;
    const hm = maxm - minm;
@@ -302,10 +378,24 @@ async function onRender(item) {
       return;
    }
    await stat.network[item.code];
+   historyItem.data = stat.one.data;
    onUpdate.bind(this)(historyItem);
 }
 
 function onResize() {
+}
+
+function genOnUnitChange(unit, self) {
+   return function () {
+      if (stat.view.unit === unit) return;
+      switch (unit) {
+      case 'd': km(self.ui.bar.week.dom, 'active'); km(self.ui.bar.month.dom, 'active'); kp(self.ui.bar.day.dom, 'active'); break;
+      case 'w': km(self.ui.bar.day.dom, 'active'); km(self.ui.bar.month.dom, 'active'); kp(self.ui.bar.week.dom, 'active'); break;
+      case 'm': km(self.ui.bar.week.dom, 'active'); km(self.ui.bar.day.dom, 'active'); kp(self.ui.bar.month.dom, 'active'); break;
+      }
+      stat.view.unit = unit;
+      self.update();
+   }
 }
 
 module.exports = ViewOne;

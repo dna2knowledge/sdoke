@@ -110,6 +110,7 @@ div.hide { display: none; }
    background-image: url("../img/af-star.svg");
 }
 .s-view-canvas {
+   margin-top: 5px;
    width: 100%;
 }
 
