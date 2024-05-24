@@ -116,12 +116,15 @@ ViewListItem.prototype = {
    },
    init: function () {
       this.defer.onClick = onClick.bind(this);
+      this.defer.onFavClick = onFavClick.bind(this);
       on(this.ui.code, 'click', this.defer.onClick);
       on(this.ui.name, 'click', this.defer.onClick);
+      on(this.ui.fav, 'click', this.defer.onFavClick);
    },
    dispose: function () {
       off(this.ui.code, 'click', this.defer.onClick);
       off(this.ui.name, 'click', this.defer.onClick);
+      off(this.ui.fav, 'click', this.defer.onFavClick);
       if (this.dom.parentNode) $m(this.dom.parentNode, this.dom);
    }
 };
@@ -129,6 +132,12 @@ ViewListItem.prototype = {
 function onClick() {
    stat.uri = `/${this.data.code}`;
    eb.emit('tab.show.view');
+}
+
+function onFavClick() {
+   this.data.fav = !this.data.fav;
+   // TODO: persist fav
+   this.update();
 }
 
 module.exports = ViewListItem;
