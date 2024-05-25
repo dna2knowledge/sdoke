@@ -30,6 +30,7 @@ function onDeviceReady() {
 }
 
 (function () {
+   // window.DEBUG = true;
    const dom = require('./ui/dom');
    const dp = require('./ctrl/dispatch');
    const App = require('./ui/main-frame');
@@ -79,4 +80,8 @@ function onDeviceReady() {
    }
 
    window.sdokeStart = sdokeStart;
+   if (typeof(cordova) === 'undefined') {
+      cordova = {};
+      onDeviceReady();
+   }
 })();
