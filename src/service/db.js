@@ -8,7 +8,10 @@ const env = {
    db_: null,
 };
 
-async function getStore(storeName, txMode) {
+async function getStore(txMode, storeName) {
+   // readonly / readwrite
+   storeName = storeName || 'sdoke';
+   txMode = txMode || 'readwrite';
    if (env.db_) return getStoreApi();
    const req = window.indexedDB.open(env.name, env.version);
    once(req, 'upgradeneeded', function (evt) {
@@ -32,7 +35,7 @@ async function getStore(storeName, txMode) {
    return getStoreApi();
 
    function getStoreApi() {
-      return env.db_.transaction(storeName, txMode).objectStore(storeName);
+      return env.db_.transaction([storeName], txMode).objectStore(storeName);
    }
 }
 
@@ -43,7 +46,7 @@ function get(key, store) {
          fn: function (evt) { e(evt); }
       }, {
          name: 'success',
-         fn: function (evt) { r(evt); }
+         fn: function (evt) { r(evt.target.result); }
       }]);
    });
 }
@@ -57,6 +60,8 @@ function getMany(keys, store) {
 function set(key, value, store) {
    return new Promise(function (r, e) {
       store.put(value, key);
+      r();
+      /*
       multipleOnce(store.transaction, [{
          name: 'error',
          fn: function (evt) { e(evt); }
@@ -64,6 +69,7 @@ function set(key, value, store) {
          name: 'success',
          fn: function (evt) { r(evt); }
       }]);
+      */
    });
 }
 

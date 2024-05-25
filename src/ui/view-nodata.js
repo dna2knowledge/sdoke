@@ -64,6 +64,7 @@ async function onFetchList() {
    // XXX: if user look into another page
    stat.prevUri = null;
    stat.uri = '';
+   stat.dirty = true;
    eb.emit('render.view-list');
    eb.emit('network.fetch.stock-all', stat.list);
    if (sharedStat.tab.active === 'view') eb.emit('tab.show.view');

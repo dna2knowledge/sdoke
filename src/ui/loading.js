@@ -12,12 +12,8 @@ function Loading(name) {
 }
 Loading.prototype = {
    init: function () {
-      this.defer.onLoading = (function () {
-         km(this.dom, 'hide');
-      }).bind(this);
-      this.defer.onLoaded = (function () {
-         kp(this.dom, 'hide');
-      }).bind(this);
+      this.defer.onLoading = onLoading.bind(this);
+      this.defer.onLoaded = onLoaded.bind(this);
       eb.on(`loading.${this.name}`, this.defer.onLoading);
       eb.on(`loaded.${this.name}`, this.defer.onLoaded)
    },
@@ -26,5 +22,13 @@ Loading.prototype = {
       eb.off(`loaded.${this.name}`, this.defer.onLoaded)
    }
 };
+
+function onLoading() {
+   km(this.dom, 'hide');
+}
+
+function onLoaded() {
+   kp(this.dom, 'hide');
+}
 
 module.exports = Loading;

@@ -1,21 +1,30 @@
 const eb = require('./eventbus');
 const { kp, km, on, off } = require('../ui/dom');
 const sharedStat = require('./stat-shared');
-const stat = require('./stat-view');
+const viewStat = require('./stat-view');
 
 const db = require('../service/db');
 const stocknet = require('../service/stock-network-data');
 
-function initEvents(ui) {
+async function initStat() {
+   const config = (await db.get('stock.view.config', await db.getStore())) || {};
+   viewStat.filter = Object.assign(viewStat.filter, config.filter);
+   viewStat.view = Object.assign(viewStat.view, config.view);
+   const list = (await db.get('stock.list', await db.getStore())) || [];
+   const fav = (await db.get('stock.list.fav', await db.getStore())) || [];
+   list.forEach(function (z) {
+      if (fav[z.code]) z.fav = true; else z.fav = false;
+   })
+   viewStat.list = list;
+}
+
+async function initEvents(ui) {
    ui.navButtons.forEach(function (navButton, i) {
       on(navButton.dom, 'click', function () { eb.emit('switch-tab', navButton.tab); });
    });
 }
 
-function initStat() {
-}
-
-function initDispatcher(ui) {
+async function initDispatcher(ui) {
    eb.on('network.fetch.stock-all', onFetchAllStock);
    eb.on('network.fetch.stock-one', onFetchOneStock);
    eb.on('switch-tab', onSwitchTab.bind(ui));
@@ -44,18 +53,17 @@ function onSwitchTab(tab) {
 async function onFetchOneStock(item) {
    if (!item || !item.code) return false;
    let p, origin;
-   if (stat.network[item.code]) {
-      p = stat.network[item.code];
+   if (viewStat.network[item.code]) {
+      p = viewStat.network[item.code];
       origin = false;
    } else {
       p = stocknet.tencent.getHistory(item.code);
-      stat.network[item.code] = p;
+      viewStat.network[item.code] = p;
       origin = true;
    }
    const r = await p;
-   if (origin) delete stat.network[item.code];
+   if (origin) delete viewStat.network[item.code];
 
-   // TODO read itemHistory from db
    const itemHistory = {
       code: item.code,
       name: item.name,
@@ -85,6 +93,13 @@ async function onFetchOneStock(item) {
       };
       eb.emit('update.stock-item', listItem);
    }
+   const updatedOne = viewStat.list.find(function (z) {
+      return z.code === item.code;
+   });
+   if (updatedOne) {
+      updatedOne.latest = latest;
+      await db.set('stock.list', viewStat.list, await db.getStore());
+   }
    eb.emit('update.stock-chart', itemHistory);
 }
 
@@ -97,12 +112,14 @@ async function onFetchAllStock(list) {
 }
 
 function init(ui) {
-   initStat();
    initDispatcher(ui);
    initEvents(ui);
 
-   // by default, go to view tab
-   eb.emit('switch-tab', 'view');
+   initStat().then(function () {
+      // by default, go to view tab
+      eb.emit('switch-tab', 'view');
+      eb.emit('render.view-list', viewStat.list);
+   });
 }
 
 module.exports = {

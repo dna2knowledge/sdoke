@@ -140,12 +140,11 @@ div.hide { display: none; }
 }
 
 .loading {
-   pointer-events: none;
    user-select: none;
    background-color: white;
    opacity: 0.3;
    width: 100%;
    height: 100%;
    position: absolute;
-   z-index: 100;
+   z-index: 1000;
 }

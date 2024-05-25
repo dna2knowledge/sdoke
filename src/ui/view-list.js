@@ -171,7 +171,6 @@ function genOnFilterSwitchChange(self, key) {
       if (!config.filter) config.filter = {};
       config.filter = Object.assign(config.filter, stat.filter);
       await db.set('stock.view.config', config, await db.getStore());
-      // TODO: persist filter config data
       eb.emit('render.view-list');
    }).bind(self);
 }

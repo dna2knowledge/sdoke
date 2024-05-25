@@ -2,7 +2,7 @@ const { o, kp, km, $p, $m, $c, t, on, off } = require('./dom');
 const eb = require('../ctrl/eventbus');
 const stat = require('../ctrl/stat-view');
 
-const db = require('../debug/faked-db');
+const db = require('../service/db');
 
 function ViewListItem(item) {
    this.data = item;
@@ -142,7 +142,11 @@ function onClick() {
 async function onFavClick() {
    this.data.fav = !this.data.fav;
    const fav = (await db.get('stock.list.fav', await db.getStore())) || {};
-   fav[this.data.code] = 1;
+   if (this.data.code in fav) {
+      delete fav[this.data.code];
+   } else {
+      fav[this.data.code] = 1;
+   }
    await db.set('stock.list.fav', fav, await db.getStore());
    this.update();
 }
