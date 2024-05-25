@@ -4,10 +4,6 @@ const stat = {
    // - read index settings, calc index
    // - draw data and index in canvas
    list: [],
-listx: [
-   { fav: true, code: 'sh000000', name: 'test', latest: { O: 23.23, C: 34.13, H: 35.3, L: 22.5, V: 23459, m: 1111 } },
-   { fav: false, code: 'sh000001', name: 'test2', latest: { O: 53.23, C: 34.13, H: 55.3, L: 22.5, V: 323459, m: 1111 } },
-],
    one: {
       code: null,
       data: null

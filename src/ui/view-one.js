@@ -4,6 +4,8 @@ const NavIconButton = require('./nav-icon-button');
 const ViewListItem = require('./view-list-item');
 const stat = require('../ctrl/stat-view');
 
+const db = require('../service/db');
+
 function ViewOne() {
    const dom = o('div');
    const bar = o('div');
@@ -181,7 +183,7 @@ ViewOne.prototype = {
       this.ui.overview.update();
       this.updateCalc();
 
-      this.ui.canvas.style.height = '450px';
+      this.ui.canvas.style.height = '350px';
       const w = this.ui.canvas.offsetWidth;
       const h = this.ui.canvas.offsetHeight;
       this.ui.canvas.width = w;
@@ -190,7 +192,7 @@ ViewOne.prototype = {
       pen.fillStyle = this.theme.background;
       pen.fillRect(0, 0, w, h);
       pen.save();
-      pen.translate(50, 50)
+      pen.translate(50, 0)
       paintS(pen, w-100, 350, this);
       paintBasic(pen, w-100, 300, this);
       pen.translate(0, 300);
@@ -231,10 +233,10 @@ function paintBasic(pen, w, h, comp) {
    pen.fillStyle = comp.theme.color;
    const maxt = `${calc.max.toFixed(2)}`;
    const mint = `${calc.min.toFixed(2)}`;
-   const title = 'price';
+   const title = 'Price';
    let box;
    box = pen.measureText(title);
-   pen.fillText(title, shiftw-5-box.width, 0);
+   pen.fillText(title, shiftw-5-box.width, 24);
    box = pen.measureText(maxt);
    pen.fillText(maxt, shiftw-5-box.width, 12);
    box = pen.measureText(mint);
@@ -274,7 +276,7 @@ function paintBasic(pen, w, h, comp) {
          } else if (yst < yed) {
             paintCandleLine(pen, x, yst, yed, ymin, ymax, '#6f6', 'green');
          } else {
-            paintCandleLine(pen, x, yst, yed, ymin, ymax, 'gray', 'gray');
+            paintCandleLine(pen, x, yst, yed, ymin, ymax, '#aaa', 'gray');
          }
          lastitem = item;
       });
@@ -323,7 +325,7 @@ function paintV(pen, w, h, comp) {
    pen.fillStyle = comp.theme.color;
    const maxt = `${calc.Vmax.toFixed(0)}`;
    const mint = `${calc.Vmin.toFixed(0)}`;
-   pen.fillText('Vol.', w0+shiftw+5, 0);
+   pen.fillText('Vol.', w0+shiftw+5, 24);
    pen.fillText(maxt, w0+shiftw+5, 12);
    pen.fillText(mint, w0+shiftw+5, 50);
 
@@ -370,14 +372,22 @@ async function onRender(item) {
       name: item.name,
       data: stat.one.data
    };
-   // TODO: clear canvas display
-   // TODO: read from db
+   // TODO: update overview and clear canvas display
+   const historyData = (await db.get(`stock.data.${item.code}`, await db.getStore()) || []);
+   if (historyData && historyData.length) {
+      historyItem.data = historyData;
+      eb.emit('update.stock-chart', historyItem);
+      return;
+   }
    // if has data, eb.emit('update.stock-chart', historyItem);
+   let origin = false;
    if (!stat.network[item.code]) {
+      origin = true;
       eb.emit('network.fetch.stock-one', item);
       return;
    }
    await stat.network[item.code];
+   if (origin) delete stat.network[item.code];
    historyItem.data = stat.one.data;
    onUpdate.bind(this)(historyItem);
 }
@@ -386,7 +396,7 @@ function onResize() {
 }
 
 function genOnUnitChange(unit, self) {
-   return function () {
+   return async function () {
       if (stat.view.unit === unit) return;
       switch (unit) {
       case 'd': km(self.ui.bar.week.dom, 'active'); km(self.ui.bar.month.dom, 'active'); kp(self.ui.bar.day.dom, 'active'); break;
@@ -394,6 +404,12 @@ function genOnUnitChange(unit, self) {
       case 'm': km(self.ui.bar.week.dom, 'active'); km(self.ui.bar.day.dom, 'active'); kp(self.ui.bar.month.dom, 'active'); break;
       }
       stat.view.unit = unit;
+
+      const config = (await db.get('stock.view.config', await db.getStore())) || {};
+      if (!config.view) config.view = {};
+      config.view.unit = unit;
+      await db.set('stock.view.config', config);
+
       self.update();
    }
 }

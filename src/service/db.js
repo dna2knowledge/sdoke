@@ -1,5 +1,5 @@
-const makePromise = require('./util/make-promise');
-const { once, multipleOnce } = require('./util/event-once');
+const makePromise = require('../util/make-promise');
+const { once, multipleOnce } = require('../util/event-once');
 
 const env = {
    name: 'sdoke',
@@ -121,6 +121,10 @@ function clr(key, store) {
    });
 }
 
+if (window.DEBUG) {
+console.log('[DEBUG mode] for db - faked');
+module.exports = require('../debug/faked-db');
+} else {
 module.exports = {
    env,
    getStore,
@@ -132,3 +136,4 @@ module.exports = {
    delMany,
    clr,
 };
+}

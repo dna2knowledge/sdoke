@@ -4,8 +4,8 @@ const NavIconButton = require('./nav-icon-button');
 const sharedStat = require('../ctrl/stat-shared');
 const stat = require('../ctrl/stat-view');
 
-const db = require('../debug/faked-db');
-const stocknet = require('../debug/faked-stock-network-data');
+const db = require('../service/db');
+const stocknet = require('../service/stock-network-data');
 
 function ViewNoData() {
    const dom = o('div');
@@ -55,7 +55,10 @@ async function onFetchList() {
       });
       return a.concat(z);
    }, []);
-   // TODO persist into db
+
+   await db.set(`stock.list`, stat.list.map(function (z) {
+      return { name: z.name, code: z.code };
+   }), await db.getStore());
 
    eb.emit('loaded.tab-view');
    // XXX: if user look into another page

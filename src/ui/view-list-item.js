@@ -2,6 +2,8 @@ const { o, kp, km, $p, $m, $c, t, on, off } = require('./dom');
 const eb = require('../ctrl/eventbus');
 const stat = require('../ctrl/stat-view');
 
+const db = require('../debug/faked-db');
+
 function ViewListItem(item) {
    this.data = item;
    const dom = o('div');
@@ -137,9 +139,11 @@ function onClick() {
    eb.emit('tab.show.view');
 }
 
-function onFavClick() {
+async function onFavClick() {
    this.data.fav = !this.data.fav;
-   // TODO: persist fav
+   const fav = (await db.get('stock.list.fav', await db.getStore())) || {};
+   fav[this.data.code] = 1;
+   await db.set('stock.list.fav', fav, await db.getStore());
    this.update();
 }
 

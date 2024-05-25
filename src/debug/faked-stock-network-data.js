@@ -88,4 +88,6 @@ const api = {
    util,
 };
 
+window._debugStockNetworkData = api;
+
 module.exports = api;

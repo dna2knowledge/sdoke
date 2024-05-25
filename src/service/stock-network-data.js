@@ -82,6 +82,9 @@ async function getSzList() {
 }
 
 async function getBjList() {
+   // temporarily disable bj list
+   return [];
+
    stat.progress.list.bj = { p: 0, ts: new Date().getTime() };
    const all = [];
    let todon = 1;
@@ -352,4 +355,9 @@ const api = {
    }
 };
 
+if (window.DEBUG) {
+console.log('[DEBUG mode] for stock network data - faked');
+module.exports = require('../debug/faked-stock-network-data');
+} else {
 module.exports = api;
+}

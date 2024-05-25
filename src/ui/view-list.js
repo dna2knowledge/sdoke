@@ -4,6 +4,8 @@ const NavIconButton = require('./nav-icon-button');
 const ViewListItem = require('./view-list-item');
 const stat = require('../ctrl/stat-view');
 
+const db = require('../service/db');
+
 function ViewList() {
    const dom = o('div');
    const bar = o('div');
@@ -160,11 +162,15 @@ function onRenderViewList() {
    stat.dirty = false;
 }
 function genOnFilterSwitchChange(self, key) {
-   return (function () {
+   return (async function () {
       stat.filter[key] = !stat.filter[key];
       const target = this.ui.bar[key];
       if (!target) return;
       stat.dirty = true;
+      const config = (await db.get('stock.view.config', await db.getStore())) || {};
+      if (!config.filter) config.filter = {};
+      config.filter = Object.assign(config.filter, stat.filter);
+      await db.set('stock.view.config', config, await db.getStore());
       // TODO: persist filter config data
       eb.emit('render.view-list');
    }).bind(self);

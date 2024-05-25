@@ -3,8 +3,8 @@ const { kp, km, on, off } = require('../ui/dom');
 const sharedStat = require('./stat-shared');
 const stat = require('./stat-view');
 
-const db = require('../debug/faked-db');
-const stocknet = require('../debug/faked-stock-network-data');
+const db = require('../service/db');
+const stocknet = require('../service/stock-network-data');
 
 function initEvents(ui) {
    ui.navButtons.forEach(function (navButton, i) {
@@ -59,7 +59,7 @@ async function onFetchOneStock(item) {
    const itemHistory = {
       code: item.code,
       name: item.name,
-      data: []
+      data: (await db.get(`stock.data.${item.code}`, await db.getStore())) || []
    };
    const map = itemHistory.data.reduce(function (a, z) {
       a[z.ts] = z;
@@ -73,7 +73,7 @@ async function onFetchOneStock(item) {
       itemHistory.data.push(z);
    });
    itemHistory.data = itemHistory.data.sort(function (a, b) { return a.ts - b.ts; });
-   // TODO save itemHistory to db
+   await db.set(`stock.data.${item.code}`, itemHistory.data, await db.getStore());
 
    const latest = itemHistory.data[itemHistory.data.length-1];
    if (latest !== item.latest) {
