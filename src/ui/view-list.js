@@ -1,4 +1,5 @@
 const { o, $p, $m, k_, kp, km, on, off } = require('./dom');
+const { once, multipleOnce } = require('../util/event-once');
 const eb = require('../ctrl/eventbus');
 const NavIconButton = require('./nav-icon-button');
 const ViewListItem = require('./view-list-item');
@@ -17,6 +18,7 @@ function ViewList() {
    const szswitch = new NavIconButton('af-city.svg', 'Shenzhen');
    const primaryswitch = new NavIconButton('af-city.svg', 'Primary');
    const favswitch = new NavIconButton('af-star.svg', 'Favorite');
+   const updateList = new NavIconButton('af-pen.svg', 'UpdateList');
    nodata.textContent = 'No matched items.';
    kp(bar, 's-flex');
    kp(list, 's-scrollable');
@@ -35,6 +37,7 @@ function ViewList() {
    $p(bar, szswitch.dom);
    $p(bar, primaryswitch.dom);
    $p(bar, favswitch.dom);
+   $p(bar, updateList.dom);
    $p(list, nodata);
    $p(dom, bar);
    $p(dom, list);
@@ -47,6 +50,7 @@ function ViewList() {
          sz: szswitch,
          primary: primaryswitch,
          fav: favswitch,
+         updateList: updateList
       },
       nodata: nodata,
       list: list,
@@ -72,12 +76,14 @@ ViewList.prototype = {
       this.defer.onFilterClick.primary = genOnFilterSwitchChange(this, 'primary');
       this.defer.onFilterClick.fav = genOnFilterSwitchChange(this, 'fav');
       this.defer.onRefreshClick = onRefreshClick.bind(this);
+      this.defer.onUpdateListClick = onUpdateListClick.bind(this);
       on(this.ui.bar.refresh.dom, 'click', this.defer.onRefreshClick);
       on(this.ui.bar.bj.dom, 'click', this.defer.onFilterClick.bj);
       on(this.ui.bar.sh.dom, 'click', this.defer.onFilterClick.sh);
       on(this.ui.bar.sz.dom, 'click', this.defer.onFilterClick.sz);
       on(this.ui.bar.primary.dom, 'click', this.defer.onFilterClick.primary);
       on(this.ui.bar.fav.dom, 'click', this.defer.onFilterClick.fav);
+      on(this.ui.bar.updateList.dom, 'click', this.defer.onUpdateListClick);
    },
    dispose: function () {
       eb.off('render.view-list', this.defer.onRenderViewList);
@@ -87,6 +93,7 @@ ViewList.prototype = {
       off(this.ui.bar.sz.dom, 'click', this.defer.onFilterClick.sz);
       off(this.ui.bar.primary.dom, 'click', this.defer.onFilterClick.primary);
       off(this.ui.bar.fav.dom, 'click', this.defer.onFilterClick.fav);
+      off(this.ui.bar.updateList.dom, 'click', this.defer.onUpdateListClick);
    },
    buildList: function () {
       this.ui.items.forEach(function (z) {
@@ -144,7 +151,7 @@ ViewList.prototype = {
    }
 };
 
-function onRenderViewList() {
+async function onRenderViewList() {
    const keys = Object.keys(this.ui.bar);
    for (let i = 0, n = keys.length; i < n; i++) {
       const key = keys[i];
@@ -158,6 +165,14 @@ function onRenderViewList() {
       }
    }
    if (!stat.dirty) return;
+   for (let i = 0, n = stat.list.length; i < n; i++) {
+      const item = stat.list[i];
+      if (item.latest) continue;
+      const historyData = (await db.get(`stock.data.${item.code}`, await db.getStore())) || [];
+      if (historyData && historyData.length) {
+         item.latest = Object.assign({}, historyData[historyData.length-1]);
+      }
+   }
    this.buildList();
    stat.dirty = false;
 }
@@ -186,6 +201,53 @@ function onUpdateItemData(item) {
 }
 function onRefreshClick() {
    eb.emit('network.fetch.stock-all', stat.list);
+}
+
+function onUpdateListClick() {
+   const file = o('input');
+   file.type = 'file';
+   file.style.visibility = 'hidden';
+   $p(document.body, file);
+   multipleOnce(file, [{
+      name: 'change', fn: async function (evt) {
+         const reader = new FileReader();
+         once(reader, 'load', function (readevt) {
+            const csv = readevt.target.result.split('\n');
+            const list = [];
+            csv.forEach(function (line) {
+               if (!line) return;
+               const parts = line.split(',');
+               if (parts.length < 2) return;
+               list.push({ code: parts[0], name: parts[1], latest: null });
+            });
+            stat.list = list;
+            updateList();
+            cleanup();
+         });
+         reader.readAsText(evt.target.files[0]);
+      }
+   }, {
+      name: 'cancel', fn: function (evt) {
+         cleanup();
+      }
+   }]);
+   file.click();
+
+   function cleanup() {
+      $m(document.body, file);
+   }
+
+   async function updateList() {
+      await db.set(`stock.list`, stat.list.map(function (z) {
+         return { name: z.name, code: z.code, latest: z.latest };
+      }), await db.getStore());
+      eb.emit('loaded.tab-view');
+      if (!stat.uri) {
+         stat.prevUri = null;
+         stat.dirty = true;
+         eb.emit('render.view-list');
+      }
+   }
 }
 
 module.exports = ViewList;
