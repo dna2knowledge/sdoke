@@ -57,7 +57,8 @@ async function onFetchOneStock(item) {
       p = viewStat.network[item.code];
       origin = false;
    } else {
-      p = stocknet.tencent.getHistory(item.code);
+      const prev = (await db.get(`stock.data.${item.code}`, await db.getStore()) || []);
+      p = stocknet.tencent.getHistory(item.code, prev && prev.length > 0 ? new Date(prev[prev.length-1].T) : null);
       viewStat.network[item.code] = p;
       origin = true;
    }
@@ -70,14 +71,14 @@ async function onFetchOneStock(item) {
       data: (await db.get(`stock.data.${item.code}`, await db.getStore())) || []
    };
    const map = itemHistory.data.reduce(function (a, z) {
-      a[z.ts] = z;
+      a[z.T] = z;
       return a;
    }, {});
    const ts0 = new Date(new Date().toISOString().split('T')[0]).getTime();
    r.forEach(function (z) {
       // XXX ignore or update data; currently we just update today's data and ignore before
-      if (z.ts === ts0 && map[z.ts]) Object.assign(map[z.ts], z);
-      if (map[z.ts]) return;
+      if (z.T === ts0 && map[z.T]) Object.assign(map[z.T], z);
+      if (map[z.T]) return;
       itemHistory.data.push(z);
    });
    itemHistory.data = itemHistory.data.sort(function (a, b) { return a.ts - b.ts; });

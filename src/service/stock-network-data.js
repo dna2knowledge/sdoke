@@ -8,6 +8,19 @@ const stat = {
 };
 
 async function getShList() {
+   const ts = new Date().getTime();
+   try {
+      // need a proxy to visit stock list
+      const url = `https://someproxy/stock.json`;
+      const r = await fetch(url, { method: 'GET' });
+      const json = await r.json();
+      return json;
+   } catch(_) {
+      stat.progress.list.sh = { ts, err: _ };
+      return null;
+   }
+   return;
+
    stat.progress.list.sh = { p: 0, ts: new Date().getTime() };
    const r0 = await getN(0, 0);
    if (stat.progress.list.sh.err) return [];
@@ -29,10 +42,10 @@ async function getShList() {
    }; });
 
    async function getN(a, b) {
+      const ts = new Date().getTime();
       try {
-         const ts = new Date().getTime();
          const prefix = `jsonpCallback${ts}`;
-         const url = `http://yunhq.sse.com.cn:32041/v1/sh1/list/exchange/equity?callback=${prefix}&select=code%2Cname%2Copen%2Chigh%2Clow%2Clast%2Cprev_close%2Cchg_rate%2Cvolume%2Camount%2Ctradephase%2Cchange%2Camp_rate%2Ccpxxsubtype%2Ccpxxprodusta&order=&begin=${a}&end=${b}&_=${ts}`;
+         const url = `https://yunhq.sse.com.cn:32042/v1/sh1/list/exchange/equity?callback=${prefix}&select=code%2Cname%2Copen%2Chigh%2Clow%2Clast%2Cprev_close%2Cchg_rate%2Cvolume%2Camount%2Ctradephase%2Cchange%2Camp_rate%2Ccpxxsubtype%2Ccpxxprodusta&order=&begin=${a}&end=${b}&_=${ts}`;
          const r = await fetch(url, { method: 'GET' });
          const raw = await r.text();
          const json = JSON.parse(raw.substring(prefix.length+1, raw.length-1));
@@ -45,6 +58,8 @@ async function getShList() {
 }
 
 async function getSzList() {
+   return [];
+
    stat.progress.list.sz = { p: 0, ts: new Date().getTime() };
    const all = [];
    let todon = 1;
@@ -66,8 +81,8 @@ async function getSzList() {
    return all;
 
    async function getN(b) {
+      const ts = new Date().getTime();
       try {
-         const ts = new Date().getTime();
          const datets = new Date(ts - 1000 * 3600 * 24).toISOString().split('T')[0];
          const prefix = `jsonpCallback${ts}`;
          const url = `https://www.szse.cn/api/report/ShowReport/data?SHOWTYPE=JSON&CATALOGID=1815_stock_snapshot&TABKEY=tab1&PAGENO=${b}&tab1PAGESIZE=10&txtBeginDate=${datets}&txtEndDate=${datets}&random=${Math.random()}`;
@@ -106,8 +121,8 @@ async function getBjList() {
    return all;
 
    async function getN(b) {
+      const ts = new Date().getTime();
       try {
-         const ts = new Date().getTime();
          const prefix = `jQuery331_${ts}`;
          const url = `https://www.bse.cn/nqhqController/nqhq_en.do?callback=${prefix}`;
          const body = `page=${b}&type_en=%5B%22B%22%5D&sortfield=hqcjsl&sorttype=desc&xxfcbj_en=%5B2%5D&zqdm=`;
@@ -147,7 +162,7 @@ async function getHistoryFromTencent(code, startDate) {
       for (let i = 0; i < ranges.length; i++) {
          const range = ranges[i];
          console.log(`${code}: fetch data between (${range[0]}, ${range[1]}]`);
-         const r0 = transform(await getRange(code, range[0], range[1])).filter(x => new Date(x.date).getTime() >= env.start.getTime());
+         const r0 = transform(await getRange(code, range[0], range[1])).filter(x => x.T >= env.start.getTime());
          env.start = new Date(range[1]);
          r0.forEach(function (z) { ret.push(z); });
          await wait(200);
@@ -177,12 +192,12 @@ async function getHistoryFromTencent(code, startDate) {
    function transform(list) {
       return list.map(x => ({
          T: new Date(x[0]).getTime(),
-         O: x[1],
-         C: x[2],
-         H: x[3],
-         L: x[4],
-         V: Math.round(x[5] * 100),
-         m: x[8],
+         O: parseFloat(x[1]),
+         C: parseFloat(x[2]),
+         H: parseFloat(x[3]),
+         L: parseFloat(x[4]),
+         V: parseInt(x[5]),
+         m: parseFloat(x[8]),
       }));
    }
 

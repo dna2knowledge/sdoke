@@ -408,7 +408,7 @@ function genOnUnitChange(unit, self) {
       const config = (await db.get('stock.view.config', await db.getStore())) || {};
       if (!config.view) config.view = {};
       config.view.unit = unit;
-      await db.set('stock.view.config', config);
+      await db.set('stock.view.config', config, await db.getStore());
 
       self.update();
    }
