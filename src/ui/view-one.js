@@ -53,6 +53,7 @@ function ViewOne() {
 ViewOne.prototype = {
    init: function () {
       this.defer.onBackClick = onBackClick.bind(this);
+      this.defer.onRefreshClick = onRefreshClick.bind(this);
       this.defer.onUpdate = onUpdate.bind(this);
       this.defer.onRender = onRender.bind(this);
       this.defer.onResize = onResize.bind(this);
@@ -63,6 +64,7 @@ ViewOne.prototype = {
       eb.on('render.view-one', this.defer.onRender);
       eb.on('resize.view-one', this.defer.onResize);
       on(this.ui.bar.back.dom, 'click', this.defer.onBackClick);
+      on(this.ui.bar.refresh.dom, 'click', this.defer.onRefreshClick);
       on(this.ui.bar.day.dom, 'click', this.defer.onDayUnit);
       on(this.ui.bar.week.dom, 'click', this.defer.onWeekUnit);
       on(this.ui.bar.month.dom, 'click', this.defer.onMonthUnit);
@@ -72,6 +74,7 @@ ViewOne.prototype = {
       eb.off('render.view-one', this.defer.onRender);
       eb.off('resize.view-one', this.defer.onResize);
       off(this.ui.bar.back.dom, 'click', this.defer.onBackClick);
+      off(this.ui.bar.refresh.dom, 'click', this.defer.onRefreshClick);
       off(this.ui.bar.day.dom, 'click', this.defer.onDayUnit);
       off(this.ui.bar.week.dom, 'click', this.defer.onWeekUnit);
       off(this.ui.bar.month.dom, 'click', this.defer.onMonthUnit);
@@ -353,6 +356,13 @@ function onBackClick() {
       stat.uri = '';
       eb.emit('tab.show.view');
    }
+}
+
+function onRefreshClick() {
+   if (!stat.list || !stat.list.length || !stat.one || !stat.one.code) return;
+   const item = stat.list.find(function (z) { return z.code === stat.one.code });
+   if (!item) return;
+   eb.emit('network.fetch.stock-one', item);
 }
 
 async function onUpdate(item) {
