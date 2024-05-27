@@ -147,7 +147,7 @@ ViewList.prototype = {
          const fr = [];
          for (let i = 0, n = this.filtered.length; i < n; i++) {
             const item = this.filtered[i];
-            const historyData = (await db.get(`stock.data.${item.code}`, await db.getStore())) || [];
+            const historyData = (await db.get(`stock.data.${item.code}`)) || [];
             if (historyData.length) {
                if (checkTestItem(historyData, item)) fr.push(item);
             }
@@ -186,7 +186,7 @@ async function onRenderViewList() {
    for (let i = 0, n = stat.list.length; i < n; i++) {
       const item = stat.list[i];
       if (item.latest) continue;
-      const historyData = (await db.get(`stock.data.${item.code}`, await db.getStore())) || [];
+      const historyData = (await db.get(`stock.data.${item.code}`)) || [];
       if (historyData && historyData.length) {
          item.latest = Object.assign({}, historyData[historyData.length-1]);
       }
@@ -230,10 +230,10 @@ function genOnFilterSwitchChange(self, key) {
       const target = this.ui.bar[key];
       if (!target) return;
       stat.dirty = true;
-      const config = (await db.get('stock.view.config', await db.getStore())) || {};
+      const config = (await db.get('stock.view.config')) || {};
       if (!config.filter) config.filter = {};
       config.filter = Object.assign(config.filter, stat.filter);
-      await db.set('stock.view.config', config, await db.getStore());
+      await db.set('stock.view.config');
       eb.emit('render.view-list');
    }).bind(self);
 }
@@ -299,7 +299,7 @@ function onUpdateListClick() {
    async function updateList() {
       await db.set(`stock.list`, stat.list.map(function (z) {
          return { name: z.name, code: z.code, latest: z.latest };
-      }), await db.getStore());
+      }));
       eb.emit('loaded.tab-view');
       if (!stat.uri) {
          stat.prevUri = null;

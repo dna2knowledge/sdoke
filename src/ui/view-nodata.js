@@ -58,7 +58,7 @@ async function onFetchList() {
 
    await db.set(`stock.list`, stat.list.map(function (z) {
       return { name: z.name, code: z.code };
-   }), await db.getStore());
+   }));
 
    eb.emit('loaded.tab-view');
    // XXX: if user look into another page

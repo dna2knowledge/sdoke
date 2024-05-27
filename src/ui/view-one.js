@@ -340,7 +340,7 @@ async function onRender(item) {
       data: stat.one.data
    };
    // TODO: update overview and clear canvas display
-   const historyData = (await db.get(`stock.data.${item.code}`, await db.getStore()) || []);
+   const historyData = (await db.get(`stock.data.${item.code}`) || []);
    if (historyData && historyData.length) {
       historyItem.data = historyData;
       eb.emit('update.stock-chart', historyItem);
@@ -372,10 +372,10 @@ function genOnUnitChange(unit, self) {
       }
       stat.view.unit = unit;
 
-      const config = (await db.get('stock.view.config', await db.getStore())) || {};
+      const config = (await db.get('stock.view.config')) || {};
       if (!config.view) config.view = {};
       config.view.unit = unit;
-      await db.set('stock.view.config', config, await db.getStore());
+      await db.set('stock.view.config', config);
 
       self.update();
    }

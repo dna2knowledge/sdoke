@@ -141,13 +141,13 @@ function onClick() {
 
 async function onFavClick() {
    this.data.fav = !this.data.fav;
-   const fav = (await db.get('stock.list.fav', await db.getStore())) || {};
+   const fav = (await db.get('stock.list.fav')) || {};
    if (this.data.code in fav) {
       delete fav[this.data.code];
    } else {
       fav[this.data.code] = 1;
    }
-   await db.set('stock.list.fav', fav, await db.getStore());
+   await db.set('stock.list.fav', fav);
    this.update();
 }
 

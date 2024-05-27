@@ -7,11 +7,11 @@ const db = require('../service/db');
 const stocknet = require('../service/stock-network-data');
 
 async function initStat() {
-   const config = (await db.get('stock.view.config', await db.getStore())) || {};
+   const config = (await db.get('stock.view.config')) || {};
    viewStat.filter = Object.assign(viewStat.filter, config.filter);
    viewStat.view = Object.assign(viewStat.view, config.view);
-   const list = (await db.get('stock.list', await db.getStore())) || [];
-   const fav = (await db.get('stock.list.fav', await db.getStore())) || [];
+   const list = (await db.get('stock.list')) || [];
+   const fav = (await db.get('stock.list.fav')) || [];
    list.forEach(function (z) {
       if (fav[z.code]) z.fav = true; else z.fav = false;
    })
@@ -57,7 +57,7 @@ async function onFetchOneStock(item) {
       p = viewStat.network[item.code];
       origin = false;
    } else {
-      const prev = (await db.get(`stock.data.${item.code}`, await db.getStore()) || []);
+      const prev = (await db.get(`stock.data.${item.code}`) || []);
       p = stocknet.tencent.getHistory(item.code, prev && prev.length > 0 ? new Date(prev[prev.length-1].T) : null);
       viewStat.network[item.code] = p;
       origin = true;
@@ -68,7 +68,7 @@ async function onFetchOneStock(item) {
    const itemHistory = {
       code: item.code,
       name: item.name,
-      data: (await db.get(`stock.data.${item.code}`, await db.getStore())) || []
+      data: (await db.get(`stock.data.${item.code}`)) || []
    };
    const map = itemHistory.data.reduce(function (a, z) {
       a[z.T] = z;
@@ -82,7 +82,7 @@ async function onFetchOneStock(item) {
       itemHistory.data.push(z);
    });
    itemHistory.data = itemHistory.data.sort(function (a, b) { return a.ts - b.ts; });
-   await db.set(`stock.data.${item.code}`, itemHistory.data, await db.getStore());
+   await db.set(`stock.data.${item.code}`, itemHistory.data);
 
    const latest = itemHistory.data[itemHistory.data.length-1];
    if (latest !== item.latest) {
@@ -99,7 +99,7 @@ async function onFetchOneStock(item) {
    });
    if (updatedOne) {
       updatedOne.latest = latest;
-      await db.set('stock.list', viewStat.list, await db.getStore());
+      await db.set('stock.list', viewStat.list);
    }
    eb.emit('update.stock-chart', itemHistory);
 }

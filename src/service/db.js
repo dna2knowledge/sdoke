@@ -39,8 +39,9 @@ async function getStore(txMode, storeName) {
    }
 }
 
-function get(key, store) {
-   return new Promise(function (r, e) {
+function get(key) {
+   return new Promise(async function (r, e) {
+      const store = await getStore();
       multipleOnce(store.get(key), [{
          name: 'error',
          fn: function (evt) { e(evt); }
@@ -51,14 +52,15 @@ function get(key, store) {
    });
 }
 
-function getMany(keys, store) {
+function getMany(keys) {
    return Promise.all(keys.map(function (key) {
-      return get(key, store);
+      return get(key);
    }));
 }
 
-function set(key, value, store) {
-   return new Promise(function (r, e) {
+function set(key, value) {
+   return new Promise(async function (r, e) {
+      const store = await getStore();
       store.put(value, key);
       r();
       /*
@@ -73,8 +75,9 @@ function set(key, value, store) {
    });
 }
 
-function setMany(keyvals, store) {
-   return new Promise(function (r, e) {
+function setMany(keyvals) {
+   return new Promise(async function (r, e) {
+      const store = await getStore();
       keyvals.forEach(function (kv) {
          store.put(kv[1], kv[0]);
       });
@@ -88,8 +91,9 @@ function setMany(keyvals, store) {
    });
 }
 
-function del(key, store) {
-   return new Promise(function (r, e) {
+function del(key) {
+   return new Promise(async function (r, e) {
+      const store = await getStore();
       store.delete(key);
       multipleOnce(store.transaction, [{
          name: 'error',
@@ -101,8 +105,9 @@ function del(key, store) {
    });
 }
 
-function delMany(keys, store) {
-   return new Promise(function (r, e) {
+function delMany(keys) {
+   return new Promise(async function (r, e) {
+      const store = await getStore();
       keys.forEach(function (key) { store.delete(key); });
       multipleOnce(store.transaction, [{
          name: 'error',
@@ -114,8 +119,9 @@ function delMany(keys, store) {
    });
 }
 
-function clr(key, store) {
-   return new Promise(function (r, e) {
+function clr() {
+   return new Promise(async function (r, e) {
+      const store = await getStore();
       store.clear();
       multipleOnce(store.transaction, [{
          name: 'error',
@@ -130,6 +136,8 @@ function clr(key, store) {
 if (window.DEBUG) {
 console.log('[DEBUG mode] for db - faked');
 module.exports = require('../debug/faked-db');
+} else if (window.nativeIpc && window.nativeIpc.platform === 'electron') {
+module.exports = require('./db-electron');
 } else {
 module.exports = {
    env,
