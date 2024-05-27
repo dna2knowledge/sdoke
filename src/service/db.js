@@ -63,7 +63,7 @@ function set(key, value) {
       const store = await getStore();
       store.put(value, key);
       r();
-      /*
+      /* oncomplete, onabort
       multipleOnce(store.transaction, [{
          name: 'error',
          fn: function (evt) { e(evt); }
