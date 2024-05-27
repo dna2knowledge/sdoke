@@ -1,8 +1,17 @@
-// const i_lv = require('level');
+const i_db = require('./db');
 
 async function exec(cmd, data, platformInfo) {
-   console.log(cmd, data, platformInfo.appDir);
-   return 'hello world';
+   switch(cmd) {
+   case 'db': return i_db.exec(data, platformInfo); break;
+   default: throw 'not implemented yet';
+   }
 }
 
-module.exports = exec;
+async function finalize() {
+   await i_db.finalize();
+}
+
+module.exports = {
+   exec,
+   finalize,
+};

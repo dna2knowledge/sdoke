@@ -4,8 +4,10 @@ const env = {
 
 async function getStore(txMode, storeName) {}
 
-async function get(key) {
-   return env.exec('db', { act: 'get', k: key });
+function get(key) {
+   return new Promise(function (r, e) {
+      env.exec(r, e, 'db', { act: 'get', k: key });
+   });
 }
 
 function getMany(keys) {
@@ -14,8 +16,10 @@ function getMany(keys) {
    }));
 }
 
-async function set(key, value) {
-   return env.exec('db', { act: 'set', k: key, v: value });
+function set(key, value) {
+   return new Promise(function (r, e) {
+      env.exec(r, e, 'db', { act: 'set', k: key, v: value });
+   });
 }
 
 function setMany(keyvals) {
@@ -25,8 +29,10 @@ function setMany(keyvals) {
    }));
 }
 
-async function del(key) {
-   return env.exec('db', { act: 'del', k: key });
+function del(key) {
+   return new Promise(function (r, e) {
+      env.exec(r, e, 'db', { act: 'del', k: key });
+   });
 }
 
 function delMany(keys) {
@@ -35,8 +41,10 @@ function delMany(keys) {
    }));
 }
 
-async function clr() {
-   return env.exec('db', { act: 'clr' });
+function clr() {
+   return new Promise(function (r, e) {
+      env.exec(r, e, 'db', { act: 'clr' });
+   });
 }
 
 
