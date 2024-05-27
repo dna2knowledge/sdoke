@@ -5,6 +5,8 @@ const ViewListItem = require('./view-list-item');
 const stat = require('../ctrl/stat-view');
 
 const db = require('../service/db');
+const d2w = require('../analysis/transform-week');
+const d2m = require('../analysis/transform-month');
 
 function ViewOne() {
    const dom = o('div');
@@ -92,56 +94,11 @@ ViewOne.prototype = {
          break;
       }
       case 'w': {
-         this.calc.data = [];
-         let ts = new Date(stat.one.data[stat.one.data.length-1].T);
-         let last = {
-            T: new Date(
-               ts.getTime() - ts.getDay() * 24 * 3600 * 1000
-            ).getTime(),
-            O: undefined, C: undefined, H: undefined, L: undefined, V: 0, m: 0
-         };
-         this.calc.data.push(last);
-         for (let i = stat.one.data.length-1; i >= 0; i--) {
-            const one = stat.one.data[i];
-            if (one.T <= last.T) {
-               if (this.calc.data.length >= cap) break;
-               last = { T: last.T, O: undefined, C: undefined, H: undefined, L: undefined, V: 0, m: 0 };
-               this.calc.data.push(last);
-               while (one.T <= last.T) last.T -= 24 * 3600 * 1000 * 7;
-            }
-            last.O = one.O;
-            if (isNaN(last.C)) last.C = one.C;
-            if (isNaN(last.H) || last.H < one.H) last.H = one.H;
-            if (isNaN(last.L) || last.L > one.L) last.L = one.L;
-            last.V += one.V;
-            last.m += one.m;
-         }
-         this.calc.data.reverse();
+         this.calc.data = d2w(stat.one.data, cap);
          break;
       }
       case 'm': {
-         this.calc.data = [];
-         let tsm0 = new Date(stat.one.data[stat.one.data.length-1].T).getMonth();
-         let last = { T: undefined, O: undefined, C: undefined, H: undefined, L: undefined, V: 0, m: 0 };
-         this.calc.data.push(last);
-         for (let i = stat.one.data.length-1; i >= 0; i--) {
-            const one = stat.one.data[i];
-            const tsm = new Date(one.T).getMonth();
-            if (tsm !== tsm0) {
-               if (this.calc.data.length >= cap) break;
-               tsm0 = tsm;
-               last = { T: undefined, O: undefined, C: undefined, H: undefined, L: undefined, V: 0, m: 0 };
-               this.calc.data.push(last);
-            }
-            last.T = one.T;
-            last.O = one.O;
-            if (isNaN(last.C)) last.C = one.C;
-            if (isNaN(last.H) || last.H < one.H) last.H = one.H;
-            if (isNaN(last.L) || last.L > one.L) last.L = one.L;
-            last.V += one.V;
-            last.m += one.m;
-         }
-         this.calc.data.reverse();
+         this.calc.data = d2m(stat.one.data, cap);
          break;
       } }
 
