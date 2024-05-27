@@ -28,6 +28,11 @@ const {
     ipcMain,
     net
 } = require('electron');
+
+const instanceLock = app.requestSingleInstanceLock();
+if (!instanceLock) app.quit(); else {
+// if needed: app.on('second-instance', (event, commandLine, workingDirectory, additionalData) => { mainWindow.focus(); });
+
 // Electron settings from .json file.
 const cdvElectronSettings = require('./cdv-electron-settings.json');
 const reservedScheme = require('./cdv-reserved-scheme.json');
@@ -184,3 +189,5 @@ ipcMain.handle('native-service', async (_, cmd, data) => {
 
 // In this file you can include the rest of your app's specific main process
 // code. You can also put them in separate files and require them here.
+
+} // check instance lock
