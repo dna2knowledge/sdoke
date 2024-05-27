@@ -33,3 +33,10 @@ contextBridge.exposeInMainWorld('_cdvElectronIpc', {
     cordova.services &&
     cordova.services[serviceName]
 });
+
+contextBridge.exposeInMainWorld('nativeIpc', {
+   platform: 'electron',
+   exec: (r, e, cmd, data) => {
+      return ipcRenderer.invoke('native-service', cmd, data).then(r, e);
+   }
+});

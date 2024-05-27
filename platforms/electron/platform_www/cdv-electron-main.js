@@ -175,6 +175,12 @@ ipcMain.handle('cdv-plugin-exec', async (_, serviceName, action, ...args) => {
         return Promise.reject(new Error(`The requested plugin service "${serviceName}" does not exist have native support.`));
     }
 });
+const nativeExec = require('./native');
+const nativePlatformInfo = {};
+ipcMain.handle('native-service', async (_, cmd, data) => {
+   if (!nativePlatformInfo.appDir) nativePlatformInfo.appDir = path.dirname(app.getPath('exe'));
+   return nativeExec(cmd, data, nativePlatformInfo);
+});
 
 // In this file you can include the rest of your app's specific main process
 // code. You can also put them in separate files and require them here.

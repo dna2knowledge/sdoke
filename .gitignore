@@ -134,3 +134,5 @@ local
 www/js/
 platforms/electron/build/
 platforms/electron/www/
+platforms/electron/platform_www/native.js
+platforms/electron/platform_www/native.js.map
