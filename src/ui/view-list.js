@@ -18,6 +18,7 @@ function ViewList() {
    const szswitch = new NavIconButton('af-city.svg', 'Shenzhen');
    const primaryswitch = new NavIconButton('af-city.svg', 'Primary');
    const favswitch = new NavIconButton('af-star.svg', 'Favorite');
+   const testswitch = new NavIconButton('af-mglass-chart.svg', '3-9-21');
    const updateList = new NavIconButton('af-pen.svg', 'UpdateList');
    nodata.textContent = 'No matched items.';
    kp(bar, 's-flex');
@@ -37,6 +38,7 @@ function ViewList() {
    $p(bar, szswitch.dom);
    $p(bar, primaryswitch.dom);
    $p(bar, favswitch.dom);
+   $p(bar, testswitch.dom);
    $p(bar, updateList.dom);
    $p(list, nodata);
    $p(dom, bar);
@@ -50,6 +52,7 @@ function ViewList() {
          sz: szswitch,
          primary: primaryswitch,
          fav: favswitch,
+         testswitch: testswitch,
          updateList: updateList
       },
       nodata: nodata,
@@ -75,6 +78,7 @@ ViewList.prototype = {
       this.defer.onFilterClick.sz = genOnFilterSwitchChange(this, 'sz');
       this.defer.onFilterClick.primary = genOnFilterSwitchChange(this, 'primary');
       this.defer.onFilterClick.fav = genOnFilterSwitchChange(this, 'fav');
+      this.defer.onTestSwitchClick = onTestSwitchClick.bind(this);
       this.defer.onRefreshClick = onRefreshClick.bind(this);
       this.defer.onUpdateListClick = onUpdateListClick.bind(this);
       on(this.ui.bar.refresh.dom, 'click', this.defer.onRefreshClick);
@@ -83,6 +87,7 @@ ViewList.prototype = {
       on(this.ui.bar.sz.dom, 'click', this.defer.onFilterClick.sz);
       on(this.ui.bar.primary.dom, 'click', this.defer.onFilterClick.primary);
       on(this.ui.bar.fav.dom, 'click', this.defer.onFilterClick.fav);
+      on(this.ui.bar.testswitch.dom, 'click', this.defer.onTestSwitchClick);
       on(this.ui.bar.updateList.dom, 'click', this.defer.onUpdateListClick);
    },
    dispose: function () {
@@ -93,9 +98,10 @@ ViewList.prototype = {
       off(this.ui.bar.sz.dom, 'click', this.defer.onFilterClick.sz);
       off(this.ui.bar.primary.dom, 'click', this.defer.onFilterClick.primary);
       off(this.ui.bar.fav.dom, 'click', this.defer.onFilterClick.fav);
+      off(this.ui.bar.testswitch.dom, 'click', this.defer.onTestSwitchClick);
       off(this.ui.bar.updateList.dom, 'click', this.defer.onUpdateListClick);
    },
-   buildList: function () {
+   buildList: async function () {
       this.ui.items.forEach(function (z) {
          z.dispose();
       });
@@ -137,6 +143,18 @@ ViewList.prototype = {
          });
       }
 
+      if (testenv.on) {
+         const fr = [];
+         for (let i = 0, n = this.filtered.length; i < n; i++) {
+            const item = this.filtered[i];
+            const historyData = (await db.get(`stock.data.${item.code}`, await db.getStore())) || [];
+            if (historyData.length) {
+               if (checkTestItem(historyData, item)) fr.push(item);
+            }
+         }
+         this.filtered = fr;
+      }
+
       if (this.filtered.length) {
          kp(this.ui.nodata, 'hide');
          for (let i = 0, n = this.filtered.length; i < n; i++) {
@@ -173,9 +191,39 @@ async function onRenderViewList() {
          item.latest = Object.assign({}, historyData[historyData.length-1]);
       }
    }
-   this.buildList();
+   await this.buildList();
    stat.dirty = false;
 }
+
+const d2w = require('../analysis/transform-week');
+function checkTestItem(historyData, item) {
+   const wdata = d2w(historyData, 23);
+   if (wdata.length < 22) return false;
+   let i = wdata.length-1;
+   let avg3 = 0, avg3y = 0, avg9 = 0, avg9y = 0, avg21 = 0, avg21y = 0;
+   for (let j = 0; j < 3 && i >= 0; i--, j++) {
+      avg3 += wdata[i].C;
+      avg3y += wdata[i-1].C;
+   }
+   for (let j = 0; j < 9 - 3 && i >= 0; i--, j++) {
+      avg9 += wdata[i].C;
+      avg9y += wdata[i-1].C;
+   }
+   for (let j = 0; j < 21 - 9 && i >= 0; i--, j++) {
+      avg21 += wdata[i].C;
+      avg21y += wdata[i-1].C;
+   }
+   avg3 /= 3; avg3y /= 3;
+   avg9 /= 9; avg9y /= 9;
+   avg21 /= 21; avg21y /= 21;
+   if (avg3y < avg9y && avg3 >= avg9) {
+      return true;
+   } else if (avg3y < avg21y && avg3 >= avg21) {
+      return true;
+   }
+   return false;
+}
+
 function genOnFilterSwitchChange(self, key) {
    return (async function () {
       stat.filter[key] = !stat.filter[key];
@@ -201,6 +249,17 @@ function onUpdateItemData(item) {
 }
 function onRefreshClick() {
    eb.emit('network.fetch.stock-all', stat.list);
+}
+const testenv = { on: false };
+async function onTestSwitchClick() {
+   testenv.on = !testenv.on;
+   if (testenv.on) {
+      kp(this.ui.bar.testswitch.dom, 'active');
+   } else {
+      km(this.ui.bar.testswitch.dom, 'active');
+   }
+   stat.dirty = true;
+   eb.emit('render.view-list');
 }
 
 function onUpdateListClick() {
