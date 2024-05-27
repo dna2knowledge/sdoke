@@ -3,7 +3,7 @@
         "autoHideMenuBar": true,
         "height": 600,
         "webPreferences":{
-            "devTools": true,
+            "devTools": false,
             "nodeIntegration": false
         },
         "width": 800
