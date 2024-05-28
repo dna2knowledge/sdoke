@@ -92,6 +92,7 @@ ViewList.prototype = {
    },
    dispose: function () {
       eb.off('render.view-list', this.defer.onRenderViewList);
+      eb.off('update.stock-item', this.defer.onUpdateItemData);
       off(this.ui.bar.refresh.dom, 'click', this.defer.onRefreshClick);
       off(this.ui.bar.bj.dom, 'click', this.defer.onFilterClick.bj);
       off(this.ui.bar.sh.dom, 'click', this.defer.onFilterClick.sh);
