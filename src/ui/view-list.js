@@ -234,7 +234,7 @@ function genOnFilterSwitchChange(self, key) {
       const config = (await db.get('stock.view.config')) || {};
       if (!config.filter) config.filter = {};
       config.filter = Object.assign(config.filter, stat.filter);
-      await db.set('stock.view.config');
+      await db.set('stock.view.config', config);
       eb.emit('render.view-list');
    }).bind(self);
 }
