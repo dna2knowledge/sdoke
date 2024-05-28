@@ -97,6 +97,15 @@ div.hide { display: none; }
    opacity: 0.8;
 }
 .s-list-item-overview-data { user-select: text; }
+.s-remove {
+   width: 12px;
+   height: 12px;
+   margin-right: 5px;
+   border: none;
+   margin-top: 2px;
+   background-repeat: no-repeat;
+   background-image: url("../img/af-circle-minus.svg");
+}
 .s-fav {
    width: 12px;
    height: 12px;

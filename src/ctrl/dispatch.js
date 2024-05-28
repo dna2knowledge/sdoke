@@ -2,6 +2,7 @@ const eb = require('./eventbus');
 const { kp, km, on, off } = require('../ui/dom');
 const sharedStat = require('./stat-shared');
 const viewStat = require('./stat-view');
+const indexStat = require('./stat-index');
 
 const db = require('../service/db');
 const stocknet = require('../service/stock-network-data');
@@ -120,6 +121,7 @@ function init(ui) {
       // by default, go to view tab
       eb.emit('switch-tab', 'view');
       eb.emit('render.view-list', viewStat.list);
+      eb.emit('render.index-list', indexStat.list);
    });
 }
 
