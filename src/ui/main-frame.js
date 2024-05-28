@@ -11,6 +11,7 @@ const NavIconButton = require('./nav-icon-button');
 const TabView = require('./tab-view');
 const TabIndex = require('./tab-index');
 const TabSearch = require('./tab-search');
+const TabCalendar = require('./tab-calendar');
 const TabSettings = require('./tab-settings');
 
 function App() {
@@ -26,20 +27,24 @@ function App() {
       new NavIconButton('af-chart.svg', 'View'),
       new NavIconButton('af-tags.svg', 'Index'),
       new NavIconButton('af-dollar-search.svg', 'Search'),
+      new NavIconButton('af-calendar-check.svg', 'Calendar'),
       new NavIconButton('af-gear.svg', 'Settings'),
    ];
    navButtons[0].tab = 'view';
    navButtons[1].tab = 'index';
    navButtons[2].tab = 'search';
-   navButtons[3].tab = 'settings';
+   navButtons[3].tab = 'calendar';
+   navButtons[4].tab = 'settings';
    const tabView = new TabView();
    const tabIndex = new TabIndex();
    const tabSearch = new TabSearch();
+   const tabCalendar = new TabCalendar();
    const tabSettings = new TabSettings();
    navButtons[0].tabU = tabView;
    navButtons[1].tabU = tabIndex;
    navButtons[2].tabU = tabSearch;
-   navButtons[3].tabU = tabSettings;
+   navButtons[3].tabU = tabCalendar;
+   navButtons[4].tabU = tabSettings;
    navButtons.forEach(function (z) {
       $p(navbar, z.dom);
       kp(z.tabU.dom, 'hide');
@@ -139,7 +144,8 @@ function onSwitchTab(tab) {
    case 'view': navButton = this.ui.navButtons[0]; break;
    case 'index': navButton = this.ui.navButtons[1]; break;
    case 'search': navButton = this.ui.navButtons[2]; break;
-   case 'settings': navButton = this.ui.navButtons[3]; break;
+   case 'calendar': navButton = this.ui.navButtons[3]; break;
+   case 'settings': navButton = this.ui.navButtons[4]; break;
    default: tab = 'view'; navButton = this.ui.navButtons[0];
    }
    kp(navButton.dom, 'active');
