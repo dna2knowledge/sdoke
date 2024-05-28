@@ -32,13 +32,7 @@ function onDeviceReady() {
 (function () {
    // window.DEBUG = true;
    const dom = require('./ui/dom');
-   const dp = require('./ctrl/dispatch');
    const App = require('./ui/main-frame');
-   const NavIconButton = require('./ui/nav-icon-button');
-   const TabView = require('./ui/tab-view');
-   const TabIndex = require('./ui/tab-index');
-   const TabSearch = require('./ui/tab-search');
-   const TabSettings = require('./ui/tab-settings');
 
    function sdokeStart() {
       while (document.body.children.length) {
@@ -47,36 +41,6 @@ function onDeviceReady() {
          dom.$m(document.body, c);
       }
       const app = new App();
-      dom.$p(document.body, app.dom);
-      const navButtons = [
-         new NavIconButton('af-chart.svg', 'View'),
-         new NavIconButton('af-tags.svg', 'Index'),
-         new NavIconButton('af-dollar-search.svg', 'Search'),
-         new NavIconButton('af-gear.svg', 'Settings'),
-      ];
-      navButtons[0].tab = 'view';
-      navButtons[1].tab = 'index';
-      navButtons[2].tab = 'search';
-      navButtons[3].tab = 'settings';
-      const tabView = new TabView();
-      const tabIndex = new TabIndex();
-      const tabSearch = new TabSearch();
-      const tabSettings = new TabSettings();
-      navButtons[0].tabU = tabView;
-      navButtons[1].tabU = tabIndex;
-      navButtons[2].tabU = tabSearch;
-      navButtons[3].tabU = tabSettings;
-      navButtons.forEach(function (z) {
-         dom.$p(app.ui.nav, z.dom);
-         dom.kp(z.tabU.dom, 'hide');
-         dom.$p(app.ui.view, z.tabU.dom);
-      });
-
-      const ui = {
-         app,
-         navButtons,
-      };
-      dp.init(ui);
    }
 
    window.sdokeStart = sdokeStart;
