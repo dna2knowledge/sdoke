@@ -44,7 +44,7 @@ function ViewOne() {
    this.defer = {};
    this.calc = {};
    this.config = {};
-   const theme = getComputedStyle(dom);
+   const theme = {} //getComputedStyle(document.body);
    this.theme = {
       background: theme.backgroundColor || 'white',
       color: theme.color || 'black'
