@@ -17,6 +17,7 @@ export default defineConfig({
     },
   },
   build: {
+    minify: true,
     outDir: path.join('..', 'www'),
   },
 })
