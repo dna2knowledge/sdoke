@@ -7,12 +7,15 @@ import {
   Route,
 } from "react-router-dom";
 
+import initCordova from '$/service/cordova';
+
 import Layout from '$/Layout.jsx';
 import PlaceHolder from '$/page/PlaceHolder.jsx';
 import Loading from '$/component/shared/Loading.jsx';
 import Toast from '$/component/shared/Toast.jsx';
 import '$/index.css';
 
+initCordova();
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
      <HashRouter><Routes>
@@ -25,4 +28,4 @@ ReactDOM.createRoot(document.getElementById('root')).render(
      <Toast />
      <Loading />
   </React.StrictMode>,
-)
+);
