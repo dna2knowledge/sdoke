@@ -9,11 +9,11 @@ import {
 
 import initCordova from '$/service/cordova';
 
-import Layout from '$/Layout.jsx';
-import PlaceHolder from '$/page/PlaceHolder.jsx';
+import Layout from '$/layout.jsx';
+import PlaceHolder from '$/page/placeholder.jsx';
 import Stock from '$/page/stock.jsx';
-import Loading from '$/component/shared/Loading.jsx';
-import Toast from '$/component/shared/Toast.jsx';
+import Loading from '$/component/shared/loading.jsx';
+import Toast from '$/component/shared/toast.jsx';
 import '$/index.css';
 
 initCordova();
