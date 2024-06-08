@@ -1,12 +1,5 @@
 import { wait } from '$/util/wait';
 
-const stat = {
-   progress: {
-      list: {
-      },
-   },
-};
-
 const vk0 = 'trend_qfq';
 const vk1 = 'kline_dayqfq';
 async function getHistoryFromTencent(code, startDate) {
@@ -14,7 +7,7 @@ async function getHistoryFromTencent(code, startDate) {
       const env = {};
       env.end = new Date();
       if (startDate) {
-         env.start = startDate;
+         env.start = new Date(startDate);
       } else {
          const h0 = await getFullHistory(code);
          if (!h0) throw `${code}: data broken`;
