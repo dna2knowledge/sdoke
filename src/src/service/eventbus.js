@@ -18,7 +18,7 @@ UixComponentRegistry.prototype = {
       return new Promise(r => {
          waitFor(that, name, r);
          function waitFor(obj, name, r) {
-            if (obj[name]) return r();
+            if (obj.comp[name]) return r();
             setTimeout(waitFor, 0, obj, name, r);
          }
       });

@@ -7,6 +7,8 @@ import EditIcon from '@mui/icons-material/Edit';
 import { Box, IconButton } from '@mui/material';
 import { Autocomplete, TextField, ButtonGroup, Button } from '@mui/material';
 import NoData from '$/component/shared/no-data';
+import StockOne from '$/component/stock/stock-one';
+import StockOneStrategy from '$/component/stock/stock-one-strategy';
 import eventbus from '$/service/eventbus';
 import databox from '$/service/databox';
 import { triggerFileSelect } from '$/util/file-reader';
@@ -104,6 +106,8 @@ export default function StockPanel() {
             {pinnedStocks.map((meta, i) => <StockButton key={i} data={meta} isStarred={true} />)}
          </Box>
          {pinnedStocks.length ? null : <NoData>No Data; type something for search</NoData>}
+         <StockOne />
+         <StockOneStrategy />
       </Box>
    </Box>;
 }

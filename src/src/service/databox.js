@@ -16,6 +16,7 @@ const stockApi = {
         const key = `stock.one.${code}.history`;
         if (stat.progress[key]) return await stat.progress[key].promise;
         stat.progress[key] = makePromise();
+        let newh;
         try {
             const history = (await db.get(key)) || [];
             let startDate = null;
@@ -23,14 +24,14 @@ const stockApi = {
                 const last = history[history.length-1];
                 startDate = last.T;
             }
-            const h = stockNet.tencent.getHistory(code, startDate);
+            const h = await stockNet.tencent.getHistory(code, startDate);
             h.forEach((z) => z && history.push(z));
             history.sort((a, b) => a.T - b.T);
             let dupT;
-            const newh = history.reduce((a, z) => {
+            newh = history.reduce((a, z) => {
                 if (!z || !z.T || z.T === dupT) return a;
                 dupT = z.T;
-                newh.push(z);
+                a.push(z);
                 return a;
             }, []);
             await db.set(key, newh);
