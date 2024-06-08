@@ -11,6 +11,7 @@ import initCordova from '$/service/cordova';
 
 import Layout from '$/Layout.jsx';
 import PlaceHolder from '$/page/PlaceHolder.jsx';
+import Stock from '$/page/stock.jsx';
 import Loading from '$/component/shared/Loading.jsx';
 import Toast from '$/component/shared/Toast.jsx';
 import '$/index.css';
@@ -20,7 +21,7 @@ ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
      <HashRouter><Routes>
         <Route path="/" element={<Layout />}>
-           <Route index element={<PlaceHolder name="Sdoke" />} />
+           <Route index element={<Stock name="Sdoke" />} />
            <Route path="about" element={<PlaceHolder name="About" />} />
         </Route>
         <Route path="/login" element={<PlaceHolder name="login" />} />
