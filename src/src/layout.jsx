@@ -4,7 +4,8 @@ import { Box, IconButton, Link, Menu, MenuItem } from '@mui/material';
 import MenuIcon from '@mui/icons-material/Menu';
 
 const titleMap = {
-   '/': 'Sdoke',
+   '/': 'Sdoke - Stock Panel',
+   '/index': 'Sdoke - Stock Index',
    '/about': 'About',
 };
 
