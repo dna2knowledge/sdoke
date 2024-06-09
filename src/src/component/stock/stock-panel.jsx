@@ -116,8 +116,7 @@ export default function StockPanel() {
                   />
                }
                noOptionsText={<Box>
-                  No Options
-                  <Button sx={{ marginLeft: '5px' }} variant="contained" startIcon={<EditIcon />} onClick={onUpdateStockList}>
+                  No available stocks. <Button sx={{ marginLeft: '5px' }} variant="contained" startIcon={<EditIcon />} onClick={onUpdateStockList}>
                      Update Stock List
                   </Button>
                </Box>}
@@ -127,7 +126,7 @@ export default function StockPanel() {
          <Box sx={{ maxHeight: '100px', overflowY: 'auto' }}>
             {pinnedStocks.map((meta, i) => <StockButton key={i} data={meta} isStarred={true} />)}
          </Box>
-         {selected ? null : <NoData>No Data; type something for search</NoData>}
+         {selected ? null : <NoData>No Data; please search and select one stock</NoData>}
          <StockOne />
          <StockOneStrategy />
       </Box>

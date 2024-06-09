@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { Box, IconButton, Select, MenuItem } from '@mui/material';
 import UpdateIcon from '@mui/icons-material/Update';
+import SwitchAccessShortcutIcon from '@mui/icons-material/SwitchAccessShortcut';
 import NoData from '$/component/shared/no-data';
 import eventbus from '$/service/eventbus';
 import databox from '$/service/databox';
@@ -124,6 +125,7 @@ export default function StockOneStrategy() {
             value={strategy} onChange={onSwitchStrategyClick}>
             <MenuItem value={'strategy.rsibase'}>Strategy (RSI)</MenuItem>
          </Select></span>
+         <IconButton type="button" sx={{ p: '10px' }}><SwitchAccessShortcutIcon/></IconButton>
       </Box>
       <Box>
          <span className={`mode_${data.signal.mode || 'unknown'}`}> {data.signal.mode}</span>

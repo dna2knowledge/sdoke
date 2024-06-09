@@ -5,7 +5,7 @@ import MenuIcon from '@mui/icons-material/Menu';
 
 const titleMap = {
    '/': 'Sdoke - Stock Panel',
-   '/index': 'Sdoke - Stock Index',
+   '/strategy': 'Sdoke - Stock Strategy',
    '/about': 'About',
 };
 
@@ -27,8 +27,8 @@ export default function Layout() {
       <Box>
          <IconButton onClick={onMenuOpen}><MenuIcon /></IconButton> {title}
          <Menu anchorEl={anchorEl} open={open} onClose={onMenuClose}>
-            <Link onClick={onMenuClose} href="#/" underline="none"><MenuItem>Stock Panel</MenuItem></Link>
-            <Link onClick={onMenuClose} href="#/index" underline="none"><MenuItem>Index Panel</MenuItem></Link>
+            <Link onClick={onMenuClose} href="#/" underline="none"><MenuItem>Stock Viewer</MenuItem></Link>
+            <Link onClick={onMenuClose} href="#/strategy" underline="none"><MenuItem>Stock Strategy</MenuItem></Link>
             <Link onClick={onMenuClose} href="#/about" underline="none"><MenuItem>About</MenuItem></Link>
          </Menu>
       </Box>
