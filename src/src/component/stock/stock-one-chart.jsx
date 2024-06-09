@@ -142,7 +142,7 @@ export default function StockOneChart() {
       if (dataRef.current.i === i) return;
       dataRef.current.i = i;
       const one = dataRef.current.data?.raw?.[i];
-      tooltipRef.current.textContent = '';
+      tooltipRef.current.innerHTML = '&nbsp;';
       if (one) {
          tooltipRef.current.appendChild(document.createTextNode(
             `${new Date(one.T).toISOString().split('T')[0]} `
@@ -182,6 +182,6 @@ export default function StockOneChart() {
 
    return <Box>
       <canvas ref={canvasRef}>(Not support &lt;canvas&gt;)</canvas>
-      <Box sx={{ textAlign: 'right' }} ref={tooltipRef}></Box>
+      <Box sx={{ textAlign: 'right' }} ref={tooltipRef}>&nbsp;</Box>
    </Box>;
 }
