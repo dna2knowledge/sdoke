@@ -26,7 +26,8 @@ export default function Layout() {
       <Box>
          <IconButton onClick={onMenuOpen}><MenuIcon /></IconButton> {title}
          <Menu anchorEl={anchorEl} open={open} onClose={onMenuClose}>
-            <Link onClick={onMenuClose} href="#/" underline="none"><MenuItem>Sdoke</MenuItem></Link>
+            <Link onClick={onMenuClose} href="#/" underline="none"><MenuItem>Stock Panel</MenuItem></Link>
+            <Link onClick={onMenuClose} href="#/index" underline="none"><MenuItem>Index Panel</MenuItem></Link>
             <Link onClick={onMenuClose} href="#/about" underline="none"><MenuItem>About</MenuItem></Link>
          </Menu>
       </Box>

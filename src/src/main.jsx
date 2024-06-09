@@ -22,6 +22,7 @@ ReactDOM.createRoot(document.getElementById('root')).render(
      <HashRouter><Routes>
         <Route path="/" element={<Layout />}>
            <Route index element={<Stock name="Sdoke" />} />
+           <Route path="index" element={<PlaceHolder name="Stock Index" />} />
            <Route path="about" element={<PlaceHolder name="About" />} />
         </Route>
         <Route path="/login" element={<PlaceHolder name="login" />} />
