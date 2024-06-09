@@ -13,8 +13,12 @@ import eventbus from '$/service/eventbus';
 import databox from '$/service/databox';
 import { triggerFileSelect } from '$/util/file-reader';
 
+const sp = {
+   autocompleteN: 10,
+};
 export default function StockPanel() {
    const [data, setData] = useState(null);
+   const [query, setQuery] = useState('');
    const statRef = useRef({});
    statRef.current.pinnedStocks = statRef.current.pinnedStocks || [];
    const [pinnedStocks, setPinnedStocks] = useState([]);
@@ -22,7 +26,8 @@ export default function StockPanel() {
    useEffect(() => {
       databox.stock.getStockList().then(rawList => {
          if (!rawList) return;
-         setData(rawList);
+         statRef.current.stockList = rawList || [];
+         setData(statRef.current.stockList.slice(0, sp.autocompleteN));
       });
       databox.stock.getPinnedStockList().then(rawList => {
          if (!rawList) return;
@@ -76,8 +81,21 @@ export default function StockPanel() {
          return a;
       }, []);
       await databox.stock.setStockList(list);
-      setData(list);
+      setData(list.slice(0, sp.autocompleteN));
    });
+   const onSearch = (evt) => {
+      const val = evt.target.value;
+      const list = statRef.current.stockList || [];
+      setQuery(val);
+      if (val) {
+         const filtered = list.filter(z => {
+            return z && ( z.code.indexOf(val) >= 0 || z.name.indexOf(val) >= 0);
+         }).slice(0, 20);
+         setData(filtered);
+      } else {
+         setData(list.slice(0, sp.autocompleteN));
+      }
+   };
 
    return <Box sx={{ height: '100%' }}>
       <Box sx={{ width: '100%', height: '100%', maxWidth: '800px', minWidth: '200px', margin: '0 auto', display: 'flex', flexDirection: 'column' }}>
@@ -92,12 +110,14 @@ export default function StockPanel() {
                }}
                renderInput={params =>
                   <TextField sx={{ width: '100%', borderBottom: '1px solid #ccc' }} placeholder="Stock Code / Name"
-                     {...params}
+                     {...params} value={query} onChange={onSearch}
                   />
                }
                noOptionsText={<Box>
                   No Options
-                  <Button sx={{ marginLeft: '5px' }} variant="contained" startIcon={<EditIcon />} onClick={onUpdateStockList}>Update Stock List</Button>
+                  <Button sx={{ marginLeft: '5px' }} variant="contained" startIcon={<EditIcon />} onClick={onUpdateStockList}>
+                     Update Stock List
+                  </Button>
                </Box>}
             />
             <IconButton type="button" sx={{ p: '10px' }}><SearchIcon /></IconButton>
