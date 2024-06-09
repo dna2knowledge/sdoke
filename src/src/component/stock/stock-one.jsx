@@ -46,9 +46,7 @@ export default function StockOne() {
       };
       function handleStockOne(one) {
          setMeta(one);
-         (async () => {
-            if (one) await updateData(one);
-         })();
+         if (one) updateData(one);
       }
    }, []);
 

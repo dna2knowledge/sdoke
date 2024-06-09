@@ -19,6 +19,7 @@ const sp = {
 export default function StockPanel() {
    const [data, setData] = useState(null);
    const [query, setQuery] = useState('');
+   const [selected, setSelected] = useState(null);
    const statRef = useRef({});
    statRef.current.pinnedStocks = statRef.current.pinnedStocks || [];
    const [pinnedStocks, setPinnedStocks] = useState([]);
@@ -63,6 +64,7 @@ export default function StockPanel() {
          databox.stock.setPinnedStockList(statRef.current.pinnedStocks);
       }
       function onStockPinnedClick(data) {
+         setSelected(data && data.code);
          eventbus.emit('stock.one', data);
          eventbus.emit('stock.strategy.one', { meta: data });
       }
@@ -125,7 +127,7 @@ export default function StockPanel() {
          <Box sx={{ maxHeight: '100px', overflowY: 'auto' }}>
             {pinnedStocks.map((meta, i) => <StockButton key={i} data={meta} isStarred={true} />)}
          </Box>
-         {pinnedStocks.length ? null : <NoData>No Data; type something for search</NoData>}
+         {selected ? null : <NoData>No Data; type something for search</NoData>}
          <StockOne />
          <StockOneStrategy />
       </Box>

@@ -95,9 +95,7 @@ export default function StockOneStrategy() {
          data.strategy = data.strategy || local.data.view.selectedStrategy || strategy || 'strategy.rsibase';
          local.data.view.selectedStrategy = data.strategy;
          setStrategy(data.strategy);
-         (async () => {
-            if (data.meta) await updateData(data.meta, data.strategy);
-         })();
+         if (data.meta) updateData(data.meta, data.strategy);
       }
    }, []);
 
