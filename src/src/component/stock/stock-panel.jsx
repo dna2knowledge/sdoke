@@ -11,7 +11,7 @@ import StockOne from '$/component/stock/stock-one';
 import StockOneStrategy from '$/component/stock/stock-one-strategy';
 import eventbus from '$/service/eventbus';
 import databox from '$/service/databox';
-import { triggerFileSelect } from '$/util/file-reader';
+import { triggerFileSelect, readText } from '$/util/file-reader';
 
 const sp = {
    autocompleteN: 10,
@@ -72,7 +72,9 @@ export default function StockPanel() {
 
    const onUpdateClick = async () => {};
    const onInsightClick = () => {};
-   const onUpdateStockList = () => triggerFileSelect().then(async (raw) => {
+   const onUpdateStockList = () => triggerFileSelect().then(async (files) => {
+      if (!files || !files.length) return; // user cancel
+      const raw = await readText(files[0]);
       if (!raw) return eventbus.emit('toast', { severity: 'error', content: 'Cannot load stock list' });
       const list = raw.split('\n').reduce((a, z) => {
          if (!z) return a;

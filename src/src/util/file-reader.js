@@ -7,8 +7,7 @@ export function triggerFileSelect() {
       input.style.visibility = 'hidden';
       multipleOnce(input, [{
          name: 'change', fn: async function (evt) {
-            const file = evt.target.files[0];
-            readText(file).then(r);
+            r(evt.target.files);
          }
       }, {
          name: 'cancel', fn: function (evt) {
