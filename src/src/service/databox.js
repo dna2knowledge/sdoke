@@ -1,6 +1,7 @@
 import db from '$/service/db';
 import stockNet from '$/service/stock-network-data';
 import makePromise from '$/util/make-promise';
+import { getDateTodayTs } from '$/util/date';
 
 const stat = {
     progress: {},
@@ -46,7 +47,16 @@ const stockApi = {
     getStockHistory: async (code) => {
         const key = `stock.one.${code}.history`;
         const history = await db.get(key);
-        if (!history) return await stockApi.updateStockHistory(code);
+
+        // if history is empty
+        if (!history || !history.length) return await stockApi.updateStockHistory(code);
+
+        // if history is behind the date
+        const last = history[history.length-1];
+        const ts = new Date(getDateTodayTs());
+        const wd = ts.getDate();
+        if (wd !== 0 && wd !== 6 && wd > last.T) return await stockApi.updateStockHistory(code);
+
         return history;
     },
 };
