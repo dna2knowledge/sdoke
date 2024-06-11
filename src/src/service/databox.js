@@ -59,6 +59,8 @@ const stockApi = {
 
         return history;
     },
+    getStockStrategyList: () => db.get("stock.strategy.list"),
+    setStockStrategyList: (list) => db.set("stock.strategy.list", list),
 };
 
 const api = {

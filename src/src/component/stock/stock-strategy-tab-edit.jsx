@@ -1,67 +1,225 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Box, TextField, Grid, Button, IconButton } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
+import CloseIcon from '@mui/icons-material/Close';
+import eventbus from '$/service/eventbus';
+
+function GridTextEditor(props) {
+   const {i, t, k, v, kl, vl, kn, vn, data} = props;
+   const [key, setKey] = useState(data[k] || '');
+   const [val, setVal] = useState(data[v] || '');
+
+   const onRemoveClick = () => {
+      eventbus.emit(`stock.strategy.edit.${t}.remove`, { i });
+   };
+
+   return <Box sx={{ display: 'flex' }}>
+      <IconButton sx={{ width: '40px', height: '40px', marginTop: '12px' }} onClick={onRemoveClick}><CloseIcon /></IconButton>
+      <Grid sx={{ flex: '1 0 auto', width: '0px' }} container spacing={2}>
+      <Grid item xs={kn}><TextField fullWidth label={kl} variant="standard" value={key} onChange={(evt) => {
+         const x = evt.target.value;
+         data[k] = x;
+         setKey(x);
+      }} /></Grid>
+      <Grid item xs={vn}><TextField fullWidth label={vl} variant="standard" value={val} onChange={(evt) => {
+         const x = evt.target.value;
+         data[v] = x;
+         setVal(x);
+      }} /></Grid>
+      </Grid>
+   </Box>;
+}
 
 function StrategyVariable(props) {
    const { data } = props;
-   const [variables, setVariables] = useState(data || []);
+   const [variables, setVariables] = useState(data?.var || []);
+   if (data?.var && data.var !== variables) setVariables(data.var);
+
+   useEffect(() => {
+      eventbus.on('stock.strategy.edit.var.remove', onEditRemove);
+      return () => {
+         eventbus.off('stock.strategy.edit.var.remove', onEditRemove);
+      };
+
+      function onEditRemove(data) {
+         if (!data) return;
+         variables.splice(data.i, 1);
+         const newlist = [...variables];
+         setVariables(newlist);
+         eventbus.emit('stock.strategy.edit.update', { T: 'var', V: newlist });
+      }
+   }, [data]);
+
+   const onAddClick = () => {
+      const newlist = [...variables, { N: '', F: '' }];
+      setVariables(newlist);
+      eventbus.emit('stock.strategy.edit.update', { T: 'var', V: newlist });
+   };
+
    return <Box sx={{ mt: 1, mb: 1 }}>
       Variables
       <Box sx={{ color: '#999', fontSize: '10px' }}>Define variables for using in score rules</Box>
-      {variables.map(z => <Grid container spacing={2}>
-         <Grid item xs={4}><TextField fullWidth label="Name" variant="standard" /></Grid>
-         <Grid item xs={8}><TextField fullWidth label="Formula" variant="standard" /></Grid>
-      </Grid>)}
-      <Box><IconButton><AddIcon /></IconButton></Box>
+      {variables.map((z, i) => <GridTextEditor key={i} i={i} t="var" kl="Name" vl="Formula" kn={4} vn={8} k="N" v="F" data={z} />)}
+      <Box><IconButton onClick={onAddClick}><AddIcon /></IconButton></Box>
    </Box>;
 }
 
 function StrategyScoreRule(props) {
    const { data } = props;
-   const [rules, setRules] = useState(data || []);
+   const [rules, setRules] = useState(data?.rule || []);
+   if (data?.rule && data.rule !== rules) setRules(data.rule);
+
+   useEffect(() => {
+      eventbus.on('stock.strategy.edit.rule.remove', onEditRemove);
+      return () => {
+         eventbus.off('stock.strategy.edit.rule.remove', onEditRemove);
+      };
+
+      function onEditRemove(evt) {
+         if (!data) return;
+         rules.splice(evt.i, 1);
+         const newlist = [...rules];
+         setRules(newlist);
+         eventbus.emit('stock.strategy.edit.update', { T: 'rule', V: newlist });
+      }
+   }, [data]);
+
+   const onAddClick = () => {
+      const newlist = [...rules, { C: '', F: '' }];
+      setRules(newlist);
+      eventbus.emit('stock.strategy.edit.update', { T: 'rule', V: newlist });
+   };
+
    return <Box sx={{ mt: 1, mb: 1 }}>
       Score Rules
       <Box sx={{ color: '#999', fontSize: '10px' }}>Define rules for buy/sell scoring; 1 is the strongest buying signal, meanwhile -1 is the strongest selling signal</Box>
-      {rules.map(z => <Grid container spacing={2}>
-         <Grid item xs={6}><TextField fullWidth label="Condition" variant="standard" /></Grid>
-         <Grid item xs={6}><TextField fullWidth label="Score Formula" variant="standard" /></Grid>
-      </Grid>)}
-      <Box><IconButton><AddIcon /></IconButton></Box>
+      {rules.map((z, i) => <GridTextEditor key={i} i={i} t="rule" kl="Condition" vl="Score Formula" kn={6} vn={6} k="C" v="F" data={z} />)}
+      <Box><IconButton onClick={onAddClick}><AddIcon /></IconButton></Box>
    </Box>;
 }
 
 function StrategyVisualization(props) {
    const { data } = props;
-   const [visualizations, setVisualizations] = useState(data || []);
+   const [visualizations, setVisualizations] = useState(data?.vis || []);
+   if (data?.vis && data.vis !== visualizations) setVisualizations(data.vis);
+
+   useEffect(() => {
+      eventbus.on('stock.strategy.edit.vis.remove', onEditRemove);
+      return () => {
+         eventbus.off('stock.strategy.edit.vis.remove', onEditRemove);
+      };
+
+      function onEditRemove(data) {
+         if (!data) return;
+         visualizations.splice(data.i, 1);
+         const newlist = [...visualizations];
+         setVisualizations(newlist);
+         eventbus.emit('stock.strategy.edit.update', { T: 'vis', V: newlist });
+      }
+   }, [data]);
+
+   const onAddClick = () => {
+      const newlist = [...visualizations, { G: '', V: '' }];
+      setVisualizations(newlist);
+      eventbus.emit('stock.strategy.edit.update', { T: 'vis', V: newlist });
+   };
+
    return <Box sx={{ mt: 1, mb: 1 }}>
       Visualization
       <Box sx={{ color: '#999', fontSize: '10px' }}>Define groups for visualization</Box>
-      {visualizations.map(z => <Grid container spacing={2}>
-         <Grid item xs={4}><TextField fullWidth label="Name" variant="standard" /></Grid>
-         <Grid item xs={8}><TextField fullWidth label="Formula" variant="standard" /></Grid>
-      </Grid>)}
-      <Box><IconButton><AddIcon /></IconButton></Box>
+      {visualizations.map((z, i) => <GridTextEditor key={i} t="vis" i={i} kl="Group" vl="Variables" kn={4} vn={8} k="G" v="V" data={z} />)}
+      <Box><IconButton onClick={onAddClick}><AddIcon /></IconButton></Box>
    </Box>;
 }
 
 export default function StockStrategyEditTab (props) {
-   const { tab, data } = props;
+   const { tab } = props;
+   const [data, setData] = useState({...props.data});
    const [name, setName] = useState(data?.name || '');
    const [desc, setDesc] = useState(data?.desc || '');
 
+   useEffect(() => {
+      eventbus.on('stock.strategy.edit.open', onEditOpen);
+      eventbus.on('stock.strategy.edit.update', onEditUpdate);
+      return () => {
+         eventbus.off('stock.strategy.edit.open', onEditOpen);
+         eventbus.off('stock.strategy.edit.update', onEditUpdate);
+      };
+
+      function onEditOpen(item) {
+         if (!item) return;
+         setName(item?.name || '');
+         setDesc(item?.desc || '');
+         setData({...item});
+      }
+      function onEditUpdate(newdata) {
+         if (!newdata || !data) return;
+         if (newdata.V && newdata.X) {
+            newdata.V = newdata.V.filter((_, i) => i === newdata.X);
+         }
+         switch (newdata.T) {
+            case 'var': data.var = newdata.V; break;
+            case 'rule': data.rule = newdata.V; break;
+            case 'vis': data.vis = newdata.V; break;
+         }
+         setData({...data});
+      }
+   }, [data]);
+
+   const onNameChange = (evt) => {
+      if (!data) return;
+      data.name = evt.target.value;
+      setName(evt.target.value);
+   };
+   const onDescChange = (evt) => {
+      if (!data) return;
+      data.desc = evt.target.value;
+      setDesc(evt.target.value);
+   };
+   const onSaveClick = () => {
+      eventbus.emit('stock.strategy.save', data);
+   };
+   const onCancelClick = () => {
+      setName(props.data?.name || '');
+      setDesc(props.data?.desc || '');
+      setData({...props.data});
+   };
+   const onFillExampleClick = () => {
+      const newname = 'RSI15-3/7';
+      const newdesc = 'RSI (<30 => buy, >70 => sell)';
+      setName(newname);
+      setDesc(newdesc);
+      setData({
+         dirty: true,
+         name: newname,
+         desc: newdesc,
+         var: [{ N: 'rsi15', F: 'rsi(15)' }],
+         rule: [{ C: 'rsi15 < 30', F: '1' }, { C: 'rsi15 < 40', F: '0.5' }, { C: 'rsi15 > 60', F: '-0.5' }, { C: 'rsi15 > 70', F: '-1' }],
+         vis: [{ G: 'rsi', V: 'rsi15' }],
+      });
+   };
+   const onDeleteClick = () => {
+      if (!data) return;
+      if (data.new) {
+         if (!confirm(`Are you sure to discard the new stock strategy ${data.name ? `"${data.name}"` : ''}`)) return;
+      } else if (!confirm(`Are you sure to delete the stock strategy "${data.name}"?`)) return;
+      eventbus.emit("stock.strategy.del", data);
+   }
+
    return <Box sx={{ display: tab === 'edit' ? 'block' : 'none', overflowY: 'auto', height: '0px', flex: '1 0 auto' }}>
       <Box>
-         <Button>Save</Button>
-         <Button>Cancel/Reset</Button>
-         <Button>Fill Example</Button>
+         <Button variant="contained" color="success" onClick={onSaveClick}>Save</Button>
+         <Button onClick={onCancelClick}>Cancel/Reset</Button>
+         <Button onClick={onFillExampleClick}>Fill Example</Button>
+         <Button onClick={onDeleteClick} color="error">Delete</Button>
       </Box>
       <Box>
          Basic Info
-         <TextField fullWidth label="Strategy Name" variant="standard" />
-         <TextField fullWidth label="Strategy Description" variant="standard" />
+         <TextField fullWidth label="Strategy Name" variant="standard" value={name} onChange={onNameChange} />
+         <TextField fullWidth label="Strategy Description" variant="standard" value={desc} onChange={onDescChange} />
       </Box>
-      <StrategyVariable data={data?.var} />
-      <StrategyScoreRule data={data?.rule} />
-      <StrategyVisualization data={data?.vis} />
+      <StrategyVariable data={data} />
+      <StrategyScoreRule data={data} />
+      <StrategyVisualization data={data} />
    </Box>;
 }

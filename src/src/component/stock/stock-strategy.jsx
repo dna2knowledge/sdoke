@@ -14,11 +14,18 @@ export default function StockStrategy() {
    const [selected, setSelected] = useState(local.data.selectedStockStrategy);
 
    useEffect(() => {
+      databox.stock.getStockStrategyList().then(rawList => {
+         setStrategyList(rawList || []);
+      });
       eventbus.on('stock.strategy.add', onStockStrategyAdd);
       eventbus.on('stock.strategy.edit', onStockStrategyEdit);
+      eventbus.on('stock.strategy.save', onStockStrategySave);
+      eventbus.on('stock.strategy.del', onStockStrategyDel);
       return () => {
          eventbus.off('stock.strategy.add', onStockStrategyAdd);
          eventbus.off('stock.strategy.edit', onStockStrategyEdit);
+         eventbus.off('stock.strategy.save', onStockStrategySave);
+         eventbus.off('stock.strategy.del', onStockStrategyDel);
       };
 
       function onStockStrategyAdd() {
@@ -35,6 +42,7 @@ export default function StockStrategy() {
          };
          local.data.selectedStockStrategy = item;
          setSelected(item);
+         eventbus.emit('stock.strategy.edit.open', item);
       }
       function onStockStrategyEdit(item) {
          if (item && local.data.selectedStockStrategy && local.data.selectedStockStrategy.dirty) {
@@ -43,6 +51,48 @@ export default function StockStrategy() {
          setTab('edit');
          local.data.selectedStockStrategy = item;
          setSelected(item);
+         eventbus.emit('stock.strategy.edit.open', item);
+      }
+      function onStockStrategySave(item) {
+         if (!item || !item.name) return eventbus.emit('toast', { severity: 'error', content: 'Strategy name is required' });
+         const item0 = strategyList.find(z => z.name === item.name);
+         const isNew = item.new;
+         delete item.new;
+         delete item.dirty;
+         delete local.data.selectedStockStrategy.dirty;
+         // TODO: grammar check for all fields
+         item.var = item.var.filter(z => z.N && z.F);
+         item.rule = item.rule.filter(z => z.C && z.F);
+         item.vis = item.vis.filter(z => z.G && z.V);
+         if (item0) {
+            if (isNew) {
+               if (!confirm(`Are you sure to overwrite the existing strategy named as "${item.name}"`)) return;
+            }
+            Object.assign(item0, item);
+         } else {
+            strategyList.push(item);
+         }
+         setStrategyList([...strategyList]);
+         setSelected({...item});
+         eventbus.emit('stock.strategy.edit.open', item);
+         databox.stock.setStockStrategyList(strategyList);
+      }
+      function onStockStrategyDel(item) {
+         if (!item) return;
+         if (item.new) {
+            local.data.selectedStockStrategy = null;
+            setSelected(null);
+            return;
+         }
+         if (!item.name) return;
+         const item0 = strategyList.find(z => z.name === item.name);
+         if (!item0) return;
+         const index = strategyList.indexOf(item0);
+         strategyList.splice(index, 1);
+         setStrategyList([...strategyList]);
+         local.data.selectedStockStrategy = null;
+         setSelected(null);
+         databox.stock.setStockStrategyList(strategyList);
       }
    }, []);
 
@@ -56,7 +106,7 @@ export default function StockStrategy() {
             onChange={(_, val) => {
                eventbus.emit('stock.strategy.edit', val);
             }}
-            renderOption={(props, item) => <li key={item.name} {...props}><StockStrategyOption data={item} /></li>}
+            renderOption={(props, item) => <li {...props} key={item.name}><StockStrategyOption data={item} /></li>}
             renderInput={params =>
                <TextField sx={{ width: '100%', borderBottom: '1px solid #ccc' }} placeholder="Strategy Name"
                   {...params}
@@ -80,8 +130,8 @@ export default function StockStrategy() {
           <Tab value="suggest" label="Search" />
         </Tabs>
       </Box>
-      <StockStrategyEditTab tab={tab} />
-      <StockStrategySuggestTab tab={tab} /></Box>) :
+      <StockStrategyEditTab tab={tab} data={selected} />
+      <StockStrategySuggestTab tab={tab} data={selected} /></Box>) :
       <NoData>No Strategy data; please search and select one or <Button
          sx={{ marginLeft: '5px' }}
          variant="contained"
