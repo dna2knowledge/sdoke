@@ -57,11 +57,11 @@ export default function StockOneStrategy() {
       setLoading(true);
       try {
          /* ret = {
-            kb: {k,b}, kps: [], signal: {act, mode, score},
+            kb: {k,b}, kps: [], score,
             stat: {
                all: {count,hit,rate,gain:{min_wait,max_wait,hi_wait,min_avg,max_avg},loss:{avg, best_wait}},
                y3: {count,hit,rate,gain:{min_wait,max_wait,hi_wait,min_avg,max_avg},loss:{avg, best_wait}},
-               d250: [{kb,kps,signal}, ...]
+               d250: [{kb,kps,score}, ...]
             }
          } */
          const history = await databox.stock.getStockHistory(meta.code);
@@ -110,13 +110,14 @@ export default function StockOneStrategy() {
 
    if (!meta) return null;
    if (loading) return <NoData>Loading {strategy} data for {meta.code} {meta.name} ...</NoData>;
-   if (!data || !data.signal) return <NoData>No Data; no {strategy} records for <strong>{meta.code} {meta.name}</strong></NoData>
+   if (!data || !data.stat) return <NoData>No Data; no {strategy} records for <strong>{meta.code} {meta.name}</strong></NoData>
+   const mode = data.score > 0 ? 'buy' : (data.score < 0 ? 'sell' : 'unknown');
    return <Box sx={{
       textAlign: 'center',
       '.mode_sell': { textTransform: 'uppercase', color: 'green', backgroundColor: '#cfc' },
       '.mode_buy': { textTransform: 'uppercase', color: 'red', backgroundColor: '#fcc' },
-      '.act': { textTransform: 'uppercase' },
-      '.h_act': { textTransform: 'uppercase', fontWeight: 'bold' },
+      '.act': { display: 'inline-block', margin: '0 5px' },
+      '.h_act': { fontWeight: 'bold' },
       '.strategy': { textTransform: 'capitalize', fontWeight: 'bold' },
    }}>
       <Box sx={{ textAlign: 'left' }}>
@@ -128,17 +129,17 @@ export default function StockOneStrategy() {
          <IconButton type="button" sx={{ p: '10px' }}><SwitchAccessShortcutIcon/></IconButton>
       </Box>
       <Box>
-         <span className={`mode_${data.signal.mode || 'unknown'}`}> {data.signal.mode}</span>
-         <span className={"act"}> {data.signal.act}</span>
-         <span> (y = {data.kb.k}x + {data.kb.b})</span>
+         <span className={`mode_${mode}`}> {mode}</span>
+         <span className={"act"}> score={isNaN(data.score) ? '-' : `${data.score.toFixed(4)}`}</span>
       </Box>
       <Box sx={{ display: 'flex' }}>
          <StrategyStat name="ALL" stat={data.stat.all} />
          <StrategyStat name="3 YEARS" stat={data.stat.y3} />
       </Box>
       <Box>History: {data?.stat?.d250.slice(0, 20).map((z, i) => <span key={i}>
-         <span className={`mode_${z.signal.mode}`}>{z.signal.mode.charAt(0)}</span>
-         <span className={z.signal.act === 'prepare' ? 'h_act' : ''}>({z.signal.act.charAt(0)}) </span>
+         <span className={`act mode_${z.score > 0 ? 'buy' : (z.score < 0 ? 'sell' : 'unknown')} ${z.score > 0.5 || z.score < -0.5 ? 'h_act' : ''}`}>
+            {z.score > 0 ? 'B' : (z.score < 0 ? 'S' : '-')}
+         </span>
       </span>)}</Box>
    </Box>;
 }

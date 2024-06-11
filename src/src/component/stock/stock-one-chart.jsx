@@ -5,11 +5,13 @@ import local from '$/service/local';
 
 function paintStrategyOne(pen, vx, h0, signal) {
    if (!signal) return;
-   if (signal.act === 'prepare') {
-      pen.save(); pen.beginPath(); pen.strokeStyle = signal.mode === 'buy' ? '#fdd' : '#dfd';
+   let score = signal.score;
+   if (score > 1) score = 1; else if (score < -1) score = -1;
+   if (score > 0) {
+      pen.save(); pen.beginPath(); pen.strokeStyle = `rgba(255, 231, 231, ${score})`;
       pen.moveTo(vx, 0); pen.lineTo(vx, h0); pen.stroke(); pen.restore();
-   } else if (signal.act === 'lookonce') {
-      pen.save(); pen.beginPath(); pen.strokeStyle = signal.mode === 'buy' ? '#fff4f4' : '#f4fff4';
+   } else if (score < 0) {
+      pen.save(); pen.beginPath(); pen.strokeStyle = `rgba(231, 255, 231, ${-score})`;
       pen.moveTo(vx, 0); pen.lineTo(vx, h0); pen.stroke(); pen.restore();
    }
 }
@@ -42,11 +44,11 @@ function paintBasic(canvas, data) {
 
    if (strategy && strategy.meta.code === overview.meta.code) {
       const vx = (data.length-1) * lx + shiftw;
-      paintStrategyOne(pen, vx, h0, strategy.signal);
+      paintStrategyOne(pen, vx, h0, strategy);
       for (let i = data.length-2, j = 0; i >= 0; i--, j++) {
          const sg = strategy?.stat?.d250?.[j];
          const vx = i * lx + shiftw;
-         paintStrategyOne(pen, vx, h0, sg.signal);
+         paintStrategyOne(pen, vx, h0, sg);
       }
    }
 

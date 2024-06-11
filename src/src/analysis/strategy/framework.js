@@ -9,10 +9,9 @@ export async function evaluateStrategy(raw, analyzeFn) {
       const ipoint = i+historyn;
       payload[0].raw = item.raw.slice(i, ipoint);
       const c = (await analyzeFn(payload))[0];
-      const signal = c.signal;
-      const kb = c.kb;
-      if (signal.mode === 'buy' && !isNaN(signal.score)) {
-         if (signal.act === 'prepare') {
+      const signal = c;
+      if (signal.score > 0 && !isNaN(signal.score)) {
+         if (signal.score > 0.5) {
             const buyin = item.raw[ipoint+1];
             const ts0 = buyin.T;
             const watchduration = item.raw.slice(ipoint+2, ipoint+predictn);
@@ -50,7 +49,7 @@ export async function evaluateStrategy(raw, analyzeFn) {
                item.stat.summinlost += (minlost - buyin.C) / buyin.C;
                item.stat.summinlostwait += minlostts - ts0;
             }
-         } else {
+         } else { // 0 < score < 0.5
          }
       }
    }
