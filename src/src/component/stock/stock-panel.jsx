@@ -35,6 +35,9 @@ export default function StockPanel() {
          statRef.current.pinnedStocks = rawList;
          setPinnedStocks([...rawList]);
       });
+   }, []);
+
+   useEffect(() => {
       eventbus.on('stock.pinned.add', onStockPinnedAdd);
       eventbus.on('stock.pinned.remove', onStockPinnedRemove);
       eventbus.on('stock.pinned.click', onStockPinnedClick);
@@ -68,7 +71,7 @@ export default function StockPanel() {
          eventbus.emit('stock.one', data);
          eventbus.emit('stock.strategy.one', { meta: data });
       }
-   }, []);
+   }, [data, pinnedStocks, selected]);
 
    const onUpdateClick = async () => {};
    const onInsightClick = () => {};

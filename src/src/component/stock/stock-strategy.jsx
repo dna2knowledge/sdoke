@@ -17,6 +17,9 @@ export default function StockStrategy() {
       databox.stock.getStockStrategyList().then(rawList => {
          setStrategyList(rawList || []);
       });
+   }, []);
+
+   useEffect(() => {
       eventbus.on('stock.strategy.add', onStockStrategyAdd);
       eventbus.on('stock.strategy.edit', onStockStrategyEdit);
       eventbus.on('stock.strategy.save', onStockStrategySave);
@@ -94,7 +97,7 @@ export default function StockStrategy() {
          setSelected(null);
          databox.stock.setStockStrategyList(strategyList);
       }
-   }, []);
+   }, [strategyList, selected]);
 
    const onCreateStrategyClick = () => eventbus.emit('stock.strategy.add');
 
