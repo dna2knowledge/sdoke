@@ -1,4 +1,3 @@
-import { lr } from '$/analysis/math/mse';
 import { evaluateStrategy } from '$/analysis/strategy/framework';
 
 const sp = {
@@ -9,7 +8,7 @@ async function analyzeOne(item) {
    const eds = item.raw.map(z => z.C);
    const n = eds.length;
    const win = sp.predict_history;
-   if (n < win) return { score: 0.0, kb: { k: 0, b: 0 } };
+   if (n < win) return { score: 0.0 };
    let avggain = 0, avgloss = 0;
    for (let i = n-1, m = n-win+1; i >= m; i--) {
       const d = eds[i] - eds[i-1];
@@ -19,15 +18,15 @@ async function analyzeOne(item) {
    avgloss /= win-1;
    const rsi = 100 * (1 - 1/(1+avggain/avgloss));
    if (rsi < 30) {
-      return { score: 1.0, kb: { k: 0, b: 0 } };
+      return { score: 1.0 };
    } else if (rsi < 40) {
-      return { score: 0.5, kb: { k: 0, b: 0 } };
+      return { score: 0.5 };
    } else if (rsi > 70) {
-      return { score: -1.0, kb: { k: 0, b: 0 } };
+      return { score: -1.0 };
    } else if (rsi > 60) {
-      return { score: -0.5, kb: { k: 0, b: 0 } };
+      return { score: -0.5 };
    } else {
-      return { score: 0.0, kb: { k: 0, b: 0 } };
+      return { score: 0.0 };
    }
 }
 
@@ -64,7 +63,6 @@ export async function rsiEvaluateStrategy(item) {
          const di = (await analyze([{ raw: rows.slice(ai-j, i) }]))[0];
          c0.stat.d250.push(di);
       }
-      c0.kb.k = (100 - c0.score)/100;
       ret = c0;
    } catch(_) { ret = {}; }
    return ret;
