@@ -83,7 +83,7 @@ export default function StockPanel() {
          if (!z) return a;
          const ps = z.split(',');
          if (!ps[0] || !ps[1]) return a;
-         const item = { code: ps[0], name: ps[1], latest: null };
+         const item = { code: ps[0], name: ps[1], area: ps[2] || null, latest: null };
          a.push(item);
          return a;
       }, []);
@@ -111,7 +111,7 @@ export default function StockPanel() {
             <IconButton onClick={onInsightClick} type="button" sx={{ p: '10px' }}><InsightsIcon /></IconButton>
             <Autocomplete sx={{ ml: 1, flex: '1 0 auto', '.MuiInputBase-input': { height: '10px' } }} disablePortal
                options={data || []}
-               getOptionLabel={option => `${option.code} ${option.name}`}
+               getOptionLabel={option => `${option.code} ${option.name}${option.area ? ` (${option.area})` : ''}`}
                onChange={(_, val) => {
                   eventbus.emit('stock.pinned.add', val);
                }}

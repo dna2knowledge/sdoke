@@ -31,7 +31,7 @@ export default function StockOne() {
       if (!local.data.view) local.data.view = {};
       local.data.view.one = {
          raw: ret,
-         meta: { code: one.code, name: one.name },
+         meta: { code: one.code, name: one.name, area: one.area },
       };
       eventbus.comp.waitUntil('stock.chart').then(() => {
          eventbus.emit('stock.chart.basic');
@@ -54,7 +54,7 @@ export default function StockOne() {
    if (loading) return <NoData>Loading data for {meta.code} {meta.name} ...</NoData>;
    return <Box>
       { data && data.length ? (<Box>
-         <Box sx={{ textAlign: 'center', width: '100%' }}>{meta.code} {meta.name}</Box>
+         <Box sx={{ textAlign: 'center', width: '100%' }}>{meta.code} {meta.name} {meta.area ? ` (${meta.area})` : null}</Box>
          <Box><Chart /></Box>
       </Box>) : <NoData>No Data; no records for <strong>{meta.code} {meta.name}</strong></NoData> }
    </Box>;
