@@ -162,10 +162,11 @@ export default function StockPanel() {
          if (!z) return a;
          const ps = z.split(',');
          if (!ps[0] || !ps[1]) return a;
-         const item = { code: ps[0], name: ps[1], tag: ps[2] || null, latest: null };
+         const item = { code: ps[0], name: ps[1], area: ps[2] || null, latest: null };
          a.push(item);
          return a;
       }, []);
+      statRef.current.stockList = list;
       await databox.stock.setStockList(list);
       setData(list.slice(0, sp.autocompleteN));
    });

@@ -137,7 +137,7 @@ export default function StockOneStrategy() {
          <StrategyStat name="3 YEARS" stat={data.stat.y3} />
       </Box>
       <Box>History: {data?.stat?.d250.slice(0, 20).map((z, i) => <span key={i}>
-         <span className={`act mode_${z.score > 0 ? 'buy' : (z.score < 0 ? 'sell' : 'unknown')} ${z.score > 0.5 || z.score < -0.5 ? 'h_act' : ''}`}>
+         <span className={`act mode_${z.score > 0 ? 'buy' : (z.score < 0 ? 'sell' : '-')} ${z.score > 0.5 || z.score < -0.5 ? 'h_act' : ''}`}>
             {z.score > 0 ? 'B' : (z.score < 0 ? 'S' : '-')}
          </span>
       </span>)}</Box>
