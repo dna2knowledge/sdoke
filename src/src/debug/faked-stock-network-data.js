@@ -7,8 +7,13 @@ const stat = {
    },
 };
 
+function dateDayGate(date) {
+   const t = date || new Date();
+   return t - t % (24 * 3600 * 1000);
+}
+
 async function getHistoryFromTencent(code, startDate) {
-   let t = (startDate || new Date()).getTime() - 600 * 3600 * 1000 * 24;
+   let t = dateDayGate(startDate) - 600 * 3600 * 1000 * 24;
    const r = [];
    let last = { O: Math.random() * 200 };
    last.C = last.O * (1 + Math.random() * 0.2 - 0.1);
