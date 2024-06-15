@@ -9,6 +9,7 @@ import { Autocomplete, TextField, ButtonGroup, Button, LinearProgress, Typograph
 import NoData from '$/component/shared/no-data';
 import StockOne from '$/component/stock/stock-one';
 import StockOneStrategy from '$/component/stock/stock-one-strategy';
+import StockCapitalTrend from '$/component/stock/stock-capital-trend';
 import eventbus from '$/service/eventbus';
 import databox from '$/service/databox';
 import local from '$/service/local';
@@ -150,7 +151,9 @@ export default function StockPanel() {
       }
       eventbus.emit('stock.update.progress', { i: 0, n: 0 });
    };
-   const onInsightClick = () => {};
+   const onInsightClick = () => {
+      eventbus.emit('stock.analysis.captr');
+   };
    const onUpdateStockList = () => triggerFileSelect().then(async (files) => {
       if (!files || !files.length) return; // user cancel
       const raw = await readText(files[0]);
@@ -211,6 +214,7 @@ export default function StockPanel() {
          {selected ? null : <NoData>No Data; please search and select one stock</NoData>}
          <StockOne />
          <StockOneStrategy />
+         <StockCapitalTrend />
        </Box>
    </Box>;
 }
