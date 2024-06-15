@@ -5,13 +5,42 @@ import InsightsIcon from '@mui/icons-material/Insights';
 import CloseIcon from '@mui/icons-material/Close';
 import EditIcon from '@mui/icons-material/Edit';
 import { Box, IconButton } from '@mui/material';
-import { Autocomplete, TextField, ButtonGroup, Button } from '@mui/material';
+import { Autocomplete, TextField, ButtonGroup, Button, LinearProgress, Typography } from '@mui/material';
 import NoData from '$/component/shared/no-data';
 import StockOne from '$/component/stock/stock-one';
 import StockOneStrategy from '$/component/stock/stock-one-strategy';
 import eventbus from '$/service/eventbus';
 import databox from '$/service/databox';
+import local from '$/service/local';
 import { triggerFileSelect, readText } from '$/util/file-reader';
+
+function StockUpdateProgressBar(props) {
+   const [i, setI] = useState(0);
+   const [n, setN] = useState(0);
+
+   useEffect(() => {
+      eventbus.on('stock.update.progress', onStockUpdateProgress);
+      return () => {
+         eventbus.off('stock.update.progress', onStockUpdateProgress);
+      };
+
+      function onStockUpdateProgress(data) {
+         setI(data.i || 0);
+         setN(data.n || 0);
+      }
+   }, []);
+
+   if (n === 0) return null;
+   const value = Math.floor(i / n * 100);
+   return <Box sx={{ display: 'flex', alignItems: 'center' }}>
+      <Box sx={{ width: '100%', mr: 1 }}>
+         <LinearProgress variant="determinate" value={value} />
+      </Box>
+      <Box>
+         <Typography sx={{ whiteSpace: 'nowrap' }} variant="body2" color="text.secondary">{`${i} / ${n}`}</Typography>
+      </Box>
+   </Box>;
+}
 
 const sp = {
    autocompleteN: 10,
@@ -73,7 +102,54 @@ export default function StockPanel() {
       }
    }, [data, pinnedStocks, selected]);
 
-   const onUpdateClick = async () => {};
+   const onUpdateClick = async () => {
+      if (!local.data.updateStockProgress) local.data.updateStockProgress = {};
+      const stat = local.data.updateStockProgress;
+      if (stat.ts) {
+         const ts = new Date().getTime();
+         if (ts - stat.ts < 12 * 3600 * 1000) {
+            if (!confirm(`Are you sure to update the history for stocks again in 12h? Last updated time is ${new Date(stat.ts).toString()}.`)) return;
+         }
+      }
+      let fetchErrorOnly = false;
+      if (stat.error?.length > 0 && confirm(
+         `Last time there are ${stat.error.length} failures to fetch stock history. Do you want to only fetch history for stocks?`
+      )) {
+         fetchErrorOnly = true;
+      }
+      let rawList = fetchErrorOnly ? stat.error.map(z => ({ code: z })) : await databox.stock.getStockList();
+      if (!rawList || !rawList.length) {
+         eventbus.emit('toast', {
+            severity: 'error',
+            content: 'There is no stock in the list. Please update your stock list first.'
+         });
+         return;
+      }
+      const error = [];
+      stat.ts = new Date().getTime();
+      for (let i = 0, n = rawList.length; i < n; i ++) {
+         eventbus.emit('stock.update.progress', { i, n });
+         const item = rawList[i];
+         if (!item.code) continue;
+         try {
+            await databox.stock.getStockHistory(item.code);
+         } catch(_) {
+            error.push(item.code);
+            eventbus.emit('toast', {
+               severity: 'error',
+               content: `Failed to get stock history for ${error.slice(0, 10).join(', ')} ${error.length >= 10 ? '...' : ''}.`
+            });
+         }
+      }
+      stat.error = error;
+      if (!error.length) {
+         eventbus.emit('toast', {
+            severity: 'success',
+            content: 'All stock history are up-to-date now.'
+         });
+      }
+      eventbus.emit('stock.update.progress', { i: 0, n: 0 });
+   };
    const onInsightClick = () => {};
    const onUpdateStockList = () => triggerFileSelect().then(async (files) => {
       if (!files || !files.length) return; // user cancel
@@ -83,7 +159,7 @@ export default function StockPanel() {
          if (!z) return a;
          const ps = z.split(',');
          if (!ps[0] || !ps[1]) return a;
-         const item = { code: ps[0], name: ps[1], area: ps[2] || null, latest: null };
+         const item = { code: ps[0], name: ps[1], tag: ps[2] || null, latest: null };
          a.push(item);
          return a;
       }, []);
@@ -128,13 +204,14 @@ export default function StockPanel() {
             />
             <IconButton type="button" sx={{ p: '10px' }}><SearchIcon /></IconButton>
          </Box>
+         <Box><StockUpdateProgressBar/></Box>
          <Box sx={{ maxHeight: '100px', overflowY: 'auto' }}>
             {pinnedStocks.map((meta, i) => <StockButton key={i} data={meta} isStarred={true} />)}
          </Box>
          {selected ? null : <NoData>No Data; please search and select one stock</NoData>}
          <StockOne />
          <StockOneStrategy />
-      </Box>
+       </Box>
    </Box>;
 }
 
