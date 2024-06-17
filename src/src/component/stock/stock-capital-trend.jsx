@@ -71,6 +71,12 @@ function paintTrendHistory(canvas, data) {
       pen.restore();
       pen.fillText(`${Math.floor((200-i)/20)}`, i*w1+w1*20/2-2, 28);
    }
+
+   const horg = h0 - Math.floor((0-min)/md*h0);
+   pen.save(); pen.strokeStyle = '#ddd';
+   pen.beginPath(); pen.moveTo(0, horg); pen.lineTo(w0, horg);
+   pen.stroke(); pen.restore();
+
    for (let i = 0, n = data.length; i < n; i++) {
       const d = data[i];
       const x = w1 * (i + 201-n);
