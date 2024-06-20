@@ -18,6 +18,11 @@ async function getHistoryFromTencent(code, startDate) {
    let last = { O: Math.random() * 200 };
    last.C = last.O * (1 + Math.random() * 0.2 - 0.1);
    for (let i = 0; i < 600; i++) {
+      const wd = new Date(t).getDay();
+      if (wd === 0 || wd === 6) {
+         t += 3600 * 1000 * 24;
+         continue;
+      }
       const item = { T: t, O: last.C * (1 + Math.random() * 0.05 - 0.025), C: 0, H: 0, L: 0, V: Math.round(10000 * Math.random()), m: 0 };
       const rate = Math.random() * 0.2 - 0.1;
       item.C = item.O * (1 + rate);
