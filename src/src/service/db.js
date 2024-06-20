@@ -143,6 +143,7 @@ api = dbFaked;
 
 } else if (window.nativeIpc && window.nativeIpc.platform === 'electron') {
 
+console.log('[DEBUG mode] for db - electron');
 api = dbElectron;
 
 } else {

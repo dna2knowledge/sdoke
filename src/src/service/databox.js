@@ -57,8 +57,9 @@ const stockApi = {
         const tsv = ts.getTime();
         const wd = ts.getDay();
         if (tsv > last.T) {
-           if (wd === 0 && tsv - last.T > 2 * 24 * 3600 * 1000) return await stockApi.updateStockHistory(code);
-           else if (wd === 6 && tsv - last.T > 1 * 24 * 3600 * 1000) return await stockApi.updateStockHistory(code);
+           if (wd === 0 && tsv - last.T > 1 * 24 * 3600 * 1000) return await stockApi.updateStockHistory(code);
+           else if (wd === 6 && tsv - last.T > 2 * 24 * 3600 * 1000) return await stockApi.updateStockHistory(code);
+           else if (wd !== 0 && wd !== 6) return await stockApi.updateStockHistory(code);
         }
 
         return history;
