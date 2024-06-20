@@ -14,10 +14,11 @@ function dateDayGate(date) {
 
 async function getHistoryFromTencent(code, startDate) {
    let t = dateDayGate(startDate) - 600 * 3600 * 1000 * 24;
+   const today = dateDayGate();
    const r = [];
    let last = { O: Math.random() * 200 };
    last.C = last.O * (1 + Math.random() * 0.2 - 0.1);
-   for (let i = 0; i < 600; i++) {
+   for (let i = 0; t <= today; i++) {
       const wd = new Date(t).getDay();
       if (wd === 0 || wd === 6) {
          t += 3600 * 1000 * 24;
