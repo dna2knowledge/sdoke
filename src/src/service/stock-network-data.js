@@ -84,6 +84,25 @@ async function getHistoryFromTencent(code, startDate) {
    }
 }
 
+function parseDate(str) {
+   return new Date(`${str.substring(0, 4)}-${str.substring(4, 6)}-${str.substring(6, 8)}`).getTime();
+}
+function parseDatetime(str) {
+   return new Date(`${
+      str.substring(0, 4)
+   }-${
+      str.substring(4, 6)
+   }-${
+      str.substring(6, 8)
+   }T${
+      str.substring(8, 10)
+   }:${
+      str.substring(10, 12)
+   }:${
+      str.substring(12, 14)
+   }`).getTime();
+}
+
 async function getRtFromTencent(codes) {
    try {
       if (!codes || !codes.length) return [];
@@ -96,12 +115,12 @@ async function getRtFromTencent(codes) {
          const item = {
             code: `${ctp[0] === '1' ? 'sh' : 'sz'}${ctp[2]}`,
             name: ctp[1],
-            cur: parseFloat(ctp[3]),
-            edm1: parseFloat(ctp[4]),
-            st: parseFloat(ctp[5]),
-            amount: parseInt(ctp[6]),
-            outer_amount: parseInt(ctp[7]),
-            inner_amount: parseInt(ctp[8]),
+            C: parseFloat(ctp[3]),
+            Cm1: parseFloat(ctp[4]),
+            O: parseFloat(ctp[5]),
+            V: parseInt(ctp[6]),
+            outer_V: parseInt(ctp[7]),
+            inner_V: parseInt(ctp[8]),
             buy: [
                [parseFloat(ctp[9]), parseInt(ctp[10])],
                [parseFloat(ctp[11]), parseInt(ctp[12])],
@@ -118,14 +137,16 @@ async function getRtFromTencent(codes) {
             ],
             // each buy-sell, ctp[29].split('|') 14:59:52/14.64/3/B/4392/24876
             //                                   <time><price><amount><type B/S><?><?>
-            ts: ctp[30], // 20230520150000
+            Tstr: ctp[30], // 20230520150000
+            Tex: parseDatetime(ctp[30]),
+            T: parseDate(ctp[30]),
             diff: parseFloat(ctp[31]),
             diff_rate: parseFloat(ctp[32]),
-            max: parseFloat(ctp[33]),
-            min: parseFloat(ctp[34]),
+            H: parseFloat(ctp[33]),
+            L: parseFloat(ctp[34]),
             // ctp[35].split('/') 14.64/55812/81726910
             //                    <price><amount><money>
-            amount: parseInt(ctp[36]),
+            V: parseInt(ctp[36]),
             money: parseFloat(ctp[37]),
             swap_rate: parseFloat(ctp[38]),
             // ctp[39] 涨速
@@ -144,6 +165,7 @@ async function getRtFromTencent(codes) {
          };
          ret.push(item);
       });
+      return ret;
    } catch(_) {
       return [];
    }

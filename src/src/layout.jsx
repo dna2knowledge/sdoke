@@ -1,11 +1,12 @@
 import { useState } from 'react';
-import { useLocation, useNavigate, Outlet } from 'react-router-dom';
+import { useLocation, Outlet } from 'react-router-dom';
 import { Box, IconButton, Link, Menu, MenuItem } from '@mui/material';
 import MenuIcon from '@mui/icons-material/Menu';
 
 const titleMap = {
    '/': 'Sdoke - Stock Panel',
    '/strategy': 'Sdoke - Stock Strategy',
+   '/trade': 'Sdoke - Stock Trade',
    '/about': 'About',
 };
 
@@ -29,6 +30,7 @@ export default function Layout() {
          <Menu anchorEl={anchorEl} open={open} onClose={onMenuClose}>
             <Link onClick={onMenuClose} href="#/" underline="none"><MenuItem>Stock Viewer</MenuItem></Link>
             <Link onClick={onMenuClose} href="#/strategy" underline="none"><MenuItem>Stock Strategy</MenuItem></Link>
+            <Link onClick={onMenuClose} href="#/trade" underline="none"><MenuItem>Stock Trade</MenuItem></Link>
             <Link onClick={onMenuClose} href="#/about" underline="none"><MenuItem>About</MenuItem></Link>
          </Menu>
       </Box>
