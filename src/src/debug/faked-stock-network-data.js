@@ -44,8 +44,20 @@ async function getRtFromTencent(codes) {
    try {
       if (!codes || !codes.length) return [];
       await wait(Math.round(Math.random() * 3) * 1000);
-      const ret = [{}];
-      return ret;
+      const ts = dateDayGate();
+      const O = 100*Math.random()
+      const C = 100*Math.random()
+      return codes.map(z => {
+         return {
+            code: z,
+            name: '????',
+            T: ts,
+            O, C,
+            L: Math.min(O, C) * (1 - Math.random() * 0.1),
+            H: Math.min(O, C) * (1 + Math.random() * 0.1),
+            V: Math.random() * 10000,
+         };
+      });
    } catch(_) {
       return [];
    }
