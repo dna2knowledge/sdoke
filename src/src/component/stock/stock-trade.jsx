@@ -217,6 +217,7 @@ function EditDialog(props) {
          cache.current.selected = stockList.find(z => z.code === item.code);
          setShowBuyin(cache.current.showBuyin);
          setShowSellout(cache.current.showSellout);
+         setStartDate(cache.current.startDate);
          setSelected(cache.current.selected);
          if (cache.current.showBuyin) {
             cache.current.biDate = getDateStr(item.B.T);
