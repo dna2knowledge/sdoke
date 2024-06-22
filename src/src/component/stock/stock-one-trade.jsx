@@ -22,21 +22,29 @@ function paintHistory(canvas, w0, h0, item, history) {
    const n0 = Math.floor((tsb - tsa)/config.dayms);
 
    // draw special point background
+   const stI = item.B ? Math.floor((tsb - item.B.T)/config.dayms) : 0;
+   const edI = item.S ? Math.floor((tsb - item.S.T)/config.dayms) : 0;
    if (item.B) {
-      const stI = Math.floor((tsb - item.B.T)/config.dayms);
-      pen.fillStyle = 'yellow';
+      const lastP = item.S ? item.S.P : history[history.length-1].C;
+      if (item.B.P === lastP) pen.fillStyle = 'yellow';
+      else if (item.B.P < lastP) pen.fillStyle = 'rgb(255, 200, 200)';
+      else pen.fillStyle = 'rgb(200, 255, 200)';
       const y = config.dh * stI + config.dh;
       pen.beginPath();
       pen.moveTo(0, y); pen.lineTo(w0, y); pen.lineTo(w0/2, y-config.dh); pen.lineTo(0, y);
       pen.fill();
    }
    if (item.S) {
-      const edI = Math.floor((tsb - item.S.T)/config.dayms);
       const y = config.dh * edI;
-      pen.fillStyle = 'yellow';
+      if (!item.B || item.B.P === item.S.P) pen.fillStyle = 'yellow';
+      else if (item.S.P > item.B.P) pen.fillStyle = 'rgb(255, 200, 200)';
+      else pen.fillStyle = 'rgba(200, 255, 200)';
+      pen.fillRect(0, config.dh * edI, w0, config.dh * (stI - edI + 1));
+      /* original design: a down triangle
       pen.beginPath();
       pen.moveTo(0, y); pen.lineTo(w0, y); pen.lineTo(w0/2, y+config.dh); pen.lineTo(0, y);
       pen.fill();
+      */
    }
 
    // draw history
@@ -75,17 +83,21 @@ function paintHistory(canvas, w0, h0, item, history) {
 
    // draw special point B S
    if (item.B) {
-      const stI = Math.floor((tsb - item.B.T)/config.dayms);
       const xP = (item.B.P - stat.min) / dm * w0;
       pen.fillStyle = 'orange';
       pen.fillRect(xP-3, stI*config.dh + config.dh/2-3, 6, 6);
    }
    if (item.S) {
-      const edI = Math.floor((tsb - item.S.T)/config.dayms);
       const xP = (item.S.P - stat.min) / dm * w0;
       pen.fillStyle = 'orange';
       pen.fillRect(xP-3, edI*config.dh + config.dh/2-3, 6, 6);
    }
+}
+
+function calcRate(stP, edP) {
+   if (stP <= 0 || edP <= 0) return '---';
+   const rate = ((edP - stP) / stP * 100).toFixed(4);
+   return `${rate}`;
 }
 
 export default function StockOneTrade(props) {
@@ -94,6 +106,7 @@ export default function StockOneTrade(props) {
    const anchorRef = useRef(null);
    const cache = useRef({});
    const [menuOpen, setMenuOpen] = useState(false);
+   const [rate, setRate] = useState('---');
 
    useEffect(() => {
       eventbus.on(`stock.one.${data?.code}.trade.update`, onStockTradeUpdated);
@@ -125,6 +138,7 @@ export default function StockOneTrade(props) {
                V: rt.V,
             });
          }
+         setRate(calcRate(hdata[1].C, rt.C));
          paintHistory(canvasRef.current, w-5, h, data, hdata);
       }
    }, [data]);
@@ -141,12 +155,15 @@ export default function StockOneTrade(props) {
          const i = raw.indexOf(hdata[0]);
          hdata.unshift(i === 0 ? null : raw[i-1]);
          cache.current.hdata = hdata;
+         const stP = data.B ? data.B.P : hdata[1].C;
+         const edP = data.S ? data.S.P : hdata[hdata.length-1].C;
+         setRate(calcRate(stP, edP));
          paintHistory(canvasRef.current, w-5, h, data, hdata);
       });
       return () => {
          needData = false;
       };
-   });
+   }, [x, y, w, h, data]);
 
    const onMenuClose = () => {
       setMenuOpen(false);
@@ -175,7 +192,15 @@ export default function StockOneTrade(props) {
       <Box sx={{ height: `${config.th1}px`, backgroundColor: '#ccc', fontSize: '10px' }}>
          <Box>{data.code} {data.name}</Box>
          <Box sx={{ display: 'flex' }}>
-            <Box sx={{ flex: '1 0 auto' }}></Box>
+            <Box sx={{
+               display: 'flex',
+               flex: '1 0 auto',
+               '.red': { color: 'red' },
+               '.green': { color: 'green' },
+               '.gray': { color: 'gray' },
+            }}>
+               <Box className={rate > 0 ? 'red' : (rate < 0 ? 'green' : 'gray')}>{rate}%</Box>
+            </Box>
             <IconButton ref={anchorRef} sx={{ width: '16px', height: '16px' }} onClick={onMenuOpen}><MoreVertIcon /></IconButton>
             <Popper open={menuOpen} anchorEl={anchorRef.current} disablePortal><Paper>
                <ClickAwayListener onClickAway={onMenuClose}><MenuList>

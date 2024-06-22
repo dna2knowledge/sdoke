@@ -168,7 +168,13 @@ function EditDialog(props) {
       };
 
       function onStockTradeEditSelect(item) {
-         if (!item) return;
+         if (!item) {
+            cache.current.selected = null;
+            setShowBuyin(cache.current.showBuyin);
+            setShowSellout(cache.current.showSellout);
+            setSelected(cache.current.selected);
+            return;
+         }
          cache.current.startDate = getDateStr(item.T);
          cache.current.showBuyin = !!item.B;
          cache.current.showSellout = !!item.S;
@@ -419,7 +425,15 @@ export default function StockTrade() {
       }
    }, [data]);
 
-   const onAddClick = () => setEditOpen(true);//eventbus.emit('stock.strategy.add');
+   const onUpdateClick = () => {
+      cache.current.lastUpdate = false;
+      setData({...data});
+   };
+   const onAddClick = () => {
+      eventbus.emit('stock.trade.edit.select', null);
+      setEditSelected(null);
+      setEditOpen(true)
+   };
    const onEditDialogClose = (item) => {
       setEditOpen(false);
       if (!item || !data?.Ts) return;
@@ -451,9 +465,10 @@ export default function StockTrade() {
          <Select variant="standard" value={year} onChange={(evt) => setYear(evt.target.value)}>
             <MenuItem value={2024}>2024</MenuItem>
          </Select>
-         <IconButton><UpdateIcon /></IconButton>
+         <IconButton onClick={onUpdateClick}><UpdateIcon /></IconButton>
          <IconButton onClick={onAddClick}><AddRoadIcon /></IconButton>
       </Box>
+      {/* TODO: summary of this year */}
       <Box sx={{ flex: '1 0 auto', marginBottom: '10px', height: '0px', width: '100%', overflow: 'auto' }}>
          <StockTradeTimeline data={data}/>
       </Box>
