@@ -95,6 +95,8 @@ function buildTradeList(firstDay, endDay, trades) {
 function StockTradeTimeline(props) {
    const { data } = props;
    const boxRef = useRef(null);
+   const dateBoxRef = useRef(null);
+   const hilightRef = useRef(null);
    const year = data?.Y || new Date().getFullYear();
    const trades = data?.Ts || [];
 
@@ -110,12 +112,37 @@ function StockTradeTimeline(props) {
    const dateList = buildDateList(firstDay, endDay);
    const tradeList = buildTradeList(firstDay, endDay, trades);
 
+   useEffect(() => {
+      if (dateBoxRef.current) {
+         dateBoxRef.current.addEventListener('mouseleave', onCancelHighlight);
+         dateBoxRef.current.addEventListener('mousemove', onMoveHighlight);
+      }
+      return () => {
+         if (dateBoxRef.current) {
+            dateBoxRef.current.removeEventListener('mousemove', onMoveHighlight);
+            dateBoxRef.current.removeEventListener('mouseleave', onCancelHighlight);
+         }
+      }
+
+      function onCancelHighlight() {
+         hilightRef.current.style.display = 'none';
+      }
+      function onMoveHighlight(evt) {
+         const target = evt.target;
+         if (target.classList.contains('cell')) {
+            hilightRef.current.style.display = 'block';
+            hilightRef.current.style.top = `${target.offsetTop}px`;
+            hilightRef.current.style.width = `${boxRef.current.parentNode.scrollWidth-dateBoxRef.current.offsetWidth-10}px`;
+         } else onCancelHighlight();
+      }
+   });
+
    if (!tradeList.length) return <NoData>There is no track of stock history.</NoData>;
    return <Box sx={{
       display: 'flex',
-      '.cell': { height: `${config.dh}px` }
+      '.cell': { height: `${config.dh}px`, userSelect: 'none' }
    }}>
-      <Box sx={{
+      <Box ref={dateBoxRef} sx={{
          zIndex: '100',
          position: 'sticky', left: '0px',
          marginRight: '10px',
@@ -127,6 +154,15 @@ function StockTradeTimeline(props) {
          <Box sx={{ height: `${config.th1 + 10}px` }}> </Box>
       </Box>
       <Box ref={boxRef} sx={{ position: 'relative' }}>
+         <Box ref={hilightRef} sx={{
+            height: `${config.dh}px`,
+            userSelect: 'none',
+            backgroundColor: 'yellow',
+            opacity: '0.3',
+            position: 'absolute',
+            zIndex: '1000',
+            left: '0px',
+         }}>&nbsp;</Box>
          {tradeList.map((z, i) => <StockOneTrade
             key={i}
             x={z.I * config.tw1}
