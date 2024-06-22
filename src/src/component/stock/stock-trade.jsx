@@ -95,7 +95,7 @@ function buildTradeList(firstDay, endDay, trades) {
 function StockTradeTimeline(props) {
    const { data } = props;
    const boxRef = useRef(null);
-   const dateBoxRef = useRef(null);
+   const containerRef = useRef(null);
    const hilightRef = useRef(null);
    const year = data?.Y || new Date().getFullYear();
    const trades = data?.Ts || [];
@@ -113,14 +113,14 @@ function StockTradeTimeline(props) {
    const tradeList = buildTradeList(firstDay, endDay, trades);
 
    useEffect(() => {
-      if (dateBoxRef.current) {
-         dateBoxRef.current.addEventListener('mouseleave', onCancelHighlight);
-         dateBoxRef.current.addEventListener('mousemove', onMoveHighlight);
+      if (containerRef.current) {
+         containerRef.current.addEventListener('mouseleave', onCancelHighlight);
+         containerRef.current.addEventListener('mousemove', onMoveHighlight);
       }
       return () => {
-         if (dateBoxRef.current) {
-            dateBoxRef.current.removeEventListener('mousemove', onMoveHighlight);
-            dateBoxRef.current.removeEventListener('mouseleave', onCancelHighlight);
+         if (containerRef.current) {
+            containerRef.current.removeEventListener('mousemove', onMoveHighlight);
+            containerRef.current.removeEventListener('mouseleave', onCancelHighlight);
          }
       }
 
@@ -132,17 +132,20 @@ function StockTradeTimeline(props) {
          if (target.classList.contains('cell')) {
             hilightRef.current.style.display = 'block';
             hilightRef.current.style.top = `${target.offsetTop}px`;
-            hilightRef.current.style.width = `${boxRef.current.parentNode.scrollWidth-dateBoxRef.current.offsetWidth-10}px`;
+            const dateBoxW = containerRef.current.children[0].offsetWidth;
+            const offset = containerRef.current.parentNode.scrollLeft;
+            hilightRef.current.style.width = `${containerRef.current.offsetWidth-dateBoxW}px`;
+            hilightRef.current.style.left = `${offset-10}px`;
          } else onCancelHighlight();
       }
    });
 
    if (!tradeList.length) return <NoData>There is no track of stock history.</NoData>;
-   return <Box sx={{
+   return <Box ref={containerRef} sx={{
       display: 'flex',
       '.cell': { height: `${config.dh}px`, userSelect: 'none' }
    }}>
-      <Box ref={dateBoxRef} sx={{
+      <Box sx={{
          zIndex: '100',
          position: 'sticky', left: '0px',
          marginRight: '10px',
