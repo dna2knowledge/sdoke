@@ -92,6 +92,14 @@ function buildTradeList(firstDay, endDay, trades) {
    return tradeList;
 }
 
+function trimDateTradeList(dateList, tradeList) {
+   let maxI = 0;
+   tradeList.forEach(z => {
+      if (z.stI > maxI) maxI = z.stI;
+   });
+   dateList.splice(maxI, dateList.length-maxI);
+}
+
 function StockTradeTimeline(props) {
    const { data } = props;
    const boxRef = useRef(null);
@@ -111,6 +119,7 @@ function StockTradeTimeline(props) {
    const wd = firstDay.getDay();
    const dateList = buildDateList(firstDay, endDay);
    const tradeList = buildTradeList(firstDay, endDay, trades);
+   trimDateTradeList(dateList, tradeList);
 
    useEffect(() => {
       if (containerRef.current) {
