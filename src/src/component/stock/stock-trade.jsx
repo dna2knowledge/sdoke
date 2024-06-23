@@ -441,12 +441,15 @@ export default function StockTrade() {
             // otherwise, fetch latest data per 10s
          }
          busy = true;
+         const todayTs = getTodayTs();
          const codemap = {};
          try {
             const list = data.Ts.map(z => {
                if (codemap[z.code]) return null;
                codemap[z.code] = 1;
-               return z.code;
+               if (!z.S) return z.code;
+               if (z.S.T === todayTs) return z.code;
+               return null;
             }).filter(z => !!z);
             if (list.length) {
                const rts = await databox.stock.getStockRealtime(list);
