@@ -127,6 +127,7 @@ export default function StockPanel() {
       }
       const error = [];
       stat.ts = new Date().getTime();
+      stat.n = rawList.length;
       for (let i = 0, n = rawList.length; i < n; i ++) {
          eventbus.emit('stock.update.progress', { i, n });
          const item = rawList[i];
@@ -148,9 +149,14 @@ export default function StockPanel() {
             content: 'All stock history are up-to-date now.'
          });
       }
+      stat.n = 0;
       eventbus.emit('stock.update.progress', { i: 0, n: 0 });
    };
    const onInsightClick = () => {
+      if (local.data.updateStockProgress?.n) {
+         eventbus.emit('toast', { severity: 'warning', content: 'Stock data are upadating. Please try later after it is complete.' });
+         return;
+      }
       eventbus.emit('stock.analysis.captr');
    };
    const onUpdateStockList = () => triggerFileSelect().then(async (files) => {
