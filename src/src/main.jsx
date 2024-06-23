@@ -14,6 +14,7 @@ import PlaceHolder from '$/page/placeholder.jsx';
 import Stock from '$/page/stock.jsx';
 import StockStrategy from '$/page/stock-strategy';
 import StockTrade from '$/page/stock-trade';
+import About from '$/page/about.jsx';
 import Loading from '$/component/shared/loading.jsx';
 import Toast from '$/component/shared/toast.jsx';
 import '$/index.css';
@@ -26,7 +27,7 @@ ReactDOM.createRoot(document.getElementById('root')).render(
            <Route index element={<Stock name="Sdoke" />} />
            <Route path="strategy" element={<StockStrategy />} />
            <Route path="trade" element={<StockTrade />} />
-           <Route path="about" element={<PlaceHolder name="About" />} />
+           <Route path="about" element={<About />} />
         </Route>
         <Route path="/login" element={<PlaceHolder name="login" />} />
      </Routes></HashRouter>
