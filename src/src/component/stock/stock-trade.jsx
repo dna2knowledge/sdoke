@@ -181,6 +181,7 @@ function StockTradeTimeline(props) {
             y={z.edI * config.dh + 10}
             w={config.tw1}
             h={(z.stI - z.edI) * config.dh + config.th1}
+            year={year}
             data={z}
          />)}
       </Box>
@@ -388,11 +389,30 @@ function EditDialog(props) {
    </Dialog>;
 }
 
+async function getTradeData(year) {
+   const obj = {};
+   obj.years = (await databox.stock.getStockTradeYears()) || [new Date().getFullYear()];
+   obj.trades = (await databox.stock.getStockTradeList(year)) || [];
+   const scan = obj.years.filter(z => z < year);
+   for(let i = 0, n = scan.length; i < n; i++) {
+      const y = scan[i];
+      const trades0 = (await databox.stock.getStockTradeList(y)) || [];
+      const trades = trades0.filter(z => {
+         if (!z.S) return true;
+         const y0 = new Date(z.S.T).getFullYear();
+         return y0 >= year;
+      });
+      obj.trades = obj.trades.concat(trades);
+   }
+   return obj;
+}
+
 export default function StockTrade() {
    // stock.trade.year{Y}
    const [year, setYear] = useState(new Date().getFullYear());
+   const [years, setYears] = useState([new Date().getFullYear()]);
    const [data, setData] = useState({
-      year: 0,
+      Y: 0,
       Ts: [],
    });
    const cache = useRef({
@@ -402,10 +422,12 @@ export default function StockTrade() {
    const [editSelected, setEditSelected] = useState(null);
 
    useEffect(() => {
-      databox.stock.getStockTradeList(year).then(rawList => {
-         setData({ year, Ts: rawList || [], });
-      });
-   }, []);
+      (async () => {
+         const r = await getTradeData(year);
+         setYears(r.years);
+         setData({ Y: year, Ts: r.trades });
+      })();
+   }, [year]);
 
    useEffect(() => {
       let timer = null;
@@ -497,6 +519,15 @@ export default function StockTrade() {
       // TODO: check year
       const year = new Date(item.T).getFullYear();
       databox.stock.setStockTradeList(year, data.Ts);
+      if (!years.includes(year)) {
+         const currentYear = new Date().getFullYear();
+         for (let y = currentYear; y >= year; y--) {
+            if (!years.includes(y)) years.push(y);
+         }
+         years.sort((a, b) => b - a);
+         setYears(years);
+         databox.stock.setStockTradeYears(years);
+      }
       cache.current.lastUpdate = false;
       setData({...data});
    };
@@ -512,7 +543,7 @@ export default function StockTrade() {
    }}>
       <Box>
          <Select variant="standard" value={year} onChange={(evt) => setYear(evt.target.value)}>
-            <MenuItem value={2024}>2024</MenuItem>
+            {years.map(Y => <MenuItem key={Y} value={Y}>{Y}</MenuItem>)}
          </Select>
          <IconButton onClick={onUpdateClick}><UpdateIcon /></IconButton>
          <IconButton onClick={onAddClick}><AddRoadIcon /></IconButton>

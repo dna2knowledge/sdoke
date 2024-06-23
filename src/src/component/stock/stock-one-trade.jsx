@@ -5,20 +5,54 @@ import eventbus from '$/service/eventbus';
 import databox from '$/service/databox';
 import config from '$/component/stock/stock-trade-config';
 
-function paintHistory(canvas, w0, h0, item, history) {
+function paintHistory(canvas, w0, h0, year, item, history) {
+   const stDate = new Date(item.T);
+   const edDate = item?.S?.T ? new Date(item.S.T) : new Date();
+   const T0 = stDate.getFullYear() === year ? item.T : new Date(`${year}-01-01`).getTime();
+   const tsa = T0;
+   const tsb = edDate.getFullYear() === year ? edDate.getTime() : new Date(`${year}-12-31`).getTime();
+
+   const hi0 = history, partial = {};
+   history = hi0.slice(1).filter(z => new Date(z.T).getFullYear() === year);
+   const relocLast = history.length > 0 ? hi0[hi0.filter(z => !z || z.T < history[0].T).length-1] : null;
+   history.unshift(relocLast);
+   if (canvas.style.height) {
+      canvas.height = '';
+      canvas.style.height = '';
+      canvas.parentNode.style.height = '';
+      canvas.parentNode.parentNode.style.height = '';
+      canvas.parentNode.parentNode.style.top = '';
+   }
+   if (history.length !== hi0.length && history.length) {
+      partial.st = hi0[1];
+      partial.ed = hi0[hi0.length-1];
+      if (new Date(partial.st.T).getFullYear() === year) partial.st = null;
+      if (new Date(partial.ed.T).getFullYear() === year) partial.ed = null;
+      const resizeH = (
+         Math.floor(
+            (new Date(history[history.length-1].T).getTime() - new Date(history[1].T).getTime())/config.dayms
+         ) * config.dh
+      ) + (partial.st ? config.dh : 0);
+      canvas.height = `${resizeH}`;
+      canvas.style.height = `${resizeH}px`;
+      canvas.parentNode.style.height = `${resizeH}px`;
+      canvas.parentNode.parentNode.style.height = `${resizeH + config.th1}px`;
+      if (partial.ed) {
+         canvas.parentNode.parentNode.style.top = `${10}px`;
+      }
+      h0 = resizeH;
+   }
    const pen = canvas.getContext('2d');
    pen.fillStyle = 'white';
    pen.fillRect(0, 0, w0, h0);
    if (history.length <= 1) return;
    const stat = { max: 0, min: Infinity, last: history[0] };
    history.forEach(z => {
+      if (!z) return;
       if (z.H > stat.max) stat.max = z.H;
       if (z.L < stat.min) stat.min = z.L;
    });
    const dm = stat.max - stat.min;
-   const T0 = item.T;
-   const tsa = item.T;
-   const tsb = item?.S?.T || new Date().getTime();
    const n0 = Math.floor((tsb - tsa)/config.dayms);
 
    // draw special point background
@@ -45,6 +79,18 @@ function paintHistory(canvas, w0, h0, item, history) {
       pen.moveTo(0, y); pen.lineTo(w0, y); pen.lineTo(w0/2, y+config.dh); pen.lineTo(0, y);
       pen.fill();
       */
+   }
+   if (partial.st) {
+      pen.fillStyle = 'rgb(200, 200, 255)';
+      pen.beginPath();
+      pen.moveTo(0, h0-config.dh); pen.lineTo(w0, h0-config.dh); pen.lineTo(w0/2, h0); pen.lineTo(0, h0-config.dh);
+      pen.fill();
+   }
+   if (partial.ed) {
+      pen.fillStyle = 'rgb(200, 200, 255)';
+      pen.beginPath();
+      pen.moveTo(0, config.dh); pen.lineTo(w0, config.dh); pen.lineTo(w0/2, 0); pen.lineTo(0, config.dh);
+      pen.fill();
    }
 
    // draw history
@@ -101,7 +147,7 @@ function calcRate(stP, edP) {
 }
 
 export default function StockOneTrade(props) {
-   const { x, y, w, h, data } = props;
+   const { x, y, w, h, year, data } = props;
    const canvasRef = useRef(null);
    const anchorRef = useRef(null);
    const cache = useRef({});
@@ -139,7 +185,7 @@ export default function StockOneTrade(props) {
             });
          }
          setRate(calcRate(hdata[1].C, rt.C));
-         paintHistory(canvasRef.current, w-5, h, data, hdata);
+         paintHistory(canvasRef.current, w-5, h, year, data, hdata);
       }
    }, [data]);
 
@@ -158,7 +204,7 @@ export default function StockOneTrade(props) {
          const stP = data.B ? data.B.P : hdata[1].C;
          const edP = data.S ? data.S.P : hdata[hdata.length-1].C;
          setRate(calcRate(stP, edP));
-         paintHistory(canvasRef.current, w-5, h, data, hdata);
+         paintHistory(canvasRef.current, w-5, h, year, data, hdata);
       });
       return () => {
          needData = false;
@@ -202,7 +248,7 @@ export default function StockOneTrade(props) {
                <Box className={rate > 0 ? 'red' : (rate < 0 ? 'green' : 'gray')}>{rate}%</Box>
             </Box>
             <IconButton ref={anchorRef} sx={{ width: '16px', height: '16px' }} onClick={onMenuOpen}><MoreVertIcon /></IconButton>
-            <Popper open={menuOpen} anchorEl={anchorRef.current} disablePortal><Paper>
+            <Popper open={menuOpen} anchorEl={anchorRef.current}><Paper>
                <ClickAwayListener onClickAway={onMenuClose}><MenuList>
                   <MenuItem onClick={onEditClick}>Edit</MenuItem>
                   <MenuItem onClick={onDelClick}>Remove</MenuItem>

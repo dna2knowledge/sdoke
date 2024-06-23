@@ -106,6 +106,8 @@ const stockApi = {
     },
     getStockStrategyList: () => db.get("stock.strategy.list"),
     setStockStrategyList: (list) => db.set("stock.strategy.list", list),
+    getStockTradeYears: () => db.get('stock.trade.list.years'),
+    setStockTradeYears: (list) => db.set('stock.trade.list.years', list),
     getStockTradeList: (year) => db.get(`stock.trade.list.${year}`),
     setStockTradeList: (year, list) => db.set(`stock.trade.list.${year}`, list),
 };
