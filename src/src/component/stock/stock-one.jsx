@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
-import { Box } from '@mui/material';
+import { Box, IconButton } from '@mui/material';
+import BookmarkAddIcon from '@mui/icons-material/BookmarkAdd';
 import NoData from '$/component/shared/no-data';
 import Chart from '$/component/stock/stock-one-chart';
 import eventbus from '$/service/eventbus';
@@ -54,7 +55,10 @@ export default function StockOne() {
    if (loading) return <NoData>Loading data for {meta.code} {meta.name} ...</NoData>;
    return <Box>
       { data && data.length ? (<Box>
-         <Box sx={{ textAlign: 'center', width: '100%' }}>{meta.code} {meta.name} {meta.area ? ` (${meta.area})` : null}</Box>
+         <Box sx={{ textAlign: 'center', width: '100%' }}>
+            <IconButton sx={{ width: '12px', height: '12px' }} onClick={() => eventbus.emit('stock.pinned.add', meta)}><BookmarkAddIcon /></IconButton> {meta.code} {meta.name}
+            {meta.area ? ` (${meta.area})` : null}
+         </Box>
          <Box><Chart /></Box>
       </Box>) : <NoData>No Data; no records for <strong>{meta.code} {meta.name}</strong></NoData> }
    </Box>;

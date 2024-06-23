@@ -86,7 +86,6 @@ export default function StockPanel() {
             setPinnedStocks([...statRef.current.pinnedStocks]);
             databox.stock.setPinnedStockList(statRef.current.pinnedStocks);
          }
-         eventbus.emit('stock.pinned.click', data);
       }
       function onStockPinnedRemove(data) {
          const one = statRef.current.pinnedStocks.find(z => z.code === data.code);
@@ -193,7 +192,7 @@ export default function StockPanel() {
                options={data || []}
                getOptionLabel={option => `${option.code} ${option.name}${option.area ? ` (${option.area})` : ''}`}
                onChange={(_, val) => {
-                  eventbus.emit('stock.pinned.add', val);
+                  eventbus.emit('stock.pinned.click', val);
                }}
                renderInput={params =>
                   <TextField sx={{ width: '100%', borderBottom: '1px solid #ccc' }} placeholder="Stock Code / Name"
