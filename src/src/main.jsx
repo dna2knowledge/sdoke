@@ -13,6 +13,7 @@ import Layout from '$/layout.jsx';
 import PlaceHolder from '$/page/placeholder.jsx';
 import Stock from '$/page/stock.jsx';
 import StockStrategy from '$/page/stock-strategy';
+import StockSearch from './page/stock-search';
 import StockTrade from '$/page/stock-trade';
 import About from '$/page/about.jsx';
 import Loading from '$/component/shared/loading.jsx';
@@ -26,6 +27,7 @@ ReactDOM.createRoot(document.getElementById('root')).render(
         <Route path="/" element={<Layout />}>
            <Route index element={<Stock name="Sdoke" />} />
            <Route path="strategy" element={<StockStrategy />} />
+           <Route path="search" element={<StockSearch />} />
            <Route path="trade" element={<StockTrade />} />
            <Route path="about" element={<About />} />
         </Route>
