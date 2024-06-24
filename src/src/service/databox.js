@@ -28,7 +28,7 @@ function checkAcitveToday() {
       if (
          (now.getHours() < 9 || now.getHours() >= 15) ||
          (now.getHours() === 9 && now.getMinutes() < 30) ||
-         (now.getHours() > 11 || now.getHours() < 13) ||
+         (now.getHours() > 11 && now.getHours() < 13) ||
          (now.getHours() === 11 && now.getMinutes() >= 30)
       ) {
          stat.active = false;

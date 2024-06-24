@@ -111,6 +111,9 @@ async function getRtFromTencent(codes) {
       const r = await fetch(url, { method: 'GET' });
       const raw = await r.text();
       raw.split(';').forEach(function (line) {
+         if (!line) return;
+         line = line.trim();
+         if (line.indexOf('=') < 0) return;
          const ctp = line.split('"')[1].split('~');
          const item = {
             code: `${ctp[0] === '1' ? 'sh' : 'sz'}${ctp[2]}`,
