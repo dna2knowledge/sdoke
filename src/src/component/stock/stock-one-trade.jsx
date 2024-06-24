@@ -225,6 +225,15 @@ export default function StockOneTrade(props) {
       eventbus.emit('stock.strategy.del', data?.index);
       onMenuClose();
    };
+   const onStockTitleClick = () => {
+      const holdData = data;
+      eventbus.comp.waitUntil('comp.stock.stock-panel').then(() => {
+         eventbus.emit('stock.pinned.click', {
+            code: holdData.code,
+            name: holdData.name,
+         });
+      });
+   };
 
    return <Box sx={{
       position: 'absolute',
@@ -236,7 +245,7 @@ export default function StockOneTrade(props) {
       backgroundColor: 'red'
    }}>
       <Box sx={{ height: `${config.th1}px`, backgroundColor: '#ccc', fontSize: '10px' }}>
-         <Box>{data.code} {data.name}</Box>
+         <Box><a href="#/" onClick={onStockTitleClick}>{data.code} {data.name}</a></Box>
          <Box sx={{ display: 'flex' }}>
             <Box sx={{
                display: 'flex',

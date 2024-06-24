@@ -68,11 +68,13 @@ export default function StockPanel() {
    }, []);
 
    useEffect(() => {
+      eventbus.comp.register('comp.stock.stock-panel');
       eventbus.on('stock.pinned.add', onStockPinnedAdd);
       eventbus.on('stock.pinned.remove', onStockPinnedRemove);
       eventbus.on('stock.pinned.click', onStockPinnedClick);
 
       return () => {
+         eventbus.comp.unregister('comp.stock.stock-panel');
          eventbus.off('stock.pinned.add', onStockPinnedAdd);
          eventbus.off('stock.pinned.remove', onStockPinnedRemove);
          eventbus.off('stock.pinned.click', onStockPinnedClick);
