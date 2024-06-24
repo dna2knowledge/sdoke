@@ -167,7 +167,7 @@ export default function StockOneTrade(props) {
          await cache.current.dataPromise;
          const hdata = cache.current.hdata;
          if (!hdata) return;
-         const last = hdata[hdata.length-1];
+         const last = hdata.length <= 1 ? {T:0} : hdata[hdata.length-1];
          if (last.T === rt.T) {
             last.O = rt.O;
             last.C = rt.C;
@@ -184,7 +184,9 @@ export default function StockOneTrade(props) {
                V: rt.V,
             });
          }
-         setRate(calcRate(hdata[1].C, rt.C));
+         const stP = data.B ? data.B.P : hdata[1].C;
+         const edP = data.S ? data.S.P : hdata[hdata.length-1].C;
+         setRate(calcRate(stP, edP));
          paintHistory(canvasRef.current, w-5, h, year, data, hdata);
       }
    }, [data]);
@@ -198,7 +200,7 @@ export default function StockOneTrade(props) {
          const tsa = data.T;
          const tsb = data?.S?.T || new Date().getTime();
          const hdata = raw.filter(z => z.T >= tsa && z.T <= tsb);
-         const i = raw.indexOf(hdata[0]);
+         const i = hdata.length ? raw.indexOf(hdata[0]) : (raw.length-1);
          hdata.unshift(i === 0 ? null : raw[i-1]);
          cache.current.hdata = hdata;
          const stP = data.B ? data.B.P : hdata[1].C;
