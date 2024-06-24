@@ -84,6 +84,8 @@ const stockApi = {
         delete stat.progress[key];
         return newh;
     },
+    getStockHistoryRaw: (code) => db.get(`stock.one.${code}.history`),
+    setStockHistoryRaw: (code, list) => db.set(`stock.one.${code}.history`, list),
     getStockHistory: async (code, endDateTs) => {
         if (!code) return null;
         const key = `stock.one.${code}.history`;

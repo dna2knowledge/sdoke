@@ -1,5 +1,4 @@
 import { useState, useRef, useEffect } from 'react';
-import SearchIcon from '@mui/icons-material/Search';
 import UpdateIcon from '@mui/icons-material/Update';
 import InsightsIcon from '@mui/icons-material/Insights';
 import CloseIcon from '@mui/icons-material/Close';
@@ -14,6 +13,7 @@ import eventbus from '$/service/eventbus';
 import databox from '$/service/databox';
 import local from '$/service/local';
 import { triggerFileSelect, readText } from '$/util/file-reader';
+import useLongPress from '$/component/util/long-press';
 
 function StockUpdateProgressBar(props) {
    const [i, setI] = useState(0);
@@ -53,6 +53,8 @@ export default function StockPanel() {
    const statRef = useRef({});
    statRef.current.pinnedStocks = statRef.current.pinnedStocks || [];
    const [pinnedStocks, setPinnedStocks] = useState([]);
+   const updateButtonRef = useRef(null);
+   const delegateClick = useLongPress(updateButtonRef);
 
    useEffect(() => {
       databox.stock.getStockList().then(rawList => {
@@ -154,6 +156,108 @@ export default function StockPanel() {
       stat.n = 0;
       eventbus.emit('stock.update.progress', { i: 0, n: 0 });
    };
+   const onQuickUpdateClick = async () => {
+      if (!local.data.updateStockProgress) local.data.updateStockProgress = {};
+      const today = new Date();
+      const ts = today.getTime();
+      const stat = local.data.updateStockProgress;
+      const rawCodeList = ((await databox.stock.getStockList()) || []).map(z => z.code).filter(z => !!z);
+      if (!rawCodeList.length) {
+         eventbus.emit('toast', {
+            severity: 'error',
+            content: 'There is no stock in the list. Please update your stock list first.'
+         });
+         return;
+      }
+      const firstH = await databox.stock.getStockHistoryRaw(rawCodeList[0]);
+      if (firstH?.length) {
+         const dayms = 24 * 3600 * 1000;
+         const todayTs = ts - ts % dayms;
+         const tsH = firstH[firstH.length-1].T;
+         const dd = Math.floor((todayTs - tsH) / dayms);
+         if (dd <= 1) {
+            // ok; pass
+         } else if (dd === 3 && today.getDay() === 1) {
+            // ok; pass
+         } else {
+            if (!confirm(`Are you sure to do quick updating history data? It may cause data missing for ${dd} days.`)) return;
+         }
+         if (today.getHours() < 15) {
+            if (!confirm(`Are you sure to do quick updating history data? The data may be changed in near future.`)) return;
+         }
+      } else {
+         if (!confirm(`Are you sure to do quick updating history data? It is recommended to do common updating to fetch full history.`)) return;
+      }
+      eventbus.emit('toast', {
+         severity: 'info',
+         content: `Doing quick update on history data ...`
+      });
+      stat.error = [];
+      let count = 0;
+      for (let i = 0, n = rawCodeList.length; i < n; i += 50) {
+         const codes = rawCodeList.slice(i, i+50);
+         try {
+            const rts = await databox.stock.getStockRealtime(codes);
+            for (let j = 0; j < rts.length; j++) {
+               const rt = rts[j];
+               try {
+                  const h = (await databox.stock.getStockHistoryRaw(rt.code)) || [];
+                  const last = h[h.length-1];
+                  if (last?.T === rt.T) {
+                     last.O = rt.O;
+                     last.C = rt.C;
+                     last.L = rt.L;
+                     last.H = rt.H;
+                     last.V = rt.V;
+                  } else {
+                     h.push({
+                        T: rt.T,
+                        O: rt.O,
+                        C: rt.C,
+                        L: rt.L,
+                        H: rt.H,
+                        V: rt.V,
+                     });
+                  }
+                  await databox.stock.setStockHistoryRaw(rt.code, h);
+                  eventbus.emit('stock.update.progress', { i: i+j, n });
+                  count ++;
+               } catch(_) {
+                  stat.error.push(rt.code);
+                  eventbus.emit('toast', {
+                     severity: 'error',
+                     content: `Failed to update stock history for ${error.slice(0, 10).join(', ')} ${error.length >= 10 ? '...' : ''}.`
+                  });
+               }
+            }
+         } catch(_) {
+            codes.forEach(z => stat.error.push(z));
+            eventbus.emit('toast', {
+               severity: 'error',
+               content: `Failed to update stock history for ${error.slice(0, 10).join(', ')} ${error.length >= 10 ? '...' : ''}.`
+            });
+         }
+      }
+
+      if (!stat.error.length) {
+         if (count === rawCodeList.length) {
+            eventbus.emit('toast', {
+               severity: 'success',
+               content: 'All stock history are up-to-date now.'
+            });
+         } else {
+            eventbus.emit('toast', {
+               severity: 'warn',
+               content: `Almost stock history are up-to-date now; ${rawCodeList.length - count} stocks cannot be quickly updated.`
+            });
+         }
+      }
+      stat.n = 0;
+      eventbus.emit('stock.update.progress', { i: 0, n: 0 });
+      if (selected) {
+         eventbus.emit('stock.pinned.click', data.find(z => z.code === selected));
+      }
+   };
    const onInsightClick = () => {
       if (local.data.updateStockProgress?.n) {
          eventbus.emit('toast', { severity: 'warning', content: 'Stock data are upadating. Please try later after it is complete.' });
@@ -191,10 +295,16 @@ export default function StockPanel() {
       }
    };
 
+   delegateClick(() => {
+      onUpdateClick();
+   }, () => {
+      onQuickUpdateClick();
+   });
+
    return <Box sx={{ height: '100%' }}>
       <Box sx={{ width: '100%', height: '100%', maxWidth: '800px', minWidth: '200px', margin: '0 auto', display: 'flex', flexDirection: 'column' }}>
          <Box sx={{ display: 'flex', width: '100%', mb: '10px' }}>
-            <IconButton onClick={onUpdateClick} type="button" sx={{ p: '10px' }}><UpdateIcon /></IconButton>
+            <IconButton ref={updateButtonRef} type="button" sx={{ p: '10px' }}><UpdateIcon /></IconButton>
             <IconButton onClick={onInsightClick} type="button" sx={{ p: '10px' }}><InsightsIcon /></IconButton>
             <Autocomplete sx={{ ml: 1, flex: '1 0 auto', '.MuiInputBase-input': { height: '10px' } }} disablePortal
                options={data || []}
@@ -213,7 +323,6 @@ export default function StockPanel() {
                   </Button>
                </Box>}
             />
-            <IconButton type="button" sx={{ p: '10px' }}><SearchIcon /></IconButton>
          </Box>
          <Box><StockUpdateProgressBar/></Box>
          <Box sx={{ maxHeight: '100px', overflowY: 'auto' }}>
