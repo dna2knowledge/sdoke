@@ -84,7 +84,8 @@ const stockApi = {
         delete stat.progress[key];
         return newh;
     },
-    getStockHistory: async (code) => {
+    getStockHistory: async (code, endDateTs) => {
+        if (!code) return null;
         const key = `stock.one.${code}.history`;
         const history = await db.get(key);
 
@@ -93,7 +94,7 @@ const stockApi = {
 
         // if history is behind the date
         const last = history[history.length-1];
-        const ts = new Date(getDateTodayTs());
+        const ts = endDateTs ? new Date(endDateTs) : new Date(getDateTodayTs());
         const tsv = ts.getTime();
         const wd = ts.getDay();
         if (tsv > last.T) {

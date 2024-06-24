@@ -191,7 +191,7 @@ export default function StockOneTrade(props) {
 
    useEffect(() => {
       let needData = true;
-      const dataPromise = databox.stock.getStockHistory(data.code)
+      const dataPromise = databox.stock.getStockHistory(data?.code, data?.S?.T);
       cache.current.dataPromise = dataPromise;
       dataPromise.then((raw) => {
          if (!needData) return;
