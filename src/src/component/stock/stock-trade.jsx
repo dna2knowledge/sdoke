@@ -432,7 +432,18 @@ export default function StockTrade() {
    useEffect(() => {
       let timer = null;
       let busy = false;
-      timer = setInterval(async () => {
+      timer = setInterval(updateTradeData, 10 * 1000);
+      eventbus.on('stock.strategy.add', onStockStrategyAdd);
+      eventbus.on('stock.strategy.edit', onStockStrategyEdit);
+      eventbus.on('stock.strategy.del', onStockStrategyDel);
+      return () => {
+         if (timer) clearInterval(timer);
+         eventbus.off('stock.strategy.add', onStockStrategyAdd);
+         eventbus.off('stock.strategy.edit', onStockStrategyEdit);
+         eventbus.off('stock.strategy.del', onStockStrategyDel);
+      };
+
+      async function updateTradeData() {
          if (busy) return;
          if (!data?.Ts) return;
          if (cache.current.lastUpdate) {
@@ -461,16 +472,7 @@ export default function StockTrade() {
          } catch (_) {
          }
          busy = false;
-      }, 10 * 1000);
-      eventbus.on('stock.strategy.add', onStockStrategyAdd);
-      eventbus.on('stock.strategy.edit', onStockStrategyEdit);
-      eventbus.on('stock.strategy.del', onStockStrategyDel);
-      return () => {
-         if (timer) clearInterval(timer);
-         eventbus.off('stock.strategy.add', onStockStrategyAdd);
-         eventbus.off('stock.strategy.edit', onStockStrategyEdit);
-         eventbus.off('stock.strategy.del', onStockStrategyDel);
-      };
+      }
 
       async function onStockStrategyAdd() {
          setEditSelected(null);
