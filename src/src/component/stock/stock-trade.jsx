@@ -10,6 +10,7 @@ import EditRoadIcon from '@mui/icons-material/EditRoad';
 import TaskIcon from '@mui/icons-material/Task';
 import CloseIcon from '@mui/icons-material/Close';
 import NoData from '$/component/shared/no-data';
+import StockTradeTooltip from '$/component/stock/stock-trade-tooltip';
 import StockOneTrade from '$/component/stock/stock-one-trade';
 import eventbus from '$/service/eventbus';
 import databox from '$/service/databox';
@@ -32,15 +33,6 @@ function buildDateList(firstDay, endDay) {
    return dateList;
 }
 
-function getTodayTs() {
-   const ts = new Date().getTime();
-   return ts - ts % (24 * 3600 * 1000);
-}
-
-function getDateStr(ts) {
-   return new Date(ts).toISOString().split('T')[0];
-}
-
 function measureDayH(elem) {
    // TODO: calc correct div height with font
    const canvas = document.createElement('canvas');
@@ -61,7 +53,7 @@ function buildTradeList(firstDay, endDay, trades) {
       return a.S.T - b.S.T;
    });
    const slots = [{ ts: -1, i: 0 }];
-   const ts = getTodayTs();
+   const ts = config.util.getTodayTs();
    let maxI = 0;
    const edTs = endDay.getTime();
    // header height is equal to how many days
@@ -147,7 +139,7 @@ function StockTradeTimeline(props) {
             hilightRef.current.style.left = `${offset-10}px`;
          } else onCancelHighlight();
       }
-   });
+   }, [containerRef, hilightRef]);
 
    if (!tradeList.length) return <NoData>There is no track of stock history.</NoData>;
    return <Box ref={containerRef} sx={{
@@ -174,7 +166,9 @@ function StockTradeTimeline(props) {
             position: 'absolute',
             zIndex: '1000',
             left: '0px',
+            display: 'none',
          }}>&nbsp;</Box>
+         <StockTradeTooltip />
          {tradeList.map((z, i) => <StockOneTrade
             key={i}
             x={z.I * config.tw1}
@@ -193,7 +187,7 @@ function EditDialog(props) {
    const cache = useRef({
       showBuyin: false,
       showSellout: false,
-      startDate: getDateStr(new Date().getTime()),
+      startDate: config.util.getDateStr(new Date().getTime()),
    });
    const [showBuyin, setShowBuyin] = useState(cache.current.showBuyin || false);
    const [showSellout, setShowSellout] = useState(cache.current.showSellout || false);
@@ -224,7 +218,7 @@ function EditDialog(props) {
             setSelected(cache.current.selected);
             return;
          }
-         cache.current.startDate = getDateStr(item.T);
+         cache.current.startDate = config.util.getDateStr(item.T);
          cache.current.showBuyin = !!item.B;
          cache.current.showSellout = !!item.S;
          cache.current.selected = stockList.find(z => z.code === item.code);
@@ -233,13 +227,13 @@ function EditDialog(props) {
          setStartDate(cache.current.startDate);
          setSelected(cache.current.selected);
          if (cache.current.showBuyin) {
-            cache.current.biDate = getDateStr(item.B.T);
+            cache.current.biDate = config.util.getDateStr(item.B.T);
             cache.current.biPrice = `${item.B.P}`;
             setBiDate(cache.current.biDate);
             setBiPrice(cache.current.biPrice);
          }
          if (cache.current.showSellout) {
-            cache.current.soDate = getDateStr(item.S.T);
+            cache.current.soDate = config.util.getDateStr(item.S.T);
             cache.current.soPrice = `${item.S.P}`;
             setSoDate(cache.current.soDate);
             setSoPrice(cache.current.soPrice);
@@ -449,7 +443,7 @@ export default function StockTrade() {
       async function updateTradeData() {
          if (updateTradeDataStat.busy) return;
          if (!data?.Ts) return;
-         const todayTs = getTodayTs();
+         const todayTs = config.util.getTodayTs();
          if (cache.current.lastUpdate) {
             // only get data once when trade active is false
             // and if over one day, also update at least once

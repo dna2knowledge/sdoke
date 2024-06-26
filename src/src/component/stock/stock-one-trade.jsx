@@ -155,6 +155,50 @@ export default function StockOneTrade(props) {
    const [rate, setRate] = useState('---');
 
    useEffect(() => {
+      if (canvasRef.current) {
+         canvasRef.current.addEventListener('mousemove', onMouseMove);
+         canvasRef.current.addEventListener('mouseleave', onMouseLeave);
+      }
+      return () => {
+         if (canvasRef.current) {
+            canvasRef.current.removeEventListener('mousemove', onMouseMove);
+            canvasRef.current.removeEventListener('mouseleave', onMouseLeave);
+         }
+      };
+
+      function onMouseMove(evt) {
+         const hdata = cache.current.hdata;
+         if (!hdata || !hdata.length) return;
+         const i = Math.floor(evt.offsetY/config.dh);
+         if (cache.current.lastI === i) return;
+         cache.current.lastI = i;
+         const edDate = data?.S?.T ? new Date(data.S.T) : new Date(config.util.getTodayTs());
+         const tsb = edDate.getFullYear() === year ? edDate.getTime() : new Date(`${year}-12-31`).getTime();
+         const T = tsb - config.dayms * i;
+         const h = hdata.find(z => z.T === T);
+         const hi = hdata.indexOf(h);
+         const lastH = hdata[hi-1];
+         if (!h) {
+            eventbus.emit('stock.trade.tooltip', null);
+            return;
+         }
+         const container = canvasRef.current.parentNode.parentNode;
+         const x = container.offsetLeft + config.tw1;
+         const y = i * config.dh + container.offsetTop;
+         const obj = { x, y, ... h };
+         if (lastH) obj.lastC = lastH.C;
+         if (data?.B?.T === T) obj.B = data.B;
+         if (data?.S?.T === T) obj.S = data.S;
+         eventbus.emit('stock.trade.tooltip', obj);
+      }
+
+      function onMouseLeave() {
+         cache.current.lastI = -1;
+         eventbus.emit('stock.trade.tooltip', null);
+      }
+   });
+
+   useEffect(() => {
       eventbus.on(`stock.one.${data?.code}.trade.update`, onStockTradeUpdated);
       return () => {
          eventbus.off(`stock.one.${data?.code}.trade.update`, onStockTradeUpdated);
