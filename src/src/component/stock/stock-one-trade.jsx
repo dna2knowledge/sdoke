@@ -183,8 +183,9 @@ export default function StockOneTrade(props) {
             return;
          }
          const container = canvasRef.current.parentNode.parentNode;
-         const x = container.offsetLeft + config.tw1;
-         const y = i * config.dh + container.offsetTop;
+         const box = container.getBoundingClientRect();
+         const x = box.left;
+         const y = evt.pageY + i * config.dh - evt.offsetY - config.th1;
          const obj = { x, y, ... h };
          if (lastH) obj.lastC = lastH.C;
          if (data?.B?.T === T) obj.B = data.B;

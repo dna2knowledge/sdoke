@@ -77,10 +77,13 @@ export default function StockTradeTooltip() {
             const container = tooltipRef.current.parentNode;
             buildInfo(tooltipRef.current, info);
             tooltipRef.current.style.display = 'block';
-            let rx = info.x;
-            if (rx + tooltipRef.current.offsetWidth > container.offsetWidth) {
-               rx = info.x - config.tw1 - tooltipRef.current.offsetWidth;
-               if (rx < 0) rx = info.x;
+            const w = tooltipRef.current.offsetWidth;
+            const winW = window.innerWidth;
+            let rx;
+            if (info.x + config.tw1 + w > winW) {
+               rx = info.x - w;
+            } else {
+               rx = info.x + config.tw1;
             }
             tooltipRef.current.style.left = `${rx}px`;
             tooltipRef.current.style.top = `${info.y}px`;
@@ -92,7 +95,7 @@ export default function StockTradeTooltip() {
    }, [tooltipRef]);
 
    return <Box ref={tooltipRef} sx={{
-      position: 'absolute',
+      position: 'fixed',
       zIndex: '1001',
       fontSize: '10px',
       backgroundColor: 'yellow',
