@@ -128,7 +128,7 @@ export default function StockTradeTimeline(props) {
             hilightRef.current.style.left = `${offset-10}px`;
          } else onCancelHighlight();
       }
-   }, [containerRef, hilightRef]);
+   });
 
    if (!tradeList.length) return <NoData>There is no track of stock history.</NoData>;
    return <Box ref={containerRef} sx={{
@@ -155,7 +155,6 @@ export default function StockTradeTimeline(props) {
             position: 'absolute',
             zIndex: '1000',
             left: '0px',
-            display: 'none',
          }}>&nbsp;</Box>
          <StockTradeTooltip />
          {tradeList.map((z, i) => <StockOneTrade
