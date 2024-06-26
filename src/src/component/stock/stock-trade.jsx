@@ -430,29 +430,34 @@ export default function StockTrade() {
    }, [year]);
 
    useEffect(() => {
-      let timer = null;
-      let busy = false;
-      timer = setInterval(updateTradeData, 10 * 1000);
+      const updateTradeDataStat = {
+         timer: null,
+         busy: false,
+         ts: 0,
+      };
+      updateTradeDataStat.timer = setInterval(updateTradeData, 10 * 1000);
       eventbus.on('stock.strategy.add', onStockStrategyAdd);
       eventbus.on('stock.strategy.edit', onStockStrategyEdit);
       eventbus.on('stock.strategy.del', onStockStrategyDel);
       return () => {
-         if (timer) clearInterval(timer);
+         if (updateTradeDataStat.timer) clearInterval(updateTradeDataStat.timer);
          eventbus.off('stock.strategy.add', onStockStrategyAdd);
          eventbus.off('stock.strategy.edit', onStockStrategyEdit);
          eventbus.off('stock.strategy.del', onStockStrategyDel);
       };
 
       async function updateTradeData() {
-         if (busy) return;
+         if (updateTradeDataStat.busy) return;
          if (!data?.Ts) return;
+         const todayTs = getTodayTs();
          if (cache.current.lastUpdate) {
             // only get data once when trade active is false
-            if (!databox.stock.getTradeActive()) return;
+            // and if over one day, also update at least once
+            if (!databox.stock.getTradeActive() && updateTradeDataStat.ts >= todayTs) return;
             // otherwise, fetch latest data per 10s
          }
-         busy = true;
-         const todayTs = getTodayTs();
+         updateTradeDataStat.busy = true;
+         updateTradeDataStat.ts = todayTs;
          const codemap = {};
          try {
             const list = data.Ts.map(z => {
@@ -471,7 +476,7 @@ export default function StockTrade() {
             cache.current.lastUpdate = true;
          } catch (_) {
          }
-         busy = false;
+         updateTradeDataStat.busy = false;
       }
 
       async function onStockStrategyAdd() {
