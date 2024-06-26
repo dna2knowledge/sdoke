@@ -462,9 +462,10 @@ export default function StockTrade() {
          try {
             const list = data.Ts.map(z => {
                if (codemap[z.code]) return null;
-               codemap[z.code] = 1;
-               if (!z.S) return z.code;
-               if (z.S.T === todayTs) return z.code;
+               if (!z.S || z.S.T === todayTs) {
+                  codemap[z.code] = 1;
+                  return z.code;
+               }
                return null;
             }).filter(z => !!z);
             if (list.length) {
