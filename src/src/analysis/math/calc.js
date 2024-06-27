@@ -402,6 +402,8 @@ async function evaluateFuncCall(name, args, data, cache, id) {
          v = args.reduce((a, b) => a+b, 0); break;
       case 'avg':
       case 'math.avg':
+      case 'average':
+      case 'math.average':
          args = evaluateFlatFuncCallArgs(args);
          v = args.reduce((a, b) => a+b, 0)/args.length; break;
       case 'norm':
@@ -454,10 +456,37 @@ async function evaluateFuncCall(name, args, data, cache, id) {
       case 'math.count0':
          args = evaluateFlatFuncCallArgs(args);
          v = args.filter(z => !z).length; break;
+      case 'sin':
+      case 'math.sin':
+         args = evaluateFlatFuncCallArgs(args);
+         v = args.map(z => Math.sin(z)); break;
+      case 'cos':
+      case 'math.cos':
+         args = evaluateFlatFuncCallArgs(args);
+         v = args.map(z => Math.cos(z)); break;
+      case 'sqrt':
+      case 'math.sqrt':
+         args = evaluateFlatFuncCallArgs(args);
+         v = args.map(z => Math.sqrt(z)); break;
+      case 'exp':
+      case 'math.exp':
+         args = evaluateFlatFuncCallArgs(args);
+         v = args.map(z => Math.exp(z)); break;
+      case 'ln':
+      case 'math.ln':
+         args = evaluateFlatFuncCallArgs(args);
+         v = args.map(z => Math.log(z) / Math.log(Math.E)); break;
+      case 'arctan':
+      case 'math.arctan':
+         args = evaluateFlatFuncCallArgs(args);
+         v = args.map(z => Math.atan(z)); break;
       // 2
       case 'pow':
       case 'math.pow':
          v = evaluateOp('^', [args[0], args[1]], data, cache, id); break;
+      case 'log':
+      case 'math.log':
+         v = evaluateOp('_log', [args[0], args[1]], data, cache, id); break;
       default:
          v = null;
    }
@@ -501,6 +530,7 @@ function evaluateOpVal(op, op1, op2) {
       case 'and': return (!!op1 && !!op2);
       case 'or': return (!!op1 || !!op2);
       case 'not':  return !op2;
+      case '_log': return Math.log(op1, op2);
       default: return null;
    }
 }
@@ -517,6 +547,7 @@ function evaluateOp1Arr(op, op1arr, op2) {
       case 'and': return op1arr.map(z => !!(z && op2));
       case 'or': return op1arr.map(z => !!(z || op2));
       case 'not':  return op1arr.map(z => !z);
+      case '_log': return op1arr.map(z => Math.log(z, op2));
       default: return null;
    }
 }
@@ -533,6 +564,7 @@ function evaluateOp2Arr(op, op1, op2arr) {
       case 'and': return op2arr.map(z => !!(op1 && z));
       case 'or': return op2arr.map(z => !!(op1 || z));
       case 'not':  return op2arr.map(z => !z);
+      case '_log': return op1arr.map(z => Math.log(op1, z));
       default: return null;
    }
 }
@@ -552,6 +584,7 @@ function evaluateOpArr(op, op1arr, op2arr) {
       case 'and': { for (let i = n1m1, j = n2m1; i >= 0 && j >= 0; i--, j--) r.unshift(!!(op1arr[i] && op2arr[j])); break; }
       case 'or': { for (let i = n1m1, j = n2m1; i >= 0 && j >= 0; i--, j--) r.unshift(!!(op1arr[i] || op2arr[j])); break; }
       case 'not': return op2arr.map(z => !z);
+      case '_log': { for (let i = n1m1, j = n2m1; i >= 0 && j >= 0; i--, j--) r.unshift(Math.log(op1arr[i], op2arr[j])); break; }
       default: return null;
    }
    return r;
