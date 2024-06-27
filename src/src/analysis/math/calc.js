@@ -1,7 +1,38 @@
 //import databox from '$/service/databox';
 
 export const version = '0.1';
+const dayms = 24 * 3600 * 1000;
 
+function getDateTs(date) {
+   const ts = date.getTime();
+   return ts - ts % dayms;
+}
+function pad0(num) {
+   if (num >= 10) return `${num}`;
+   return `0${num}`;
+}
+function nextMonthTs(date) {
+   const y = date.getFullYear();
+   const m = date.getMonth();
+   if (m === 11) {
+      return new Date(`${y+1}-01-01}`).getTime();
+   } else {
+      return new Date(`${y}-${pad0(m+1)}-01`).getTime();
+   }
+}
+function flatList(list) {
+   if (!Array.isArray(list)) return list;
+   const r = [];
+   list.forEach(z => {
+      if (Array.isArray(z)) {
+         const x = flatList(z);
+         x.forEach(zz => r.push(zz));
+      } else {
+         r.push(z);
+      }
+   });
+   return r;
+}
 /*
  * <T> = open/O, close/C, high/H, low/L, vol/volume/V
  * .<T>.today, .<T>.at(day(-1)), .<T>.at(yyyymmdd), .<T>.range(week), .<T>.range(day(-10), day(-1)), .<T>.range(thisweek(-1)), .<T>.range(thisyear)
@@ -101,7 +132,7 @@ function compileSub(tokens, i, out, stat) {
    for (let n = tokens.length; i < n; i++) {
       const t = tokens[i];
       if (t === '(') {
-         const sub = { func: ms === 1, V: [] };
+         const sub = { V: [] };
          const last = valS[valS.length-1];
          if (ms === 1) { // func
             last.F = true;
@@ -204,8 +235,8 @@ async function evaluateNode(expr, data, cache) {
       return expr.r;
    } else if (expr.F) {
       const args = [];
-      for (let i = 0, n = expr.A.length; i < n; i++) {
-         args.push(await evaluateNode(expr.A[i], data, cache));
+      for (let i = 0, n = expr.A.V.length; i < n; i++) {
+         args.push(await evaluateNode(expr.A.V[i], data, cache));
       }
       expr.r = await evaluateFuncCall(expr.v, args, data, cache, expr.id);
       return expr.r;
@@ -229,6 +260,8 @@ function evaluateConstant(name, cache) {
       case 'e':
       case 'math.e':
          v = Math.E; break;
+      case 'today':
+         v = new Date().getTime(); break;
       default:
          v = null;
    }
@@ -275,6 +308,93 @@ async function evaluateFuncCall(name, args, data, cache, id) {
       case 'math.rnd':
       case 'math.random':
          return Math.random(); // no cache
+      case 'today':
+         args = evaluateFlatFuncCallArgs(args);
+         v = getDateTs(new Date());
+         if (args.length) v = args.map(z => v + dayms * z);
+         break;
+      case 'thisweek': {
+         const d = new Date();
+         const wd = d.getDay();
+         v = getDateTs(d);
+         v = [0, 0];
+         v[0] = v - wd * dayms;
+         v[1] = v[0] + 7 * dayms;
+         if (args.length) {
+            args = evaluateFlatFuncCallArgs(args);
+            v = args.map(z => [v[0] + 7 * dayms * z, v[1] + 7 * dayms * (z + 1)]);
+         }
+         break; }
+      case 'week': {
+         const d = new Date();
+         v = getDateTs(d);
+         v = [v - 7 * dayms, v];
+         if (args.length) {
+            args = evaluateFlatFuncCallArgs(args);
+            v = args.map(z => [v[0] + 7 * dayms * z, v[1] + 7 * dayms * (z + 1)]);
+         }
+         break; }
+      case 'thismonth': {
+         const d = new Date();
+         const wd = d.getDate();
+         v = getDateTs(d);
+         v = [0, 0];
+         v[0] = v - (wd - 1) * dayms;
+         v[1] = nextMonthTs(d);
+         if (args.length) {
+            args = evaluateFlatFuncCallArgs(args);
+            const y = d.getFullYear();
+            const m = d.getMonth()+1;
+            v = args.map(z => {
+               const dy = Math.floor(z/12);
+               const dm = z % 12;
+               const td = new Date(`${y+dy}-${pad0(m+dm)}-01`);
+               return [td.getTime(), nextMonthTs(td)];
+            });
+         }
+         break; }
+      case 'month': {
+         const d = new Date();
+         v = getDateTs(d);
+         v = [v - 30 * dayms, v];
+         if (args.length) {
+            args = evaluateFlatFuncCallArgs(args);
+            v = args.map(z => [v[0] + 30 * dayms * z, v[1] + 30 * dayms * (z + 1)]);
+         }
+         break; }
+      case 'thisyear': {
+         const d = new Date();
+         const y = d.getFullYear();
+         v = getDateTs(d);
+         v = [0, 0];
+         v[0] = new Date(`${y}-01-01`).getTime();
+         v[1] = new Date(`${y+1}-01-01`).getTime();
+         if (args.length) {
+            args = evaluateFlatFuncCallArgs(args);
+            v = args.map(z => {
+               const L = new Date(`${y+z}-01-01`).getTime();
+               const H = new Date(`${y+z+1}-01-01`).getTime();
+               return [L, H];
+            });
+         }
+         break; }
+      case 'year': {
+         const d = new Date();
+         v = getDateTs(d);
+         v = [v - 365 * dayms, v];
+         if (args.length) {
+            args = evaluateFlatFuncCallArgs(args);
+            v = args.map(z => [v[0] + 365 * dayms * z, v[1] + 365 * dayms * (z + 1)]);
+         }
+         break; }
+      case 'index': {
+         // .close.atrange(index(-20, 0)) -20 = about trade month, 0 = latest trade day
+         args = evaluateFlatFuncCallArgs(args);
+         v = args.slice();
+         v.unshift('i');
+         break; }
+      case 'flat':
+         v = flatList(args); break;
       // 1
       case 'sum':
       case 'math.sum':
@@ -302,6 +422,10 @@ async function evaluateFuncCall(name, args, data, cache, id) {
          args = evaluateFlatFuncCallArgs(args);
          v = args.reduce((a, b) => a+b, 0);
          v = args.map(z => z / v); break;
+      case 'round':
+      case 'math.round':
+         args = evaluateFlatFuncCallArgs(args);
+         v = args.map(z => Math.round(z)); break;
       case 'ceil':
       case 'math.ceil':
          args = evaluateFlatFuncCallArgs(args);
@@ -355,11 +479,11 @@ function evaluateOp(op, vals, data, cache, id) {
       // TODO check +/-, not
       v = evaluateOpVal(op, op1, op2);
    } else if (op1isArr && op2isArr) {
-      evaluateOpArr(op, op1, op2);
+      v = evaluateOpArr(op, op1, op2);
    } else if (op1isArr && !op2isArr) {
-      evaluateOp1Arr(op, op1, op2);
+      v = evaluateOp1Arr(op, op1, op2);
    } else /*if (!op1isArr && op2isArr)*/ {
-      evaluateOp2Arr(op, op1, op2);
+      v = evaluateOp2Arr(op, op1, op2);
    }
    cache[id] = v;
    return v;
