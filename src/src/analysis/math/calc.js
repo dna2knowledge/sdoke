@@ -223,8 +223,8 @@ function compileSub(tokens, i, out, stat) {
    return i;
 }
 
-async function evaluate(expr, data) {
-   return await evaluateNode(expr.V[0], data, {});
+async function evaluate(expr, data, cache) {
+   return await evaluateNode(expr.V[0], data, cache || {});
 }
 async function evaluateNode(expr, data, cache) {
    if (!expr) return null;
