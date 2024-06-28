@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import {
-   Box, Button, TextField, Pagination,
+   Box, Button, TextField, Pagination, LinearProgress,
    Table, TableHead, TableBody, TableRow, TableCell,
 } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
@@ -8,6 +8,8 @@ import NoData from '$/component/shared/no-data';
 import eventbus from '$/service/eventbus';
 import databox from '$/service/databox';
 import calc from '$/analysis/math/calc';
+
+window._debugCalc = calc;
 
 function StockSearchProgressBar() {
    const [text, setText] = useState('');
@@ -33,9 +35,7 @@ function StockSearchProgressBar() {
       <Box sx={{ width: '100%', mr: 1 }}>
          <LinearProgress variant="determinate" value={value} />
       </Box>
-      <Box>
-         <Typography sx={{ whiteSpace: 'nowrap' }} variant="body2" color="text.secondary">{text || ''}{` ${i} / ${n}`}</Typography>
-      </Box>
+      <Box>{text || ''}{` ${i} / ${n}`}</Box>
    </Box>;
 }
 
@@ -63,6 +63,7 @@ async function filterStock(stockList, searchFormula, sortFormula) {
          if (val) r.push(stock);
          eventbus.emit('stock.search.progress', { t: 'Search', i, n });
       }
+      eventbus.emit('stock.search.progress', { i: 0, n: 0 });
       stockList.forEach(z => { z.score = 0; });
       return sortFormula ? (await sortStock(r, sortFormula)) : r;
    } else {
@@ -93,8 +94,23 @@ async function sortStock(stockList, sortFormula) {
          if (!b || b.score === undefined) return 1;
          return b.score - a.score;
       });
+      eventbus.emit('stock.search.progress', { i: 0, n: 0 });
    }
    return stockList;
+}
+
+function StockLink(props) {
+   const { data } = props;
+   const onStockTitleClick = () => {
+      const holdData = data;
+      eventbus.comp.waitUntil('comp.stock.stock-panel').then(() => {
+         eventbus.emit('stock.pinned.click', {
+            code: holdData.code,
+            name: holdData.name,
+         });
+      });
+   };
+   return <Box><a href="#/" onClick={onStockTitleClick}>{data.code} {data.name}</a></Box>;
 }
 
 function StockSearchResultList() {
@@ -173,7 +189,7 @@ function StockSearchResultList() {
             <TableCell>Score</TableCell>
          </TableRow></TableHead><TableBody>
             {pageList.map((z, i) => <TableRow key={i}>
-               <TableCell>{z.code} {z.name}</TableCell>
+               <TableCell><StockLink data={z} /></TableCell>
                <TableCell>{z.score || 0}</TableCell>
             </TableRow>)}
          </TableBody></Table>
