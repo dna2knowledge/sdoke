@@ -35,7 +35,7 @@ function StockSearchProgressBar() {
       <Box sx={{ width: '100%', mr: 1 }}>
          <LinearProgress variant="determinate" value={value} />
       </Box>
-      <Box>{text || ''}{` ${i} / ${n}`}</Box>
+      <Box sx={{ whiteSpace: 'nowrap', fontSize: '10px' }}>{text || ''}{` ${i} / ${n}`}</Box>
    </Box>;
 }
 
