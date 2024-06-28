@@ -223,7 +223,7 @@ function StockSearchResultList() {
 export default function StockSearch() {
    const [query, setQuery] = useState('');
    const [sort, setSort] = useState('');
-   const [round, setRound] = useState(0);
+   const [round, setRound] = useState(local.data.searchResult?.i || 0);
 
    useEffect(() => {
       eventbus.on('stock.search.result', onRoundUpdate);
