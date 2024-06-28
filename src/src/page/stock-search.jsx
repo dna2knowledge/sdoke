@@ -53,7 +53,7 @@ async function filterStock(stockList, searchFormula, sortFormula) {
       }
       const r = [];
       const n = stockList.length;
-      eventbus.emit('stock.update.progress', { t: 'Search', i: 0, n });
+      eventbus.emit('stock.search.progress', { t: 'Search', i: 0, n });
       for (let i = 0; i < n; i++) {
          // TODO: report progress
          const stock = stockList[i];
@@ -61,7 +61,7 @@ async function filterStock(stockList, searchFormula, sortFormula) {
          const hdata = await databox.stock.getStockHistoryRaw(stock.code);
          const val = await calc.evaluate(expr, hdata);
          if (val) r.push(stock);
-         eventbus.emit('stock.update.progress', { t: 'Search', i, n });
+         eventbus.emit('stock.search.progress', { t: 'Search', i, n });
       }
       stockList.forEach(z => { z.score = 0; });
       return sortFormula ? (await sortStock(r, sortFormula)) : r;
@@ -78,7 +78,7 @@ async function sortStock(stockList, sortFormula) {
          return stockList;
       }
       const n = stockList.length;
-      eventbus.emit('stock.update.progress', { t: 'Sort', i: 0, n });
+      eventbus.emit('stock.search.progress', { t: 'Sort', i: 0, n });
       for (let i = 0; i < n; i++) {
          // TODO: report progress
          const stock = stockList[i];
@@ -86,7 +86,7 @@ async function sortStock(stockList, sortFormula) {
          const hdata = await databox.stock.getStockHistoryRaw(stock.code);
          const score = await calc.evaluate(expr, hdata);
          stock.score = score;
-         eventbus.emit('stock.update.progress', { t: 'Sort', i, n });
+         eventbus.emit('stock.search.progress', { t: 'Sort', i, n });
       }
       stockList.sort((a, b) => {
          if (!a || a.score === undefined) return -1;
