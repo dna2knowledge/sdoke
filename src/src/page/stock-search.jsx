@@ -9,6 +9,36 @@ import eventbus from '$/service/eventbus';
 import databox from '$/service/databox';
 import calc from '$/analysis/math/calc';
 
+function StockSearchProgressBar() {
+   const [text, setText] = useState('');
+   const [i, setI] = useState(0);
+   const [n, setN] = useState(0);
+
+   useEffect(() => {
+      eventbus.on('stock.search.progress', onStockUpdateProgress);
+      return () => {
+         eventbus.off('stock.search.progress', onStockUpdateProgress);
+      };
+
+      function onStockUpdateProgress(data) {
+         setText(data.t || '');
+         setI(data.i || 0);
+         setN(data.n || 0);
+      }
+   }, []);
+
+   if (n === 0) return null;
+   const value = Math.floor(i / n * 100);
+   return <Box sx={{ display: 'flex', alignItems: 'center' }}>
+      <Box sx={{ width: '100%', mr: 1 }}>
+         <LinearProgress variant="determinate" value={value} />
+      </Box>
+      <Box>
+         <Typography sx={{ whiteSpace: 'nowrap' }} variant="body2" color="text.secondary">{text || ''}{` ${i} / ${n}`}</Typography>
+      </Box>
+   </Box>;
+}
+
 function dup(list) {
    if (!list) return [];
    return list.map(z => Object.assign({}, z));
@@ -22,13 +52,16 @@ async function filterStock(stockList, searchFormula, sortFormula) {
          return stockList;
       }
       const r = [];
-      for (let i = 0, n = stockList.length; i < n; i++) {
+      const n = stockList.length;
+      eventbus.emit('stock.update.progress', { t: 'Search', i: 0, n });
+      for (let i = 0; i < n; i++) {
          // TODO: report progress
          const stock = stockList[i];
          if (!stock) continue;
          const hdata = await databox.stock.getStockHistoryRaw(stock.code);
          const val = await calc.evaluate(expr, hdata);
          if (val) r.push(stock);
+         eventbus.emit('stock.update.progress', { t: 'Search', i, n });
       }
       stockList.forEach(z => { z.score = 0; });
       return sortFormula ? (await sortStock(r, sortFormula)) : r;
@@ -44,13 +77,16 @@ async function sortStock(stockList, sortFormula) {
          eventbus.emit('toast', { severity: 'error', content: `Sort formula syntax error - ${JSON.stringify(expr.err)}` });
          return stockList;
       }
-      for (let i = 0, n = stockList.length; i < n; i++) {
+      const n = stockList.length;
+      eventbus.emit('stock.update.progress', { t: 'Sort', i: 0, n });
+      for (let i = 0; i < n; i++) {
          // TODO: report progress
          const stock = stockList[i];
          if (!stock) continue;
          const hdata = await databox.stock.getStockHistoryRaw(stock.code);
          const score = await calc.evaluate(expr, hdata);
          stock.score = score;
+         eventbus.emit('stock.update.progress', { t: 'Sort', i, n });
       }
       stockList.sort((a, b) => {
          if (!a || a.score === undefined) return -1;
@@ -81,6 +117,7 @@ function StockSearchResultList() {
          if (Q) {
             if (!Q.query && !Q.sort) return;
             setLoading(true);
+            eventbus.emit('loading');
             if (Q.nest) {
                // nested; search in result
                eventbus.emit('stock.search.result', {
@@ -109,6 +146,7 @@ function StockSearchResultList() {
          setPageTotal(Math.ceil(list.length / pageSize));
          setPageList(list.slice(0, pageSize));
          setLoading(false);
+         eventbus.emit('loaded');
       }
    });
 
@@ -178,6 +216,7 @@ export default function StockSearch() {
                <Button type="button" sx={{ p: '10px' }} onClick={() => onSearch(true)}><SearchIcon /> Search in result</Button>
             </Box>
          </Box>
+         <Box><StockSearchProgressBar/></Box>
          <StockSearchResultList />
       </Box>
    </Box>;
