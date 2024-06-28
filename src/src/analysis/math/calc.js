@@ -332,6 +332,7 @@ async function evaluateQualifier(name, data, cache) {
       case 'monthly':
          qualified.data = cache[`_stock_${code}_m`] || dailyToMonthly(qualified.data);
          cache[`_stock_${code}_m`] = qualified.data;
+         break;
       default: ps.unshift(cmd);
    }
    cmd = ps[0];
@@ -349,11 +350,6 @@ async function evaluateQualifier(name, data, cache) {
 async function evaluateFuncCall(name, args, data, cache, id) {
    if (cache[id]) return cache[id];
    let v = null;
-   /* TODO:
-      .C.at(day(0))
-      .C.atrange(day(-20), today)
-      .weekly.close.at(thisweek(-1)) # get weekly close price for last week
-   */
    if (!name) return null;
    let qualified = null;
    if (name.indexOf('.') >= 0) {
