@@ -1,12 +1,16 @@
 import { useState, useEffect } from 'react';
 import {
-   Box, Button, TextField, Pagination, LinearProgress,
+   Box, Button, IconButton,
+   TextField, Pagination, LinearProgress,
    Table, TableHead, TableBody, TableRow, TableCell,
 } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
+import KeyboardArrowLeftIcon from '@mui/icons-material/KeyboardArrowLeft';
+import KeyboardArrowRightIcon from '@mui/icons-material/KeyboardArrowRight';
 import NoData from '$/component/shared/no-data';
 import eventbus from '$/service/eventbus';
 import databox from '$/service/databox';
+import local from '$/service/local';
 import calc from '$/analysis/math/calc';
 
 window._debugCalc = calc;
@@ -132,28 +136,42 @@ function StockSearchResultList() {
       async function onStockSearchSearchUpdate(Q) {
          if (Q) {
             if (!Q.query && !Q.sort) return;
+            const lastStep = local.data.searchResult.steps[local.data.searchResult.i];
+            if (lastStep.query === Q.query && lastStep.sort === Q.sort) return;
             setLoading(true);
             eventbus.emit('loading');
             if (Q.nest) {
                // nested; search in result
-               eventbus.emit('stock.search.result', {
+               const step = {
                   query: Q.query,
-                  list: await filterStock(data, Q.query, Q.sort),
-               });
+                  sort: Q.sort,
+                  list: await filterStock(dup(data), Q.query, Q.sort)
+               };
+               local.data.searchResult.steps = local.data.searchResult.steps.slice(0, local.data.searchResult.i + 1);
+               local.data.searchResult.i = local.data.searchResult.steps.length;
+               local.data.searchResult.steps.push(step);
+               eventbus.emit('stock.search.result', step);
             } else {
                // search
                const stockList = dup(await databox.stock.getStockList());
-               eventbus.emit('stock.search.result', {
+               const step = {
                   query: Q.query,
+                  sort: Q.sort,
                   list: await filterStock(stockList, Q.query, Q.sort),
-               });
+               };
+               local.data.searchResult.steps = [local.data.searchResult.steps[0]];
+               local.data.searchResult.steps.push(step);
+               local.data.searchResult.i = 1;
+               eventbus.emit('stock.search.result', step);
             }
          } else {
             const stockList = dup(await databox.stock.getStockList());
-            eventbus.emit('stock.search.result', { query: '', list: stockList });
+            local.data.searchResult = { steps: [{ query: '', sort: '', list: stockList }], i: 0 };
+            eventbus.emit('stock.search.result', local.data.searchResult.steps[0]);
          }
       }
       function onStockSearchResultUpdate(data) {
+         if (!data) return;
          let { query, list } = data;
          list = list || [];
          setQuery(query);
@@ -200,11 +218,52 @@ function StockSearchResultList() {
 export default function StockSearch() {
    const [query, setQuery] = useState('');
    const [sort, setSort] = useState('');
+   const [round, setRound] = useState(0);
+
    useEffect(() => {
-      databox.stock.getStockList().then(rawList => {
-         eventbus.emit('stock.search.result', { query: '', list: dup(rawList) });
-      });
+      eventbus.on('stock.search.result', onRoundUpdate);
+      return () => {
+         eventbus.off('stock.search.result', onRoundUpdate);
+      };
+
+      function onRoundUpdate(step) {
+         if (!step) return;
+         const i = local.data.searchResult.i;
+         setRound(i);
+         setQuery(step.query);
+         setSort(step.sort);
+      }
+   });
+
+   useEffect(() => {
+      if (local.data.searchResult?.steps?.length) {
+         const steps = local.data.searchResult.steps;
+         const i = steps.length - 1;
+         const step = steps[i];
+         eventbus.emit('stock.search.result', step);
+      } else {
+         // XXX: cannot update when it is updated;
+         //      wait for move code into components from here in page
+         databox.stock.getStockList().then(rawList => {
+            const list = dup(rawList);
+            local.data.searchResult = { steps: [{ list, query: '', sort: '' }], i: 0 };
+            eventbus.emit('stock.search.result', local.data.searchResult.steps[0]);
+         });
+      }
    }, []);
+
+   const onRoundPrev = () => {
+      const i = local.data.searchResult.i;
+      if (i <= 0) return;
+      local.data.searchResult.i --;
+      eventbus.emit('stock.search.result', local.data.searchResult.steps[i-1]);
+   };
+   const onRoundNext = () => {
+      const i = local.data.searchResult.i;
+      if (i >= local.data.searchResult.steps.length - 1) return;
+      local.data.searchResult.i ++;
+      eventbus.emit('stock.search.result', local.data.searchResult.steps[i+1]);
+   };
 
    const onSearch = (nest) => {
       if (!nest && !query && !sort) {
@@ -228,8 +287,11 @@ export default function StockSearch() {
                placeholder="e.g. .H.at(day(0))"
                value={sort} onChange={(evt) => setSort(evt.target.value || '')} />
             <Box>
-               <Button type="button" sx={{ p: '10px' }} onClick={() => onSearch(false)}><SearchIcon /> Search</Button>
-               <Button type="button" sx={{ p: '10px' }} onClick={() => onSearch(true)}><SearchIcon /> Search in result</Button>
+               <Button type="button" onClick={() => onSearch(false)}><SearchIcon /> Search</Button>
+               <Button type="button" onClick={() => onSearch(true)}><SearchIcon /> Search in result</Button>
+               <IconButton onClick={onRoundPrev}><KeyboardArrowLeftIcon/></IconButton>
+               <span>Round {round}</span>
+               <IconButton onClick={onRoundNext}><KeyboardArrowRightIcon/></IconButton>
             </Box>
          </Box>
          <Box><StockSearchProgressBar/></Box>
