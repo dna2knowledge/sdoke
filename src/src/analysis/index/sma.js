@@ -1,4 +1,4 @@
-function sma(vals, win) {
+export default function sma(vals, win) {
    const r = [];
    const n = vals.length;
    if (n < win || win < 1) return r;
@@ -15,7 +15,3 @@ function sma(vals, win) {
    }
    return r;
 }
-
-module.exports = {
-   sma,
-};

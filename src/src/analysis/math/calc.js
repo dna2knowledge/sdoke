@@ -2,6 +2,8 @@ import databox from '$/service/databox';
 import { lr } from '$/analysis/math/mse';
 import dailyToWeekly from '$/analysis/transform/weekly';
 import dailyToMonthly from '$/analysis/transform/monthly';
+import smaIndex from '$/analysis/index/sma';
+import rsiIndex from '$/analysis/index/rsi';
 
 export const version = '0.1';
 const dayms = 24 * 3600 * 1000;
@@ -341,9 +343,47 @@ async function evaluateQualifier(name, data, cache) {
       qualified.err = `invalid "${ps[0]}"`;
       return qualified;
    }
-   ps.shift();
    qualified.col = cmd;
+   ps.shift();
    cmd = ps.shift();
+
+   if (cmd) {
+      // support .C.rsi6() > .C.rsi9()
+      // rsiN, smaN
+      let tr = false;
+      if (cmd.startsWith('rsi')) {
+         const win = parseInt(cmd.substring(3)) || 5;
+         const key = `_stock_${code}_rsi${win}`;
+         if (cache[key]) {
+            qualified.data = cache[key];
+         } else {
+            const n = data.length;
+            qualified.data = rsiIndex(data.map(z => z[qualified.col]), win);
+            qualified.data = qualified.data.map((z, i) => ({ v: z, T: data[n-i-1]?.T }));
+            qualified.data.reverse();
+            cache[key] = qualified.data;
+         }
+         qualified.col = 'v';
+         tr = true;
+      } else if (cmd.startsWith('sma')) {
+         const win = parseInt(cmd.substring(3)) || 5;
+         const key = `_stock_${code}_sma${win}`;
+         if (cache[key]) {
+            qualified.data = cache[key];
+         } else {
+            const n = data.length;
+            qualified.data = smaIndex(data.map(z => z[qualified.col]), win);
+            qualified.data = qualified.data.map((z, i) => ({ v: z, T: data[n-i-1]?.T }));
+            qualified.data.reverse();
+            cache[key] = qualified.data;
+         }
+         cache[key] = qualified.data;
+         qualified.col = 'v';
+         tr = true;
+      }
+      if (tr) cmd = ps.shift();
+   }
+
    qualified.func = cmd || `get${qualified.col}`;
    return qualified;
 }
@@ -371,6 +411,7 @@ async function evaluateFuncCall(name, args, data, cache, id) {
       case 'getH': // = .H.at
       case 'getL': // = .L.at
       case 'getV': // = .V.at
+      case 'getv': // = .v.at
       {
          // args = [ts1, ts2, ...], args = [["i", i1, i2], ts1, ...]
          v = [];

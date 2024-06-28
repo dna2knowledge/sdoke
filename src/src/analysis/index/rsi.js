@@ -1,4 +1,4 @@
-function rsi(vals, win) {
+export default function rsi(vals, win) {
    const r = [];
    const n = vals.length;
    if (n < win || win < 2) return r;
@@ -20,7 +20,3 @@ function rsi(vals, win) {
    }
    return r;
 }
-
-module.exports = {
-   rsi,
-};
