@@ -137,7 +137,7 @@ function StockSearchResultList() {
          if (Q) {
             if (!Q.query && !Q.sort) return;
             const lastStep = local.data.searchResult.steps[local.data.searchResult.i];
-            if (lastStep.query === Q.query && lastStep.sort === Q.sort) return;
+            if (lastStep.query === Q.query && lastStep.sort === Q.sort && lastStep.fav === Q.fav) return;
             setLoading(true);
             eventbus.emit('loading');
             if (Q.nest) {
@@ -153,8 +153,13 @@ function StockSearchResultList() {
                eventbus.emit('stock.search.result', step);
             } else {
                // search
-               const stockList = dup(await databox.stock.getStockList());
+               const stockList = dup(
+                  Q.fav ?
+                  (await databox.stock.getPinnedStockList()) :
+                  (await databox.stock.getStockList())
+               );
                const step = {
+                  fav: Q.fav,
                   query: Q.query,
                   sort: Q.sort,
                   list: await filterStock(stockList, Q.query, Q.sort),
@@ -265,13 +270,14 @@ export default function StockSearch() {
       eventbus.emit('stock.search.result', local.data.searchResult.steps[i+1]);
    };
 
-   const onSearch = (nest) => {
+   const onSearch = (nest, fav) => {
       if (!nest && !query && !sort) {
          eventbus.emit('stock.search.search', null);
          return;
       }
       eventbus.emit('stock.search.search', {
          nest,
+         fav,
          query,
          sort,
       });
@@ -287,11 +293,12 @@ export default function StockSearch() {
                placeholder="e.g. .H.at(day(0))"
                value={sort} onChange={(evt) => setSort(evt.target.value || '')} />
             <Box>
-               <Button type="button" onClick={() => onSearch(false)}><SearchIcon /> Search</Button>
-               <Button type="button" onClick={() => onSearch(true)}><SearchIcon /> Search in result</Button>
                <IconButton onClick={onRoundPrev}><KeyboardArrowLeftIcon/></IconButton>
                <span>Round {round}</span>
                <IconButton onClick={onRoundNext}><KeyboardArrowRightIcon/></IconButton>
+               <Button type="button" onClick={() => onSearch(false, false)}><SearchIcon /> Search</Button>
+               <Button type="button" onClick={() => onSearch(false, true)}><SearchIcon /> Search in fav</Button>
+               <Button type="button" onClick={() => onSearch(true, false)}><SearchIcon /> Search in result</Button>
             </Box>
          </Box>
          <Box><StockSearchProgressBar/></Box>
