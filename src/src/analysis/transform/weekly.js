@@ -1,4 +1,4 @@
-function dailyToWeekly(data, cap) {
+export default function dailyToWeekly(data, cap) {
    if (!data || !data.length) return [];
    if (!cap) cap = Infinity;
    const transformed = [];
@@ -28,5 +28,3 @@ function dailyToWeekly(data, cap) {
    transformed.reverse();
    return transformed;
 }
-
-module.exports = dailyToWeekly;

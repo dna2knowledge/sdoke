@@ -1,4 +1,4 @@
-function dailyToMonthly(data, cap) {
+export default function dailyToMonthly(data, cap) {
    if (!data || !data.length) return [];
    if (!cap) cap = Infinity;
    const transformed = [];
@@ -25,5 +25,3 @@ function dailyToMonthly(data, cap) {
    transformed.reverse();
    return transformed;
 }
-
-module.exports = dailyToMonthly;

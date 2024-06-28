@@ -102,6 +102,7 @@ const stockApi = {
         if (tsv > last.T) {
            if (wd === 0 && tsv - last.T > 2 * dayms) return await stockApi.updateStockHistory(code);
            else if (wd === 6 && tsv - last.T > 1 * dayms) return await stockApi.updateStockHistory(code);
+           // TODO: if update history and find no today's data, stop next update till today's end market time 15:00
            else if (wd !== 0 && wd !== 6) return await stockApi.updateStockHistory(code);
         }
 
