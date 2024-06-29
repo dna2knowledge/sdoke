@@ -3,7 +3,9 @@ import databox from '$/service/databox';
 async function getData(datePoint, range) {
    if (!datePoint) datePoint = new Date();
    const ts = datePoint.getTime();
-   const todo = ((await databox.stock.getStockList()) || []).filter(item => (
+   const stockList = (await databox.stock.getStockList()) || [];
+   if (!stockList.length) return {};
+   const todo = stockList.filter(item => (
       !item.code.startsWith('bj') &&
       !item.code.startsWith('sz2') &&
       !item.code.startsWith('sz14') &&

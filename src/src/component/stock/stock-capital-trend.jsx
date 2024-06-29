@@ -199,8 +199,14 @@ export default function CapitalTrend() {
       } catch(err) { }
       setLoading(false);
       if (oneKey.current !== key) return false;
-      if (!ret || !ret.S || !ret.K) {
+      if (!ret) {
          eventbus.emit('toast', { content: 'No data; due to an internal server error.', severity: 'error' });
+         local.data.captr[unit] = null;
+         setData(null);
+         return;
+      }
+      if (!ret.ts) {
+         eventbus.emit('toast', { content: 'No data; maybe the stock list is empty, please upload one.', severity: 'error' });
          local.data.captr[unit] = null;
          setData(null);
          return;
