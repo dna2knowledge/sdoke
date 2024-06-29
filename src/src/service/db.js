@@ -16,6 +16,9 @@ async function getStore(txMode, storeName) {
    const req = window.indexedDB.open(env.name, env.version);
    once(req, 'upgradeneeded', function (evt) {
       const db = evt.target.result;
+      // TODO: do upgrade in future; migrate schema and data
+      if (db.objectStoreNames.contains(storeName)) return;
+      console.log(`db created "${storeName}" ...`);
       db.createObjectStore(storeName);
    });
    multipleOnce(req, [{
