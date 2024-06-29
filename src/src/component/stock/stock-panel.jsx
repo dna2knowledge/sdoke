@@ -328,7 +328,12 @@ export default function StockPanel() {
          <Box sx={{ maxHeight: '100px', overflowY: 'auto' }}>
             {pinnedStocks.map((meta, i) => <StockButton key={i} data={meta} isStarred={true} />)}
          </Box>
-         {selected ? null : <NoData>No Data; please search and select one stock</NoData>}
+         {selected ? null : <NoData>
+            No Data; please search and select one stock or <Button
+               sx={{ marginLeft: '5px' }} variant="contained"
+               startIcon={<EditIcon />} onClick={onUpdateStockList}>
+            Upload your stock List
+         </Button></NoData>}
          <StockOne />
          <StockOneStrategy />
          <StockCapitalTrend />
