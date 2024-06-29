@@ -113,7 +113,7 @@ const tr = {
       't.authorval': 'Seven Liu 和所有其他相关贡献者',
       't.license': '开源协议',
       't.note': '特别申明',
-      't.noteval': '股市有风险，投资需谨慎。',
+      't.noteval': '本软件提供的信息不构成任何投资建议。股市有风险，投资需谨慎。',
       't.language': '界面语言',
    },
 };
