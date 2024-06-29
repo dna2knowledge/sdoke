@@ -107,6 +107,14 @@ const tr = {
       'edit.warn.remove': '确定删除这则交易记录：',
    },
    about: {
+      't.name': '应用名称',
+      't.nameval': 'Sdoke',
+      't.author': '软件作者',
+      't.authorval': 'Seven Liu 和所有其他相关贡献者',
+      't.license': '开源协议',
+      't.note': '特别申明',
+      't.noteval': '股市有风险，投资需谨慎。',
+      't.language': '界面语言',
    },
 };
 
