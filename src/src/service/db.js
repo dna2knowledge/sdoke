@@ -65,16 +65,13 @@ function set(key, value) {
    return new Promise(async function (r, e) {
       const store = await getStore();
       store.put(value, key);
-      r();
-      /* oncomplete, onabort
       multipleOnce(store.transaction, [{
-         name: 'error',
+         name: 'abort',
          fn: function (evt) { e(evt); }
       }, {
-         name: 'success',
+         name: 'complete',
          fn: function (evt) { r(evt); }
       }]);
-      */
    });
 }
 
@@ -85,10 +82,10 @@ function setMany(keyvals) {
          store.put(kv[1], kv[0]);
       });
       multipleOnce(store.transaction, [{
-         name: 'error',
+         name: 'abort',
          fn: function (evt) { e(evt); }
       }, {
-         name: 'success',
+         name: 'complete',
          fn: function (evt) { r(evt); }
       }]);
    });
@@ -99,10 +96,10 @@ function del(key) {
       const store = await getStore();
       store.delete(key);
       multipleOnce(store.transaction, [{
-         name: 'error',
+         name: 'abort',
          fn: function (evt) { e(evt); }
       }, {
-         name: 'success',
+         name: 'complete',
          fn: function (evt) { r(evt); }
       }]);
    });
@@ -113,10 +110,10 @@ function delMany(keys) {
       const store = await getStore();
       keys.forEach(function (key) { store.delete(key); });
       multipleOnce(store.transaction, [{
-         name: 'error',
+         name: 'abort',
          fn: function (evt) { e(evt); }
       }, {
-         name: 'success',
+         name: 'complete',
          fn: function (evt) { r(evt); }
       }]);
    });
@@ -127,10 +124,10 @@ function clr() {
       const store = await getStore();
       store.clear();
       multipleOnce(store.transaction, [{
-         name: 'error',
+         name: 'abort',
          fn: function (evt) { e(evt); }
       }, {
-         name: 'success',
+         name: 'complete',
          fn: function (evt) { r(evt); }
       }]);
    });
