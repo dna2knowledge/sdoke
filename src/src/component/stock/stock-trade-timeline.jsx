@@ -5,6 +5,8 @@ import StockTradeTooltip from '$/component/stock/stock-trade-tooltip';
 import StockOneTrade from '$/component/stock/stock-one-trade';
 import config from '$/component/stock/stock-trade-config';
 
+import { useTranslation } from 'react-i18next';
+
 function pad0(num) {
    if (num >= 10) return `${num}`;
    return `0${num}`;
@@ -82,6 +84,8 @@ function trimDateTradeList(dateList, tradeList) {
 }
 
 export default function StockTradeTimeline(props) {
+   const { t } = useTranslation('trade');
+
    const { data } = props;
    const boxRef = useRef(null);
    const containerRef = useRef(null);
@@ -130,7 +134,7 @@ export default function StockTradeTimeline(props) {
       }
    });
 
-   if (!tradeList.length) return <NoData>There is no track of stock history.</NoData>;
+   if (!tradeList.length) return <NoData>{t('tip.nodata', 'There is no track of stock history.')}</NoData>;
    return <Box ref={containerRef} sx={{
       display: 'flex',
       '.cell': { height: `${config.dh}px`, userSelect: 'none' }

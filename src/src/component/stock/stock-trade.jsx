@@ -14,7 +14,11 @@ import eventbus from '$/service/eventbus';
 import databox from '$/service/databox';
 import config from '$/component/stock/stock-trade-config';
 
+import { useTranslation } from 'react-i18next';
+
 function EditDialog(props) {
+   const { t } = useTranslation('trade');
+
    const { open, onClose, data } = props;
    const cache = useRef({
       showBuyin: false,
@@ -76,12 +80,18 @@ function EditDialog(props) {
    const close = () => onClose(null);
    const onSaveClick = () => {
       if (!selected) {
-         eventbus.emit('toast', { severity: 'error', content: 'Please select a stock for trade track.' });
+         eventbus.emit('toast', {
+            severity: 'error',
+            content: t('tip.edit.noselect.stock', 'Please select a stock for trade track.')
+         });
          return;
       }
       const startDateTs = new Date(startDate).getTime();
       if (!startDate || isNaN(startDateTs)) {
-         eventbus.emit('toast', { severity: 'error', content: 'Please type a valid date.' });
+         eventbus.emit('toast', {
+            severity: 'error',
+            content: t('tip.edit.invalid.date', 'Please type a valid date.')
+         });
          return;
       }
       const obj = {
@@ -94,28 +104,43 @@ function EditDialog(props) {
          const bT = new Date(biDate).getTime();
          const bP = parseFloat(biPrice);
          if (isNaN(bT)) {
-            eventbus.emit('toast', { severity: 'error', content: 'Please type a valid date for buy-in.' });
+            eventbus.emit('toast', {
+               severity: 'error',
+               content: t('tip.edit.invalid.buyin.date', 'Please type a valid date for buy-in.')
+            });
             return;
          }
          if (isNaN(bP)) {
-            eventbus.emit('toast', { severity: 'error', content: 'Please type a valid price for buy-in.' });
+            eventbus.emit('toast', {
+               severity: 'error',
+               content: t('tip.edit.invalid.buyin.price', 'Please type a valid price for buy-in.')
+            });
             return;
          }
          obj.B = { T: bT, P: bP };
       }
       if (showSellout) {
          if (!obj.B) {
-            eventbus.emit('toast', { severity: 'error', content: 'Please correctly set up buy-in first.' });
+            eventbus.emit('toast', {
+               severity: 'error',
+               content: t('tip.edit.invalid.nobuyin', 'Please correctly set up buy-in first.')
+            });
             return;
          }
          const sT = new Date(soDate).getTime();
          const sP = parseFloat(soPrice);
          if (isNaN(sT)) {
-            eventbus.emit('toast', { severity: 'error', content: 'Please type a valid date for buy-in.' });
+            eventbus.emit('toast', {
+               severity: 'error',
+               content: t('tip.edit.invalid.sellout.date', 'Please type a valid date for sell-out.')
+            });
             return;
          }
          if (isNaN(sP)) {
-            eventbus.emit('toast', { severity: 'error', content: 'Please type a valid price for buy-in.' });
+            eventbus.emit('toast', {
+               severity: 'error',
+               content: t('tip.edit.invalid.sellout.price', 'Please type a valid price for sell-out.')
+            });
             return;
          }
          obj.S = { T: sT, P: sP };
@@ -149,19 +174,20 @@ function EditDialog(props) {
                   cache.current.selected = val;
                }}
                renderInput={params =>
-                  <TextField sx={{ width: '100%', borderBottom: '1px solid #ccc' }} placeholder="Stock Code / Name"
+                  <TextField sx={{ width: '100%', borderBottom: '1px solid #ccc' }}
+                     placeholder={t('tip.stock.autocomplete', "Stock Code / Name")}
                      {...params}
                   />
                }
                noOptionsText={<Box>
-                  No available stocks.
+                  {t('tip.stock.list.empty', 'No available stocks.')}
                </Box>}
             />
             <TextField disabled={!!data} value={startDate} onChange={(evt) => {
                const val = evt.target.value;
                setStartDate(val);
                cache.current.startDate = val;
-            }} label="Start Date" fullWidth variant="standard" />
+            }} label={t('t.start.date', "Start Date")} fullWidth variant="standard" />
             <Box sx={{ marginTop: '20px', marginBottom: '-5px' }}>
                <Switch value={showBuyin} onChange={(_, val) => {
                   setShowBuyin(val);
@@ -170,46 +196,46 @@ function EditDialog(props) {
                      setShowSellout(false);
                      cache.current.showSellout = false;
                   }
-               }} /> Buy in
+               }} /> {t('t.buyin', 'Buy-in')}
             </Box>
             {showBuyin ? <Box>
                <TextField value={biDate} onChange={(evt) => {
                   const val = evt.target.value;
                   setBiDate(val);
                   cache.current.buyinDate = val;
-               }} label="Buyin Date" fullWidth variant="standard" />
+               }} label={t('t.buyin.date', 'Buy-in Date')} fullWidth variant="standard" />
                <TextField value={biPrice} onChange={(evt) => {
                   const val = evt.target.value;
                   setBiPrice(val);
                   cache.current.buyinPrice = val;
-               }} label="Buyin Price" fullWidth type="number" variant="standard" />
+               }} label={t('t.buyin.price', 'Buy-in Price')} fullWidth type="number" variant="standard" />
                <Box sx={{ marginTop: '20px', marginBottom: '-5px' }}>
                   <Switch value={showSellout} onChange={(_, val) => {
                      setShowSellout(val);
                      cache.current.showSellout = false;
-                  }} /> Sell out
+                  }} /> {t('t.sellout', 'Sell-out')}
                </Box>
                {showSellout ? <Box>
                   <TextField value={soDate} onChange={(evt) => {
                      const val = evt.target.value;
                      setSoDate(val);
                      cache.current.selloutDate = val;
-                  }} label="Sellout Data" fullWidth variant="standard" />
+                  }} label={t('t.sellout.date', 'Sell-out Date')} fullWidth variant="standard" />
                   <TextField value={soPrice} onChange={(evt) => {
                      const val = evt.target.value;
                      setSoPrice(val);
                      cache.current.selloutPrice = val;
-                  }} label="Sellout Price" fullWidth type="number" variant="standard" />
+                  }} label={t('t.sellout.price', 'Sell-out Price')} fullWidth type="number" variant="standard" />
                </Box> : null }
             </Box> : null}
          </Box>
       </DialogContent>
       <DialogActions>
-         <Button onClick={onSaveClick}>
-            Save
+         <Button onClick={onSaveClick} variant="contained">
+            {t('t.save', 'Save')}
          </Button>
          <Button onClick={close}>
-            Cancel
+            {t('t.cancel', 'Cancel')}
          </Button>
       </DialogActions>
    </Dialog>;
@@ -234,6 +260,8 @@ async function getTradeData(year) {
 }
 
 export default function StockTrade() {
+   const { t } = useTranslation('trade');
+
    // stock.trade.year{Y}
    const [year, setYear] = useState(new Date().getFullYear());
    const [years, setYears] = useState([new Date().getFullYear()]);
@@ -325,7 +353,7 @@ export default function StockTrade() {
          if (!data?.Ts || !data.Ts.length) return;
          if (index < 0 || data.Ts.length <= index) return;
          const item = data.Ts[index];
-         if (!confirm(`Are you sure to remove stock trade data for "${item.code} ${item.name}"?`)) return;
+         if (!confirm(`${t('edit.warn.remove', 'Are you sure to remove stock trade data for')} "${item.code} ${item.name}"?`)) return;
          data.Ts.splice(index, 1);
          const year = new Date(item.T).getFullYear();
          databox.stock.setStockTradeList(year, data.Ts);

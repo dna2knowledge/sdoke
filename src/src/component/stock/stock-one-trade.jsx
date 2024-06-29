@@ -5,6 +5,8 @@ import eventbus from '$/service/eventbus';
 import databox from '$/service/databox';
 import config from '$/component/stock/stock-trade-config';
 
+import { useTranslation } from 'react-i18next';
+
 function paintHistory(canvas, w0, h0, year, item, history) {
    const stDate = new Date(item.T);
    const edDate = item?.S?.T ? new Date(item.S.T) : new Date();
@@ -147,6 +149,8 @@ function calcRate(stP, edP) {
 }
 
 export default function StockOneTrade(props) {
+   const { t } = useTranslation('trade');
+
    const { x, y, w, h, year, data } = props;
    const canvasRef = useRef(null);
    const anchorRef = useRef(null);
@@ -306,8 +310,8 @@ export default function StockOneTrade(props) {
             <IconButton ref={anchorRef} sx={{ width: '16px', height: '16px' }} onClick={onMenuOpen}><MoreVertIcon /></IconButton>
             <Popper open={menuOpen} anchorEl={anchorRef.current}><Paper>
                <ClickAwayListener onClickAway={onMenuClose}><MenuList>
-                  <MenuItem onClick={onEditClick}>Edit</MenuItem>
-                  <MenuItem onClick={onDelClick}>Remove</MenuItem>
+                  <MenuItem onClick={onEditClick}>{t('t.edit', 'Edit')}</MenuItem>
+                  <MenuItem onClick={onDelClick}>{t('t.remove', 'Remove')}</MenuItem>
                </MenuList></ClickAwayListener>
             </Paper></Popper>
          </Box>
