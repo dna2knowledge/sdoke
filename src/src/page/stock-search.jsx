@@ -172,7 +172,7 @@ function StockSearchResultList() {
                   fav: Q.fav,
                   query: Q.query,
                   sort: Q.sort,
-                  list: await filterStock(stockList, Q.query, Q.sort),
+                  list: await filterStock(stockList, Q.query, Q.sort, t),
                };
                local.data.searchResult.steps = [local.data.searchResult.steps[0]];
                local.data.searchResult.steps.push(step);
