@@ -1,6 +1,10 @@
 const tr = {
    translation: {
-      'hello': '你好'
+      't.stock.viewer': '股票查看',
+      't.stock.strategy': '策略编辑',
+      't.stock.search': '股票筛选',
+      't.stock.trade': '交易记录',
+      't.about': '关于',
    },
    viewer: {
       'history.all.updated': '所有股票历史数据已更新完毕。',
@@ -43,7 +47,15 @@ const tr = {
       'tip.strategy.loading': '正在为 {{code}} {{name}} 应用策略 "{{strategy}}" ...',
       'tip.one.nodata': '没有数据；无法获取 {{code}} {{name}} 的数据。',
       'tip.strategy.nodata': '没有数据；无法获取 {{code}} {{name}} 在策略 "{{strategy}}" 下的数据。',
-   }
+   },
+   strategy: {
+   },
+   search: {
+   },
+   trade: {
+   },
+   about: {
+   },
 };
 
 export default tr;
