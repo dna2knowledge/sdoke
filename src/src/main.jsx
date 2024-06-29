@@ -8,6 +8,7 @@ import {
 } from "react-router-dom";
 
 import initCordova from '$/service/cordova';
+import _ from '$/i18n/index';
 
 import Layout from '$/layout.jsx';
 import PlaceHolder from '$/page/placeholder.jsx';
