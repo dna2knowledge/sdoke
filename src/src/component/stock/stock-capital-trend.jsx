@@ -7,6 +7,8 @@ import eventbus from '$/service/eventbus';
 import local from '$/service/local';
 import captialTrendAnalysis from '$/analysis/trend/capital';
 
+import { useTranslation } from 'react-i18next';
+
 function transform(data) {
    return { S: transformOne(data.S), K: transformOne(data.K) };
 }
@@ -151,20 +153,24 @@ function CapitalTrendOne(props) {
 }
 
 function CaptialTrendGroup(props) {
+   const { t } = useTranslation('viewer');
+
    const { data } = props;
    return <Box sx={{ display: 'flex', width: '100%' }}>
       <Box sx={{ width: 'calc(50% - 20px)', marginLeft: '10px', marginRight: '5px' }}>
-         <Box>GAIN</Box>
+         <Box>{t('t.gain.u', 'GAIN')}</Box>
          {data.gain.map((z, i) => <CapitalTrendOne key={i} data={z}/>)}
       </Box>
       <Box sx={{ width: 'calc(50% - 20px)', marginLeft: '5px', marginRight: '10px' }}>
-         <Box>LOSS</Box>
+         <Box>{t('t.loss.u', 'LOSS')}</Box>
          {data.loss.map((z, i) => <CapitalTrendOne key={i} data={z}/>)}
       </Box>
    </Box>;
 }
 
 export default function CapitalTrend() {
+   const { t } = useTranslation('viewer');
+
    const [anchor] = useState('left');
    const [suggested, setSuggested] = useState(false);
    const [loading, setLoading] = useState(false);
@@ -200,13 +206,13 @@ export default function CapitalTrend() {
       setLoading(false);
       if (oneKey.current !== key) return false;
       if (!ret) {
-         eventbus.emit('toast', { content: 'No data; due to an internal server error.', severity: 'error' });
+         eventbus.emit('toast', { content: t('captr.warn.internal.error', 'No data; due to an internal server error.'), severity: 'error' });
          local.data.captr[unit] = null;
          setData(null);
          return;
       }
       if (!ret.ts) {
-         eventbus.emit('toast', { content: 'No data; maybe the stock list is empty, please upload one.', severity: 'error' });
+         eventbus.emit('toast', { content: t('captr.warn.nodata', 'No data; maybe the stock list is empty, please upload one.'), severity: 'error' });
          local.data.captr[unit] = null;
          setData(null);
          return;
@@ -242,40 +248,40 @@ export default function CapitalTrend() {
    }, [unit, viewtype, loading]);
 
    return <Drawer open={suggested} anchor={anchor} onClose={onClose}>
-      {suggested ? (loading ? <NoData>Loading capital trend data ...</NoData>
+      {suggested ? (loading ? <NoData>{t('tip.captr.loading', 'Loading capital trend data ...')}</NoData>
       : (data ? <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%', padding: '10px' }}>
          <Box sx={{ marginBottom: '10px' }}>
             <IconButton onClick={onUpdateClick} type="button" sx={{ p: '10px' }}><UpdateIcon /></IconButton>
-            Analysis of Capital Trend
+            {t('captr.title', 'Analysis Report of Capital Trend')}
             <Box>
                <ButtonGroup>
                   <Button variant={unit === 'daily'?'contained':'outlined'}
-                     onClick={() => eventbus.emit('stock.analysis.captr', { unit: 'daily'})}>Daily</Button>
+                     onClick={() => eventbus.emit('stock.analysis.captr', { unit: 'daily'})}>{t('t.daily', 'Daily')}</Button>
                   <Button variant={unit === 'weekly'?'contained':'outlined'}
-                     onClick={() => eventbus.emit('stock.analysis.captr', { unit: 'weekly'})}>Weekly</Button>
+                     onClick={() => eventbus.emit('stock.analysis.captr', { unit: 'weekly'})}>{t('t.weekly', 'Weekly')}</Button>
                   <Button variant={unit === 'monthly'?'contained':'outlined'}
-                     onClick={() => eventbus.emit('stock.analysis.captr', { unit: 'monthly'})}>Monthly</Button>
+                     onClick={() => eventbus.emit('stock.analysis.captr', { unit: 'monthly'})}>{t('t.monthly', 'Monthly')}</Button>
                   <Button variant={unit === 'yearly'?'contained':'outlined'}
-                     onClick={() => eventbus.emit('stock.analysis.captr', { unit: 'yearly'})}>Yearly</Button>
+                     onClick={() => eventbus.emit('stock.analysis.captr', { unit: 'yearly'})}>{t('t.yearly', 'Yearly')}</Button>
                </ButtonGroup>
                <ButtonGroup>
                   <Button variant={viewtype === 'histogram'?'contained':'outlined'}
-                     onClick={() => eventbus.emit('stock.analysis.captr.viewtype', 'histogram')}>Histogram</Button>
+                     onClick={() => eventbus.emit('stock.analysis.captr.viewtype', 'histogram')}>{t('t.histogram', 'Histogram')}</Button>
                   <Button variant={viewtype === 'list'?'contained':'outlined'}
-                     onClick={() => eventbus.emit('stock.analysis.captr.viewtype', 'list')}>List</Button>
+                     onClick={() => eventbus.emit('stock.analysis.captr.viewtype', 'list')}>{t('t.list', 'List')}</Button>
                   <Button variant={viewtype === 'history'?'contained':'outlined'}
-                     onClick={() => eventbus.emit('stock.analysis.captr.viewtype', 'history')}>History</Button>
+                     onClick={() => eventbus.emit('stock.analysis.captr.viewtype', 'history')}>{t('t.history', 'History')}</Button>
                </ButtonGroup>
             </Box>
          </Box>
          <Divider />
          <Box sx={{ flex: '1 0 auto', width: '100%', height: '0px', overflowY: 'auto' }}>
-            <Box>Standard</Box>
+            <Box>{t('t.standardarea', 'Standard')}</Box>
             <CaptialTrendGroup data={data.S}/>
             <Divider />
-            <Box>Creative</Box>
+            <Box>{t('t.kcarea', 'Creative')}</Box>
             <CaptialTrendGroup data={data.K}/>
          </Box>
-      </Box>: <NoData>No capital trend data</NoData>)) : null}
+      </Box>: <NoData>{t('tip.captr.nodata', 'No capital trend data')}</NoData>)) : null}
    </Drawer>;
 }
