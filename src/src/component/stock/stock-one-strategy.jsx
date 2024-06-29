@@ -8,7 +8,11 @@ import databox from '$/service/databox';
 import { rsiEvaluateStrategy } from '$/analysis/strategy/rsibase';
 import local from '$/service/local';
 
+import { useTranslation } from 'react-i18next';
+
 function StrategyStat(props) {
+   const { t } = useTranslation('viewer');
+
    const { name, stat } = props;
    let rateK = 'num_blue', gainMinK = 'num_red', gainHiK = 'num_red', gainMaxK = 'num_red', lossK = 'num_green';
    const days = [
@@ -29,21 +33,23 @@ function StrategyStat(props) {
       '.num_red': { color: 'red', fontWeight: 'bold' },
    }}>
       <div>{name}</div>
-      <div>capture = <strong>{stat.hit}</strong> / {stat.count}, rate =
+      <div>{t('t.capture', 'capture')} = <strong>{stat.hit}</strong> / {stat.count}, {t('t.rate', 'rate')} =
          <span className={rateK}> {Math.round(stat.rate*10000)/100}%</span>
       </div>
-      <div>gain min / max -
+      <div>{t('t.gain.min.max', 'gain min / max')} -
          <span className={gainMinK}> {Math.round(stat.gain.min_avg*10000)/100}% </span>
          <span className={gainMaxK}> {Math.round(stat.gain.max_avg*10000)/100}% </span>
       </div>
-      <div>loss min -
+      <div>{t('t.loss.min', 'loss min')} -
          <span className={lossK}> {Math.round(stat.loss.avg*10000)/100}% </span>
       </div>
-      <div>op window - {days}</div>
+      <div>{t('t.op.window', 'op window')} - {days}</div>
    </Box>;
 }
 
 export default function StockOneStrategy() {
+   const { t } = useTranslation('viewer');
+
    const [meta, setMeta] = useState(null);
    const [strategy, setStrategy] = useState(local.data?.view?.selectedStrategy || 'strategy.rsibase');
    const [loading, setLoading] = useState(true);
@@ -70,7 +76,10 @@ export default function StockOneStrategy() {
       setLoading(false);
       if (oneKey.current !== key) return false;
       if (!ret) {
-         eventbus.emit('toast', { content: 'No data; due to an internal server error.', severity: 'error' });
+         eventbus.emit('toast', {
+            content: t('strategy.warn.internal.error', 'No data; due to an internal server error.'),
+            severity: 'error'
+         });
          return;
       }
 
@@ -109,8 +118,16 @@ export default function StockOneStrategy() {
    }
 
    if (!meta) return null;
-   if (loading) return <NoData>Loading {strategy} data for {meta.code} {meta.name} ...</NoData>;
-   if (!data || !data.stat) return <NoData>No Data; no {strategy} records for <strong>{meta.code} {meta.name}</strong></NoData>
+   if (loading) return <NoData>{t(
+      'tip.strategy.loading',
+      'Loading {{strategy}} data for {{code}} {{name}} ...',
+      { strategy, code: meta.code, name: meta.name }
+   )}</NoData>;
+   if (!data || !data.stat) return <NoData>{t(
+      'tip.strategy.nodata',
+      'No Data; no {{strategy}} records for {{code}} {{name}}',
+      { strategy, code: meta.code, name: meta.name }
+   )}</NoData>
    const mode = data.score > 0 ? 'buy' : (data.score < 0 ? 'sell' : 'unknown');
    return <Box sx={{
       textAlign: 'center',
@@ -129,16 +146,16 @@ export default function StockOneStrategy() {
          <IconButton type="button" sx={{ p: '10px' }}><SwitchAccessShortcutIcon/></IconButton>
       </Box>
       <Box>
-         <span className={`mode_${mode}`}> {mode}</span>
-         <span className={"act"}> score={isNaN(data.score) ? '-' : `${data.score.toFixed(4)}`}</span>
+         <span className={`mode_${mode}`}> {t(`t.${mode}`, mode)}</span>
+         <span className={"act"}> {t('t.score', 'score')}={isNaN(data.score) ? '-' : `${data.score.toFixed(4)}`}</span>
       </Box>
       <Box sx={{ display: 'flex' }}>
-         <StrategyStat name="ALL" stat={data.stat.all} />
-         <StrategyStat name="3 YEARS" stat={data.stat.y3} />
+         <StrategyStat name={t('t.all', "ALL")} stat={data.stat.all} />
+         <StrategyStat name={t('t.3years', "3 YEARS")} stat={data.stat.y3} />
       </Box>
       <Box>History: {data?.stat?.d250.slice(0, 20).map((z, i) => <span key={i}>
          <span className={`act mode_${z.score > 0 ? 'buy' : (z.score < 0 ? 'sell' : '-')} ${z.score > 0.5 || z.score < -0.5 ? 'h_act' : ''}`}>
-            {z.score > 0 ? 'B' : (z.score < 0 ? 'S' : '-')}
+            {z.score > 0 ? t('t.buy.s', 'B') : (z.score < 0 ? t('t.sell.s', 'S') : t('t.unknown.s', '-'))}
          </span>
       </span>)}</Box>
    </Box>;

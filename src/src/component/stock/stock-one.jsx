@@ -7,7 +7,11 @@ import eventbus from '$/service/eventbus';
 import databox from '$/service/databox';
 import local from '$/service/local';
 
+import { useTranslation } from 'react-i18next';
+
 export default function StockOne() {
+   const { t } = useTranslation('viewer');
+
    const [meta, setMeta] = useState(null);
    const [loading, setLoading] = useState(true);
    const [data, setData] = useState(null);
@@ -25,7 +29,10 @@ export default function StockOne() {
       setLoading(false);
       if (oneKey.current !== key) return false;
       if (!ret || !ret.length) {
-         eventbus.emit('toast', { content: 'No data; due to an internal server error.', severity: 'error' });
+         eventbus.emit('toast', {
+            content: t('view.warn.internal.error', 'No data; due to an internal server error.'),
+            severity: 'error'
+         });
          return;
       }
       setData(ret);
@@ -60,6 +67,9 @@ export default function StockOne() {
             {meta.area ? ` (${meta.area})` : null}
          </Box>
          <Box><Chart /></Box>
-      </Box>) : <NoData>No Data; no records for <strong>{meta.code} {meta.name}</strong></NoData> }
+      </Box>) : <NoData>{t(
+         'tip.one.nodata', 'No Data; no records for {{code}} {{name}}',
+         { code: meta.code, name: meta.name }
+      )}</NoData> }
    </Box>;
 }

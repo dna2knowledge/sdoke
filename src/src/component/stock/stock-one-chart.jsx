@@ -3,6 +3,8 @@ import { Box } from '@mui/material';
 import eventbus from '$/service/eventbus';
 import local from '$/service/local';
 
+import { useTranslation } from 'react-i18next';
+
 function paintStrategyOne(pen, vx, h0, signal) {
    if (!signal) return;
    let score = signal.score;
@@ -111,6 +113,8 @@ function paintBasic(canvas, data) {
 }
 
 export default function StockOneChart() {
+   const { t } = useTranslation('viewer');
+
    const canvasRef = useRef(null);
    const tooltipRef = useRef(null);
    const dataRef = useRef({});
@@ -150,10 +154,18 @@ export default function StockOneChart() {
             `${new Date(one.T).toISOString().split('T')[0]} `
          ));
          tooltipRef.current.appendChild(document.createTextNode(
-            `st=${one.O.toFixed(2)} ed=${one.C.toFixed(2)} min/max=${one.L.toFixed(2)}/${one.H.toFixed(2)}`
+            `${t(
+               't.open', 'open'
+            )}=${one.O.toFixed(2)} ${t(
+               't.close', 'close'
+            )}=${one.C.toFixed(2)} ${t(
+               't.low', 'low'
+            )}/${t(
+               't.high', 'high'
+            )}=${one.L.toFixed(2)}/${one.H.toFixed(2)}`
          ));
          tooltipRef.current.appendChild(document.createTextNode(
-            ` vol=${one.V}`
+            ` ${t('t.vol', 'vol')}=${one.V}`
          ));
       }
    };

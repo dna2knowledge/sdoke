@@ -15,6 +15,8 @@ import local from '$/service/local';
 import { triggerFileSelect, readText } from '$/util/file-reader';
 import useLongPress from '$/component/util/long-press';
 
+import { useTranslation } from 'react-i18next';
+
 function StockUpdateProgressBar(props) {
    const [i, setI] = useState(0);
    const [n, setN] = useState(0);
@@ -47,6 +49,8 @@ const sp = {
    autocompleteN: 10,
 };
 export default function StockPanel() {
+   const { t } = useTranslation('viewer');
+
    const [data, setData] = useState(null);
    const [query, setQuery] = useState('');
    const [selected, setSelected] = useState(null);
@@ -112,12 +116,19 @@ export default function StockPanel() {
       if (stat.ts) {
          const ts = new Date().getTime();
          if (ts - stat.ts < 12 * 3600 * 1000) {
-            if (!confirm(`Are you sure to update the history for stocks again in 12h? Last updated time is ${new Date(stat.ts).toString()}.`)) return;
+            if (!confirm(`${t(
+               'history.warn.refetch',
+               'Are you sure to update the history for stocks again in 12h? Last updated time is'
+            )} ${new Date(stat.ts).toString()}.`)) return;
          }
       }
       let fetchErrorOnly = false;
       if (stat.error?.length > 0 && confirm(
-         `Last time there are ${stat.error.length} failures to fetch stock history. Do you want to only fetch history for stocks?`
+         `${t(
+            'history.warn.refatch.fromerror',
+            'Last time there are {{v,number}} failures to fetch stock history. Do you want to only fetch history for stocks?',
+            { v: stat.error.length }
+         )}`
       )) {
          fetchErrorOnly = true;
       }
@@ -125,7 +136,7 @@ export default function StockPanel() {
       if (!rawList || !rawList.length) {
          eventbus.emit('toast', {
             severity: 'error',
-            content: 'There is no stock in the list. Please update your stock list first.'
+            content: t('viewer:history.warn.nostock', 'There is no stock in the list. Please update your stock list first.')
          });
          return;
       }
@@ -142,7 +153,9 @@ export default function StockPanel() {
             error.push(item.code);
             eventbus.emit('toast', {
                severity: 'error',
-               content: `Failed to get stock history for ${error.slice(0, 10).join(', ')} ${error.length >= 10 ? '...' : ''}.`
+               content: `${t(
+                  'history.warn.partial.fail', 'Failed to get stock history for'
+               )} ${error.slice(0, 10).join(', ')} ${error.length >= 10 ? '...' : ''}.`
             });
          }
       }
@@ -150,7 +163,7 @@ export default function StockPanel() {
       if (!error.length) {
          eventbus.emit('toast', {
             severity: 'success',
-            content: 'All stock history are up-to-date now.'
+            content: t('viewer:history.all.updated', 'All stock history are up-to-date now.')
          });
       }
       stat.n = 0;
@@ -165,7 +178,7 @@ export default function StockPanel() {
       if (!rawCodeList.length) {
          eventbus.emit('toast', {
             severity: 'error',
-            content: 'There is no stock in the list. Please update your stock list first.'
+            content: t('viewer:history.warn.nostock', 'There is no stock in the list. Please update your stock list first.')
          });
          return;
       }
@@ -180,17 +193,27 @@ export default function StockPanel() {
          } else if (dd === 3 && today.getDay() === 1) {
             // ok; pass
          } else {
-            if (!confirm(`Are you sure to do quick updating history data? It may cause data missing for ${dd} days.`)) return;
+            if (!confirm(t(
+               'history.quick.warn.cause.datamissing',
+               'Are you sure to do quick updating history data? It may cause data missing for {{v,number}} days.',
+               { v: dd }
+            ))) return;
          }
          if (today.getHours() < 15) {
-            if (!confirm(`Are you sure to do quick updating history data? The data may be changed in near future.`)) return;
+            if (!confirm(t(
+               'history.quick.warn.trade.active',
+               `Are you sure to do quick updating history data? The data may be changed in near future.`
+            ))) return;
          }
       } else {
-         if (!confirm(`Are you sure to do quick updating history data? It is recommended to do common updating to fetch full history.`)) return;
+         if (!confirm(t(
+            'history.quick.warn.recommendfull',
+            `Are you sure to do quick updating history data? It is recommended to do common updating to fetch full history.`
+         ))) return;
       }
       eventbus.emit('toast', {
          severity: 'info',
-         content: `Doing quick update on history data ...`
+         content: t('history.quick.start', `Doing quick update on history data ...`)
       });
       stat.error = [];
       let count = 0;
@@ -226,7 +249,10 @@ export default function StockPanel() {
                   stat.error.push(rt.code);
                   eventbus.emit('toast', {
                      severity: 'error',
-                     content: `Failed to update stock history for ${error.slice(0, 10).join(', ')} ${error.length >= 10 ? '...' : ''}.`
+                     content: `${t(
+                        'history.warn.partial.fail',
+                        'Failed to update stock history for'
+                     )} ${error.slice(0, 10).join(', ')} ${error.length >= 10 ? '...' : ''}.`
                   });
                }
             }
@@ -234,7 +260,10 @@ export default function StockPanel() {
             codes.forEach(z => stat.error.push(z));
             eventbus.emit('toast', {
                severity: 'error',
-               content: `Failed to update stock history for ${error.slice(0, 10).join(', ')} ${error.length >= 10 ? '...' : ''}.`
+               content: `${t(
+                  'history.warn.partial.fail',
+                  'Failed to update stock history for'
+               )} ${error.slice(0, 10).join(', ')} ${error.length >= 10 ? '...' : ''}.`
             });
          }
       }
@@ -243,12 +272,16 @@ export default function StockPanel() {
          if (count === rawCodeList.length) {
             eventbus.emit('toast', {
                severity: 'success',
-               content: 'All stock history are up-to-date now.'
+               content: t('viewer:history.all.updated', 'All stock history are up-to-date now.')
             });
          } else {
             eventbus.emit('toast', {
                severity: 'warn',
-               content: `Almost stock history are up-to-date now; ${rawCodeList.length - count} stocks cannot be quickly updated.`
+               content: t(
+                  'history.quick.partial.fail',
+                  `Almost stock history are up-to-date now; {{v,number}} stocks cannot be quickly updated.`,
+                  { v: rawCodeList.length - count }
+               )
             });
          }
       }
@@ -260,7 +293,9 @@ export default function StockPanel() {
    };
    const onInsightClick = () => {
       if (local.data.updateStockProgress?.n) {
-         eventbus.emit('toast', { severity: 'warning', content: 'Stock data are upadating. Please try later after it is complete.' });
+         eventbus.emit('toast', { severity: 'warning', content: t(
+            'insight.warn.history.updating', 'Stock data are upadating. Please try later after it is complete.'
+         ) });
          return;
       }
       eventbus.emit('stock.analysis.captr');
@@ -268,7 +303,7 @@ export default function StockPanel() {
    const onUpdateStockList = () => triggerFileSelect().then(async (files) => {
       if (!files || !files.length) return; // user cancel
       const raw = await readText(files[0]);
-      if (!raw) return eventbus.emit('toast', { severity: 'error', content: 'Cannot load stock list' });
+      if (!raw) return eventbus.emit('toast', { severity: 'error', content: t('stock.list.warn.fail', 'Cannot load stock list') });
       const list = raw.split('\n').reduce((a, z) => {
          if (!z) return a;
          const ps = z.split(',');
@@ -313,13 +348,13 @@ export default function StockPanel() {
                   eventbus.emit('stock.pinned.click', val);
                }}
                renderInput={params =>
-                  <TextField sx={{ width: '100%', borderBottom: '1px solid #ccc' }} placeholder="Stock Code / Name"
+                  <TextField sx={{ width: '100%', borderBottom: '1px solid #ccc' }} placeholder={t('tip.stock.autocomplete', 'Stock Code / Name')}
                      {...params} value={query} onChange={onSearch}
                   />
                }
                noOptionsText={<Box>
-                  No available stocks. <Button sx={{ marginLeft: '5px' }} variant="contained" startIcon={<EditIcon />} onClick={onUpdateStockList}>
-                     Update Stock List
+                  {t('tip.stock.list.empty', 'No available stocks.')} <Button sx={{ marginLeft: '5px' }} variant="contained" startIcon={<EditIcon />} onClick={onUpdateStockList}>
+                     {t('btn.update.stock.list', 'Update your Stock List')}
                   </Button>
                </Box>}
             />
@@ -329,10 +364,10 @@ export default function StockPanel() {
             {pinnedStocks.map((meta, i) => <StockButton key={i} data={meta} isStarred={true} />)}
          </Box>
          {selected ? null : <NoData>
-            No Data; please search and select one stock or <Button
+            {t('tip.stock.no.selected', 'No Data; please search and select one stock or')} <Button
                sx={{ marginLeft: '5px' }} variant="contained"
                startIcon={<EditIcon />} onClick={onUpdateStockList}>
-            Upload your stock List
+            {t('btn.update.stock.list', 'Update your Stock List')}
          </Button></NoData>}
          <StockOne />
          <StockOneStrategy />

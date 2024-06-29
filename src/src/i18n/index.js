@@ -5,7 +5,7 @@ import zhCn from '$/i18n/zh-cn';
 
 const lang = (
    (local.load('sdokelang') || {}).lang ||
-   window.navigator.language.toLowerCase()
+   window.navigator.language
 );
 
 i18n.use(initReactI18next).init({
@@ -14,8 +14,9 @@ i18n.use(initReactI18next).init({
    debug: true,
    resources: {
       en: {},
-      'zh-cn': zhCn,
+      'zh-CN': zhCn,
    }
 });
 
+window._debugI18n = i18n;
 export default i18n;
