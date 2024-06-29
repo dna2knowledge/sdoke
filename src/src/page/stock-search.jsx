@@ -13,7 +13,7 @@ import databox from '$/service/databox';
 import local from '$/service/local';
 import calc from '$/analysis/math/calc';
 
-window._debugCalc = calc;
+import { useTranslation } from 'react-i18next';
 
 function StockSearchProgressBar() {
    const [text, setText] = useState('');
@@ -48,16 +48,20 @@ function dup(list) {
    return list.map(z => Object.assign({}, z));
 }
 
-async function filterStock(stockList, searchFormula, sortFormula) {
+async function filterStock(stockList, searchFormula, sortFormula, t) {
    if (searchFormula) {
+      const searchTitle = t('t.search', 'Search');
       const expr = calc.compile(calc.tokenize(searchFormula));
       if (expr.err) {
-         eventbus.emit('toast', { severity: 'error', content: `Search formula syntax error - ${JSON.stringify(expr.err)}` });
+         eventbus.emit('toast', {
+            severity: 'error',
+            content: `${t('tip.search.syntax.error', 'Search formula syntax error')} - ${JSON.stringify(expr.err)}`
+         });
          return stockList;
       }
       const r = [];
       const n = stockList.length;
-      eventbus.emit('stock.search.progress', { t: 'Search', i: 0, n });
+      eventbus.emit('stock.search.progress', { t: searchTitle, i: 0, n });
       for (let i = 0; i < n; i++) {
          // TODO: report progress
          const stock = stockList[i];
@@ -65,25 +69,29 @@ async function filterStock(stockList, searchFormula, sortFormula) {
          const hdata = await databox.stock.getStockHistoryRaw(stock.code);
          const val = await calc.evaluate(expr, hdata);
          if (val) r.push(stock);
-         eventbus.emit('stock.search.progress', { t: 'Search', i, n });
+         eventbus.emit('stock.search.progress', { t: searchTitle, i, n });
       }
       eventbus.emit('stock.search.progress', { i: 0, n: 0 });
       stockList.forEach(z => { z.score = 0; });
-      return sortFormula ? (await sortStock(r, sortFormula)) : r;
+      return sortFormula ? (await sortStock(r, sortFormula, t)) : r;
    } else {
-      return await sortStock(stockList, sortFormula);
+      return await sortStock(stockList, sortFormula, t);
    }
 }
 
-async function sortStock(stockList, sortFormula) {
+async function sortStock(stockList, sortFormula, t) {
    if (sortFormula) {
+      const sortTitle = t('t.sort', 'Sort');
       const expr = calc.compile(calc.tokenize(sortFormula));
       if (expr.err) {
-         eventbus.emit('toast', { severity: 'error', content: `Sort formula syntax error - ${JSON.stringify(expr.err)}` });
+         eventbus.emit('toast', {
+            severity: 'error',
+            content: `${t('tip.sort.syntax.error', 'Sort formula syntax error')} - ${JSON.stringify(expr.err)}`
+         });
          return stockList;
       }
       const n = stockList.length;
-      eventbus.emit('stock.search.progress', { t: 'Sort', i: 0, n });
+      eventbus.emit('stock.search.progress', { t: sortTitle, i: 0, n });
       for (let i = 0; i < n; i++) {
          // TODO: report progress
          const stock = stockList[i];
@@ -91,7 +99,7 @@ async function sortStock(stockList, sortFormula) {
          const hdata = await databox.stock.getStockHistoryRaw(stock.code);
          const score = await calc.evaluate(expr, hdata);
          stock.score = score;
-         eventbus.emit('stock.search.progress', { t: 'Sort', i, n });
+         eventbus.emit('stock.search.progress', { t: sortTitle, i, n });
       }
       stockList.sort((a, b) => {
          if (!a || a.score === undefined) return -1;
@@ -118,6 +126,8 @@ function StockLink(props) {
 }
 
 function StockSearchResultList() {
+   const { t } = useTranslation('search');
+
    const [data, setData] = useState([]);
    const [loading, setLoading] = useState(false);
    const [query, setQuery] = useState('');
@@ -145,7 +155,7 @@ function StockSearchResultList() {
                const step = {
                   query: Q.query,
                   sort: Q.sort,
-                  list: await filterStock(dup(data), Q.query, Q.sort)
+                  list: await filterStock(dup(data), Q.query, Q.sort, t)
                };
                local.data.searchResult.steps = local.data.searchResult.steps.slice(0, local.data.searchResult.i + 1);
                local.data.searchResult.i = local.data.searchResult.steps.length;
@@ -197,9 +207,9 @@ function StockSearchResultList() {
 
    if (!data.length) {
       if (query) {
-         return <NoData>No Data; no result for "<strong>{query}</strong>".</NoData>;
+         return <NoData>{t('tip.noquery', 'No Data; no result for')} "<strong>{query}</strong>".</NoData>;
       } else {
-         return <NoData>No Data; type sth for a search.</NoData>;
+         return <NoData>{t('tip.noresult', 'No Data; type sth for a search.')}</NoData>;
       }
    }
    return <Box sx={{ flex: '1 0 auto', height: '0px', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
@@ -208,8 +218,8 @@ function StockSearchResultList() {
       </Box> : null}
       <Box sx={{ flex: '1 0 auto', height: '0px', overflow: 'auto', mb: 2 }}>
          <Table size="small"><TableHead><TableRow>
-            <TableCell>Stock</TableCell>
-            <TableCell>Score</TableCell>
+            <TableCell>{t('t.stock', 'Stock')}</TableCell>
+            <TableCell>{t('t.score', 'Score')}</TableCell>
          </TableRow></TableHead><TableBody>
             {pageList.map((z, i) => <TableRow key={i}>
                <TableCell><StockLink data={z} /></TableCell>
@@ -221,6 +231,8 @@ function StockSearchResultList() {
 }
 
 export default function StockSearch() {
+   const { t } = useTranslation('search');
+
    const [query, setQuery] = useState('');
    const [sort, setSort] = useState('');
    const [round, setRound] = useState(local.data.searchResult?.i || 0);
@@ -286,19 +298,19 @@ export default function StockSearch() {
    return <Box sx={{ width: '100%', height: '100%', overflowY: 'hidden' }}>
       <Box sx={{ width: '100%', height: '100%', maxWidth: '800px', minWidth: '200px', margin: '0 auto', display: 'flex', flexDirection: 'column' }}>
          <Box sx={{ display: 'flex', flexDirection: 'column', width: '100%', mb: '10px' }}>
-            <TextField sx={{ mt: 1, ml: 1, flex: '1 0 auto' }} fullWidth label="Filter formula"
+            <TextField sx={{ mt: 1, ml: 1, flex: '1 0 auto' }} fullWidth label={t('t.filter.formula', "Filter formula")}
                placeholder="e.g. (.C.at(day(0)) - .C.at(day(-1)))/.C.at(day(-1))>0.05"
                value={query} onChange={(evt) => setQuery(evt.target.value || '')} />
-            <TextField sx={{ mt: 1, ml: 1, flex: '1 0 auto' }} fullWidth label="Sort formula"
+            <TextField sx={{ mt: 1, ml: 1, flex: '1 0 auto' }} fullWidth label={t('t.sort.formula', "Sort formula")}
                placeholder="e.g. .H.at(day(0))"
                value={sort} onChange={(evt) => setSort(evt.target.value || '')} />
             <Box>
                <IconButton onClick={onRoundPrev}><KeyboardArrowLeftIcon/></IconButton>
-               <span>Round {round}</span>
+               <span>{t('t.round', 'Round {{v}}', { v: round })}</span>
                <IconButton onClick={onRoundNext}><KeyboardArrowRightIcon/></IconButton>
-               <Button type="button" onClick={() => onSearch(false, false)}><SearchIcon /> Search</Button>
-               <Button type="button" onClick={() => onSearch(false, true)}><SearchIcon /> Search in fav</Button>
-               <Button type="button" onClick={() => onSearch(true, false)}><SearchIcon /> Search in result</Button>
+               <Button type="button" onClick={() => onSearch(false, false)}><SearchIcon /> {t('t.search', 'Search')}</Button>
+               <Button type="button" onClick={() => onSearch(false, true)}><SearchIcon /> {t('t.search.fav', 'Search in fav')}</Button>
+               <Button type="button" onClick={() => onSearch(true, false)}><SearchIcon /> {t('t.search.result', 'Search in result')}</Button>
             </Box>
          </Box>
          <Box><StockSearchProgressBar/></Box>

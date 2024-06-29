@@ -67,6 +67,20 @@ const tr = {
    strategy: {
    },
    search: {
+      't.search': '筛选',
+      't.sort': '排序',
+      't.stock': '股票',
+      't.score': '分数',
+      'tip.search.syntax.error': '筛选公式语法错误',
+      'tip.sort.syntax.error': '排序公式语法错误',
+      'tip.noquery': '没有数据；输入公式进行筛选',
+      'tip.noresult': '没有数据；筛选条件：',
+      't.filter.formula': '筛选公式',
+      't.sort.formula': '排序公式',
+      't.round': '第 {{v}} 轮',
+      't.search': '筛选',
+      't.search.fav': '在收藏中筛选',
+      't.search.result': '在结果中筛选',
    },
    trade: {
    },
