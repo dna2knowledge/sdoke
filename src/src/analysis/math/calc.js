@@ -774,4 +774,5 @@ const api = {
    compile,
    evaluate,
 };
+window._debugCalc = api;
 export default api;
