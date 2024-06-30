@@ -408,7 +408,7 @@ async function evaluateFuncCall(name, args, data, cache, id) {
    let v = null;
    if (!name) return null;
    let qualified = null;
-   if (name.indexOf('.') >= 0) {
+   if (name.indexOf('.') >= 0 && !name.startsWith('math.')) {
       // .C(...) = .C.at(...), .close.at(...), .close.atrange(...), .weekly.close()
       // sh600001.C.at(...)
       qualified = await evaluateQualifier(name, data, cache);
@@ -417,7 +417,7 @@ async function evaluateFuncCall(name, args, data, cache, id) {
          cache[id] = null;
          return null;
       }
-      data = qualified.data;
+      data = qualified.data || [];
       name = qualified.func;
    }
    switch(name) {
