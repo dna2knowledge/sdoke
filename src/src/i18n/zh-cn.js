@@ -78,6 +78,7 @@ const tr = {
       't.filter.formula': '筛选公式',
       't.sort.formula': '排序公式',
       't.round': '第 {{v}} 轮',
+      't.result.total': '共 {{v}} 个结果',
       't.search': '筛选',
       't.search.fav': '在收藏中筛选',
       't.search.result': '在结果中筛选',

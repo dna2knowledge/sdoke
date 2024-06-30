@@ -236,6 +236,7 @@ export default function StockSearch() {
    const [query, setQuery] = useState('');
    const [sort, setSort] = useState('');
    const [round, setRound] = useState(local.data.searchResult?.i || 0);
+   const [total, setTotal] = useState(0);
 
    useEffect(() => {
       eventbus.on('stock.search.result', onRoundUpdate);
@@ -247,6 +248,7 @@ export default function StockSearch() {
          if (!step) return;
          const i = local.data.searchResult.i;
          setRound(i);
+         setTotal(step.list?.length || 0);
          setQuery(step.query);
          setSort(step.sort);
       }
@@ -257,6 +259,7 @@ export default function StockSearch() {
          const steps = local.data.searchResult.steps;
          const i = steps.length - 1;
          const step = steps[i];
+         local.data.searchResult.i = i;
          eventbus.emit('stock.search.result', step);
       } else {
          // XXX: cannot update when it is updated;
@@ -306,7 +309,7 @@ export default function StockSearch() {
                value={sort} onChange={(evt) => setSort(evt.target.value || '')} />
             <Box>
                <IconButton onClick={onRoundPrev}><KeyboardArrowLeftIcon/></IconButton>
-               <span>{t('t.round', 'Round {{v}}', { v: round })}</span>
+               <span>{t('t.round', 'Round {{v}}', { v: round })}</span>, <span>{t('t.result.total', 'Total {{v}}', { v: total })}</span>
                <IconButton onClick={onRoundNext}><KeyboardArrowRightIcon/></IconButton>
                <Button type="button" onClick={() => onSearch(false, false)}><SearchIcon /> {t('t.search', 'Search')}</Button>
                <Button type="button" onClick={() => onSearch(false, true)}><SearchIcon /> {t('t.search.fav', 'Search in fav')}</Button>
