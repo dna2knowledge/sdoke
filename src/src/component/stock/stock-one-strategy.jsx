@@ -51,7 +51,7 @@ export default function StockOneStrategy() {
    const { t } = useTranslation('viewer');
 
    const [meta, setMeta] = useState(null);
-   const [strategy, setStrategy] = useState(local.data?.view?.selectedStrategy || 'strategy.rsibase');
+   const [strategy, setStrategy] = useState(local.data?.view?.selectedStrategy || 'strategy-example.rsibase');
    const [loading, setLoading] = useState(true);
    const [data, setData] = useState(null);
    const oneKey = useRef(null);
@@ -71,7 +71,11 @@ export default function StockOneStrategy() {
             }
          } */
          const history = await databox.stock.getStockHistory(meta.code);
-         ret = await rsiEvaluateStrategy({ meta, raw: history });
+         if (strategy === 'strategy-example.rsibase') {
+            ret = await rsiEvaluateStrategy({ meta, raw: history });
+         } else {
+            // TODO calc with customized strategy
+         }
       } catch(err) { }
       setLoading(false);
       if (oneKey.current !== key) return false;
@@ -102,7 +106,7 @@ export default function StockOneStrategy() {
          if (!data) return;
          setMeta(data.meta);
          if (!local.data.view) local.data.view = {};
-         data.strategy = data.strategy || local.data.view.selectedStrategy || strategy || 'strategy.rsibase';
+         data.strategy = data.strategy || local.data.view.selectedStrategy || strategy || 'strategy-example.rsibase';
          local.data.view.selectedStrategy = data.strategy;
          setStrategy(data.strategy);
          if (data.meta) updateData(data.meta, data.strategy);
@@ -141,7 +145,7 @@ export default function StockOneStrategy() {
          <Tooltip title={t('t.refresh', 'Refresh')}><IconButton onClick={onUpdateClick}><UpdateIcon /></IconButton></Tooltip>
          <span><Select sx={{ lineHeight: '0.4375em', '.MuiSelect-select.MuiInputBase-input': { minHeight: 0 } }}
             value={strategy} onChange={onSwitchStrategyClick}>
-            <MenuItem value={'strategy.rsibase'}>Strategy (RSI)</MenuItem>
+            <MenuItem value={'strategy-example.rsibase'}>{t('t.strategy.example.rsibase', 'Strategy Example (RSI)')}</MenuItem>
          </Select></span>
          <Tooltip title={t('t.goto.edit.strategy', 'Go to strategy editing')}><IconButton type="button" sx={{ p: '10px' }}><SwitchAccessShortcutIcon/></IconButton></Tooltip>
       </Box>

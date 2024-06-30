@@ -30,40 +30,6 @@ function GridTextEditor(props) {
    </Box>;
 }
 
-function StrategyVariable(props) {
-   const { data } = props;
-   const [variables, setVariables] = useState(data?.var || []);
-   if (data?.var && data.var !== variables) setVariables(data.var);
-
-   useEffect(() => {
-      eventbus.on('stock.strategy.edit.var.remove', onEditRemove);
-      return () => {
-         eventbus.off('stock.strategy.edit.var.remove', onEditRemove);
-      };
-
-      function onEditRemove(data) {
-         if (!data) return;
-         variables.splice(data.i, 1);
-         const newlist = [...variables];
-         setVariables(newlist);
-         eventbus.emit('stock.strategy.edit.update', { T: 'var', V: newlist });
-      }
-   }, [data]);
-
-   const onAddClick = () => {
-      const newlist = [...variables, { N: '', F: '' }];
-      setVariables(newlist);
-      eventbus.emit('stock.strategy.edit.update', { T: 'var', V: newlist });
-   };
-
-   return <Box sx={{ mt: 1, mb: 1 }}>
-      Variables
-      <Box sx={{ color: '#999', fontSize: '10px' }}>Define variables for using in score rules</Box>
-      {variables.map((z, i) => <GridTextEditor key={i} i={i} t="var" kl="Name" vl="Formula" kn={4} vn={8} k="N" v="F" data={z} />)}
-      <Box><IconButton onClick={onAddClick}><AddIcon /></IconButton></Box>
-   </Box>;
-}
-
 function StrategyScoreRule(props) {
    const { data } = props;
    const [rules, setRules] = useState(data?.rule || []);
@@ -158,7 +124,6 @@ export default function StockStrategyEditTab (props) {
             newdata.V = newdata.V.filter((_, i) => i === newdata.X);
          }
          switch (newdata.T) {
-            case 'var': data.var = newdata.V; break;
             case 'rule': data.rule = newdata.V; break;
             case 'vis': data.vis = newdata.V; break;
          }
@@ -191,11 +156,11 @@ export default function StockStrategyEditTab (props) {
       setDesc(newdesc);
       setData({
          dirty: true,
+         new: !!data?.new,
          name: newname,
          desc: newdesc,
-         var: [{ N: 'rsi15', F: 'rsi(15)' }],
-         rule: [{ C: 'rsi15 < 30', F: '1' }, { C: 'rsi15 < 40', F: '0.5' }, { C: 'rsi15 > 60', F: '-0.5' }, { C: 'rsi15 > 70', F: '-1' }],
-         vis: [{ G: 'rsi', V: 'rsi15' }],
+         rule: [{ C: '.C.rsi15() <= 30', F: '1' }, { C: '.C.rsi15() >= 70', F: '-1' }, { C: '', F: '1 - 2 * (.C.rsi15() - 30) / (70 - 30)' }],
+         vis: [{ G: 'rsi', V: '.C.rsi15.atrange(index(-250, 0))' }],
       });
    };
    const onDeleteClick = () => {
@@ -218,7 +183,6 @@ export default function StockStrategyEditTab (props) {
          <TextField fullWidth label="Strategy Name" variant="standard" value={name} onChange={onNameChange} />
          <TextField fullWidth label="Strategy Description" variant="standard" value={desc} onChange={onDescChange} />
       </Box>
-      <StrategyVariable data={data} />
       <StrategyScoreRule data={data} />
       <StrategyVisualization data={data} />
    </Box>;

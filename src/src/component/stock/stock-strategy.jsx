@@ -11,7 +11,7 @@ import local from '$/service/local';
 export default function StockStrategy() {
    const [tab, setTab] = useState('edit');
    const [strategyList, setStrategyList] = useState([]);
-   const [selected, setSelected] = useState(local.data.selectedStockStrategy);
+   const [selected, setSelected] = useState(local.data.selectedStockStrategy || null);
 
    useEffect(() => {
       databox.stock.getStockStrategyList().then(rawList => {
@@ -64,9 +64,8 @@ export default function StockStrategy() {
          delete item.dirty;
          delete local.data.selectedStockStrategy.dirty;
          // TODO: grammar check for all fields
-         item.var = item.var.filter(z => z.N && z.F);
-         item.rule = item.rule.filter(z => z.C && z.F);
-         item.vis = item.vis.filter(z => z.G && z.V);
+         item.rule = item.rule.filter(z => /*z.C &&*/ z.F);
+         item.vis = item.vis.filter(z => /*z.G &&*/ z.V);
          if (item0) {
             if (isNew) {
                if (!confirm(`Are you sure to overwrite the existing strategy named as "${item.name}"`)) return;
@@ -103,7 +102,7 @@ export default function StockStrategy() {
 
    return <Box sx={{ width: '100%', height: '100%', maxWidth: '800px', minWidth: '200px', margin: '0 auto', display: 'flex', flexDirection: 'column' }}>
       <Box sx={{ mb: '10px' }}>
-         <Autocomplete sx={{ ml: 1, flex: '1 0 auto', '.MuiInputBase-input': { height: '10px' } }} disablePortal
+         <Autocomplete sx={{ ml: 1, flex: '1 0 auto', '.MuiInputBase-input': { height: '10px' } }}
             options={strategyList}
             getOptionLabel={option => `${option.name}`}
             onChange={(_, val) => {

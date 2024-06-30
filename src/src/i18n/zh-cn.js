@@ -60,6 +60,7 @@ const tr = {
       't.add.fav': '收藏',
       't.update.history': '更新历史数据',
       't.do.captr': '资金走向分析',
+      't.strategy.example.rsibase': '策略演示 (RSI)',
       'view.warn.internal.error': '没有数据；发生了一个内部错误。',
       'captr.title': '资金走向分析报告',
       'captr.warn.internal.error': '没有数据；发生了一个内部错误。',
