@@ -1,8 +1,10 @@
 import { useState, useEffect } from 'react';
-import { Box, TextField, Grid, Button, IconButton } from '@mui/material';
+import { Box, TextField, Grid, Button, IconButton, Divider, Tooltip } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import CloseIcon from '@mui/icons-material/Close';
 import eventbus from '$/service/eventbus';
+
+import { useTranslation } from 'react-i18next';
 
 function GridTextEditor(props) {
    const {i, t, k, v, kl, vl, kn, vn, data} = props;
@@ -31,6 +33,8 @@ function GridTextEditor(props) {
 }
 
 function StrategyScoreRule(props) {
+   const { t } = useTranslation('strategy');
+
    const { data } = props;
    const [rules, setRules] = useState(data?.rule || []);
    if (data?.rule && data.rule !== rules) setRules(data.rule);
@@ -57,14 +61,24 @@ function StrategyScoreRule(props) {
    };
 
    return <Box sx={{ mt: 1, mb: 1 }}>
-      Score Rules
-      <Box sx={{ color: '#999', fontSize: '10px' }}>Define rules for buy/sell scoring; 1 is the strongest buying signal, meanwhile -1 is the strongest selling signal</Box>
-      {rules.map((z, i) => <GridTextEditor key={i} i={i} t="rule" kl="Condition" vl="Score Formula" kn={6} vn={6} k="C" v="F" data={z} />)}
-      <Box><IconButton onClick={onAddClick}><AddIcon /></IconButton></Box>
+      {t('t.scorerule', 'Score Rules')}
+      <Box sx={{ color: '#999', fontSize: '10px' }}>
+         {t('t.desc.scorerule', 'Define rules for buy/sell scoring; 1 is the strongest buying signal, meanwhile -1 is the strongest selling signal')}
+      </Box>
+      {rules.map((z, i) => <GridTextEditor
+         key={i} i={i} t="rule"
+         kl={t('t.scorerule.condition', "Condition")}
+         vl={t('t.scorerule.scoreformula', "Score Formula")}
+         kn={6} vn={6} k="C" v="F" data={z} />)}
+      <Box><Tooltip title={t('t.add.scorerule', 'Add Score Rule')}>
+         <IconButton onClick={onAddClick}><AddIcon /></IconButton>
+      </Tooltip></Box>
    </Box>;
 }
 
 function StrategyVisualization(props) {
+   const { t } = useTranslation('strategy');
+
    const { data } = props;
    const [visualizations, setVisualizations] = useState(data?.vis || []);
    if (data?.vis && data.vis !== visualizations) setVisualizations(data.vis);
@@ -91,14 +105,24 @@ function StrategyVisualization(props) {
    };
 
    return <Box sx={{ mt: 1, mb: 1 }}>
-      Visualization
-      <Box sx={{ color: '#999', fontSize: '10px' }}>Define groups for visualization</Box>
-      {visualizations.map((z, i) => <GridTextEditor key={i} t="vis" i={i} kl="Group" vl="Variables" kn={4} vn={8} k="G" v="V" data={z} />)}
-      <Box><IconButton onClick={onAddClick}><AddIcon /></IconButton></Box>
+      {t('t.vis', 'Visualization')}
+      <Box sx={{ color: '#999', fontSize: '10px' }}>
+         {t('t.desc.vis', 'Define groups for visualization within latest data of 250 days')}
+      </Box>
+      {visualizations.map((z, i) => <GridTextEditor
+         key={i} t="vis" i={i}
+         kl={t('t.vis.group', "Group")}
+         vl={t('t.vis.visformula', "Visualization Formula")}
+         kn={4} vn={8} k="G" v="V" data={z} />)}
+      <Box><Tooltip title={t('t.add.vis', 'Add Visualization')}>
+         <IconButton onClick={onAddClick}><AddIcon /></IconButton>
+      </Tooltip></Box>
    </Box>;
 }
 
 export default function StockStrategyEditTab (props) {
+   const { t } = useTranslation('strategy');
+
    const { tab } = props;
    const [data, setData] = useState({...props.data});
    const [name, setName] = useState(data?.name || '');
@@ -151,7 +175,7 @@ export default function StockStrategyEditTab (props) {
    };
    const onFillExampleClick = () => {
       const newname = 'RSI15-3/7';
-      const newdesc = 'RSI (<30 => buy, >70 => sell)';
+      const newdesc = t('t.example.desc.rsibase', 'RSI (<30 => buy, >70 => sell)');
       setName(newname);
       setDesc(newdesc);
       setData({
@@ -160,30 +184,33 @@ export default function StockStrategyEditTab (props) {
          name: newname,
          desc: newdesc,
          rule: [{ C: '.C.rsi15() <= 30', F: '1' }, { C: '.C.rsi15() >= 70', F: '-1' }, { C: '', F: '1 - 2 * (.C.rsi15() - 30) / (70 - 30)' }],
-         vis: [{ G: 'rsi', V: '.C.rsi15.atrange(index(-250, 0))' }],
+         vis: [{ G: 'rsi.rsi15', V: '.C.rsi15.atrange(index(-250, 0))' }],
       });
    };
    const onDeleteClick = () => {
       if (!data) return;
       if (data.new) {
-         if (!confirm(`Are you sure to discard the new stock strategy ${data.name ? `"${data.name}"` : ''}`)) return;
-      } else if (!confirm(`Are you sure to delete the stock strategy "${data.name}"?`)) return;
+         if (!confirm(`${t('tip.warn.discard.new', 'Are you sure to discard the new stock strategy')} ${data.name ? `"${data.name}"` : ''}?`)) return;
+      } else if (!confirm(`${t('tip.warn.delete', 'Are you sure to delete the stock strategy')} "${data.name}"?`)) return;
       eventbus.emit("stock.strategy.del", data);
    }
 
    return <Box sx={{ display: tab === 'edit' ? 'block' : 'none', overflowY: 'auto', height: '0px', flex: '1 0 auto' }}>
-      <Box>
-         <Button variant="contained" color="success" onClick={onSaveClick}>Save</Button>
-         <Button onClick={onCancelClick}>Cancel/Reset</Button>
-         <Button onClick={onFillExampleClick}>Fill Example</Button>
-         <Button onClick={onDeleteClick} color="error">Delete</Button>
+      <Box sx={{ mt: 1 }}>
+         <Button variant="contained" color="success" onClick={onSaveClick}>{t('t.save', 'Save')}</Button>
+         <Button onClick={onCancelClick}>{t('t.cancel', 'Cancel/Reset')}</Button>
+         <Button onClick={onFillExampleClick}>{t('t.fillexample', 'Fill Example')}</Button>
+         <Button onClick={onDeleteClick} color="error">{t('t.delete', 'Delete')}</Button>
       </Box>
+      <Divider sx={{ mt: 1, mb: 1 }} />
       <Box>
-         Basic Info
-         <TextField fullWidth label="Strategy Name" variant="standard" value={name} onChange={onNameChange} />
-         <TextField fullWidth label="Strategy Description" variant="standard" value={desc} onChange={onDescChange} />
+         {t('t.basic', 'Basic Info')}
+         <TextField fullWidth label={t('t.basic.name', "Strategy Name")} variant="standard" value={name} onChange={onNameChange} />
+         <TextField fullWidth label={t('t.basic.desc', "Strategy Description")} variant="standard" value={desc} onChange={onDescChange} />
       </Box>
+      <Divider sx={{ mt: 1, mb: 1 }} />
       <StrategyScoreRule data={data} />
+      <Divider sx={{ mt: 1, mb: 1 }} />
       <StrategyVisualization data={data} />
    </Box>;
 }
