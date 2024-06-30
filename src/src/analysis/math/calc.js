@@ -85,11 +85,27 @@ function tokenIsNumber(x) {
    return `${parseFloat(x)}` === x;
 }
 
-function compile(tokens) {
+function compile(tokens, opt) {
+   opt = opt || {};
    const obj = { V: [] };
    const stat = { cache: {}, i: 1, err: [] };
+
+   // enable signature share between multiple expressions
+   if (opt.importSignature) {
+      let maxI = 1;
+      Object.keys(opt.importSignature).forEach(sig => {
+         const v = opt.importSignature[sig];
+         const i0 = v && v.startsWith('_') ? parseInt(v.substring(1)) : 0;
+         if (i0 > maxI) maxI = i0;
+         stat.cache[k] = v;
+      });
+      stat.i = maxI + 1;
+   }
+
    compileSub(tokens, 0, obj, stat);
+
    if (stat.err.length) return { err: stat.err };
+   if (opt.exportSignature) obj._signature = stat.cache;
    return obj;
 }
 function compileMergeOp(op, opS, valS, stat) {
