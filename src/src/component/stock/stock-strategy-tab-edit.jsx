@@ -183,7 +183,7 @@ export default function StockStrategyEditTab (props) {
          new: !!data?.new,
          name: newname,
          desc: newdesc,
-         rule: [{ C: '.C.rsi15() <= 30', F: '1' }, { C: '.C.rsi15() >= 70', F: '-1' }, { C: '', F: '1 - 2 * (.C.rsi15() - 30) / (70 - 30)' }],
+         rule: [{ C: '.C.rsi15() < 30', F: '1' }, { C: '.C.rsi15() > 70', F: '-1' }, { C: '', F: '1 - 2 * (.C.rsi15() - 30) / (70 - 30)' }],
          vis: [{ G: 'rsi.rsi15', V: '.C.rsi15.atrange(index(-250, 0))' }],
       });
    };
