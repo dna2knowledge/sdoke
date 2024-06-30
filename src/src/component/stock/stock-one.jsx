@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { Box, IconButton } from '@mui/material';
+import { Box, IconButton, Tooltip } from '@mui/material';
 import BookmarkAddIcon from '@mui/icons-material/BookmarkAdd';
 import NoData from '$/component/shared/no-data';
 import Chart from '$/component/stock/stock-one-chart';
@@ -63,7 +63,10 @@ export default function StockOne() {
    return <Box>
       { data && data.length ? (<Box>
          <Box sx={{ textAlign: 'center', width: '100%' }}>
-            <IconButton sx={{ width: '12px', height: '12px' }} onClick={() => eventbus.emit('stock.pinned.add', meta)}><BookmarkAddIcon /></IconButton> {meta.code} {meta.name}
+            <Tooltip title={t('t.add.fav', 'Add to favorite')}><IconButton
+               sx={{ width: '12px', height: '12px' }}
+               onClick={() => eventbus.emit('stock.pinned.add', meta)}
+            ><BookmarkAddIcon /></IconButton></Tooltip> {meta.code} {meta.name}
             {meta.area ? ` (${meta.area})` : null}
          </Box>
          <Box><Chart /></Box>

@@ -4,7 +4,10 @@ import InsightsIcon from '@mui/icons-material/Insights';
 import CloseIcon from '@mui/icons-material/Close';
 import EditIcon from '@mui/icons-material/Edit';
 import { Box, IconButton } from '@mui/material';
-import { Autocomplete, TextField, ButtonGroup, Button, LinearProgress, Typography } from '@mui/material';
+import {
+   Autocomplete, TextField, ButtonGroup, Button, LinearProgress,
+   Tooltip,
+} from '@mui/material';
 import NoData from '$/component/shared/no-data';
 import StockOne from '$/component/stock/stock-one';
 import StockOneStrategy from '$/component/stock/stock-one-strategy';
@@ -39,9 +42,7 @@ function StockUpdateProgressBar(props) {
       <Box sx={{ width: '100%', mr: 1 }}>
          <LinearProgress variant="determinate" value={value} />
       </Box>
-      <Box>
-         <Typography sx={{ whiteSpace: 'nowrap' }} variant="body2" color="text.secondary">{`${i} / ${n}`}</Typography>
-      </Box>
+      <Box sx={{ whiteSpace: 'nowrap', fontSize: '10px' }}>{`${i} / ${n}`}</Box>
    </Box>;
 }
 
@@ -339,8 +340,8 @@ export default function StockPanel() {
    return <Box sx={{ height: '100%' }}>
       <Box sx={{ width: '100%', height: '100%', maxWidth: '800px', minWidth: '200px', margin: '0 auto', display: 'flex', flexDirection: 'column' }}>
          <Box sx={{ display: 'flex', width: '100%', mb: '10px' }}>
-            <IconButton ref={updateButtonRef} type="button" sx={{ p: '10px' }}><UpdateIcon /></IconButton>
-            <IconButton onClick={onInsightClick} type="button" sx={{ p: '10px' }}><InsightsIcon /></IconButton>
+            <Tooltip title={t('t.update.history', 'Update history')}><IconButton ref={updateButtonRef} type="button" sx={{ p: '10px' }}><UpdateIcon /></IconButton></Tooltip>
+            <Tooltip title={t('t.do.captr', 'Capital Trend')}><IconButton onClick={onInsightClick} type="button" sx={{ p: '10px' }}><InsightsIcon /></IconButton></Tooltip>
             <Autocomplete sx={{ ml: 1, flex: '1 0 auto', '.MuiInputBase-input': { height: '10px' } }} disablePortal
                options={data || []}
                getOptionLabel={option => `${option.code} ${option.name}${option.area ? ` (${option.area})` : ''}`}

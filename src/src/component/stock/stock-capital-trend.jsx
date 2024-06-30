@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
-import { Box, Drawer, Divider, IconButton, Link } from '@mui/material';
+import { Box, Drawer, Divider, IconButton, Tooltip } from '@mui/material';
 import { Button, ButtonGroup } from '@mui/material';
+import CloseIcon from '@mui/icons-material/Close';
 import UpdateIcon from '@mui/icons-material/Update';
 import NoData from '$/component/shared/no-data';
 import eventbus from '$/service/eventbus';
@@ -251,7 +252,8 @@ export default function CapitalTrend() {
       {suggested ? (loading ? <NoData>{t('tip.captr.loading', 'Loading capital trend data ...')}</NoData>
       : (data ? <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%', padding: '10px' }}>
          <Box sx={{ marginBottom: '10px' }}>
-            <IconButton onClick={onUpdateClick} type="button" sx={{ p: '10px' }}><UpdateIcon /></IconButton>
+            <Tooltip title={t('t.close.ui', 'Close')}><IconButton onClick={() => setSuggested(false)}><CloseIcon /></IconButton></Tooltip>
+            <Tooltip title={t('t.refresh', 'Refresh')}><IconButton onClick={onUpdateClick}><UpdateIcon /></IconButton></Tooltip>
             {t('captr.title', 'Analysis Report of Capital Trend')}
             <Box>
                <ButtonGroup>

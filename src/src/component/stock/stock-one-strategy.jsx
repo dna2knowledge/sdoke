@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { Box, IconButton, Select, MenuItem } from '@mui/material';
+import { Box, IconButton, Select, MenuItem, Tooltip } from '@mui/material';
 import UpdateIcon from '@mui/icons-material/Update';
 import SwitchAccessShortcutIcon from '@mui/icons-material/SwitchAccessShortcut';
 import NoData from '$/component/shared/no-data';
@@ -138,12 +138,12 @@ export default function StockOneStrategy() {
       '.strategy': { textTransform: 'capitalize', fontWeight: 'bold' },
    }}>
       <Box sx={{ textAlign: 'left' }}>
-         <IconButton onClick={onUpdateClick} type="button" sx={{ p: '10px' }}><UpdateIcon /></IconButton>
+         <Tooltip title={t('t.refresh', 'Refresh')}><IconButton onClick={onUpdateClick}><UpdateIcon /></IconButton></Tooltip>
          <span><Select sx={{ lineHeight: '0.4375em', '.MuiSelect-select.MuiInputBase-input': { minHeight: 0 } }}
             value={strategy} onChange={onSwitchStrategyClick}>
             <MenuItem value={'strategy.rsibase'}>Strategy (RSI)</MenuItem>
          </Select></span>
-         <IconButton type="button" sx={{ p: '10px' }}><SwitchAccessShortcutIcon/></IconButton>
+         <Tooltip title={t('t.goto.edit.strategy', 'Go to strategy editing')}><IconButton type="button" sx={{ p: '10px' }}><SwitchAccessShortcutIcon/></IconButton></Tooltip>
       </Box>
       <Box>
          <span className={`mode_${mode}`}> {t(`t.${mode}`, mode)}</span>

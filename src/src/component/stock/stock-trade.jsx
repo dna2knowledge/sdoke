@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import {
-   Box, Select, MenuItem, IconButton, Button, Switch,
+   Box, Select, MenuItem, IconButton, Button, Switch, Tooltip,
    Dialog, DialogTitle, DialogContent, DialogActions, TextField, Autocomplete
 } from '@mui/material';
 import UpdateIcon from '@mui/icons-material/Update';
@@ -152,7 +152,7 @@ function EditDialog(props) {
       <DialogTitle sx={{ m: 0, p: 2 }}>
          Stock Trade
       </DialogTitle>
-      <IconButton
+      <Tooltip title={t('t.close.ui', 'Close')}><IconButton
          aria-label="close"
          onClick={close}
          sx={{
@@ -162,7 +162,7 @@ function EditDialog(props) {
             color: (theme) => theme.palette.grey[500],
          }}>
          <CloseIcon />
-      </IconButton>
+      </IconButton></Tooltip>
       <DialogContent dividers sx={{ minHeight: '400px' }}>
          <Box sx={{ width: '100%' }}>
             <Autocomplete disabled={!!data} sx={{ '.MuiInputBase-input': { height: '10px' } }} fullWidth disablePortal
@@ -410,8 +410,8 @@ export default function StockTrade() {
          <Select variant="standard" value={year} onChange={(evt) => setYear(evt.target.value)}>
             {years.map(Y => <MenuItem key={Y} value={Y}>{Y}</MenuItem>)}
          </Select>
-         <IconButton onClick={onUpdateClick}><UpdateIcon /></IconButton>
-         <IconButton onClick={onAddClick}><AddRoadIcon /></IconButton>
+         <Tooltip title={t('t.refresh', 'Refresh')}><IconButton onClick={onUpdateClick}><UpdateIcon /></IconButton></Tooltip>
+         <Tooltip title={t('t.add.trade', 'Add Trade')}><IconButton onClick={onAddClick}><AddRoadIcon /></IconButton></Tooltip>
       </Box>
       {/* TODO: summary of this year */}
       <Box sx={{ flex: '1 0 auto', marginBottom: '10px', height: '0px', width: '100%', overflow: 'auto' }}>
