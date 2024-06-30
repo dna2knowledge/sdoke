@@ -19,6 +19,7 @@ function StockSearchProgressBar() {
    const [text, setText] = useState('');
    const [i, setI] = useState(0);
    const [n, setN] = useState(0);
+   const [meta, setMeta] = useState(null);
 
    useEffect(() => {
       eventbus.on('stock.search.progress', onStockUpdateProgress);
@@ -30,6 +31,7 @@ function StockSearchProgressBar() {
          setText(data.t || '');
          setI(data.i || 0);
          setN(data.n || 0);
+         setMeta(data.meta || null);
       }
    }, []);
 
@@ -39,7 +41,7 @@ function StockSearchProgressBar() {
       <Box sx={{ width: '100%', mr: 1 }}>
          <LinearProgress variant="determinate" value={value} />
       </Box>
-      <Box sx={{ whiteSpace: 'nowrap', fontSize: '10px' }}>{text || ''}{` ${i} / ${n}`}</Box>
+      <Box sx={{ whiteSpace: 'nowrap', fontSize: '10px' }}>{text || ''}{` ${i} / ${n}`}{meta ? ` - ${meta.code} ${meta.name}` : ''}</Box>
    </Box>;
 }
 
@@ -66,10 +68,10 @@ async function filterStock(stockList, searchFormula, sortFormula, t) {
          // TODO: report progress
          const stock = stockList[i];
          if (!stock) continue;
+         eventbus.emit('stock.search.progress', { t: searchTitle, i: i+1, n, meta: stock });
          const hdata = await databox.stock.getStockHistoryRaw(stock.code);
          const val = await calc.evaluate(expr, hdata);
          if (val) r.push(stock);
-         eventbus.emit('stock.search.progress', { t: searchTitle, i, n });
       }
       eventbus.emit('stock.search.progress', { i: 0, n: 0 });
       stockList.forEach(z => { z.score = 0; });
@@ -96,10 +98,10 @@ async function sortStock(stockList, sortFormula, t) {
          // TODO: report progress
          const stock = stockList[i];
          if (!stock) continue;
+         eventbus.emit('stock.search.progress', { t: sortTitle, i: i+1, n, meta: stock });
          const hdata = await databox.stock.getStockHistoryRaw(stock.code);
          const score = await calc.evaluate(expr, hdata);
          stock.score = score;
-         eventbus.emit('stock.search.progress', { t: sortTitle, i, n });
       }
       stockList.sort((a, b) => {
          if (!a || a.score === undefined) return -1;
