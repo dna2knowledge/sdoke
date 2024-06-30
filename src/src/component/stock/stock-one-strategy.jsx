@@ -153,7 +153,7 @@ export default function StockOneStrategy() {
          <StrategyStat name={t('t.all', "ALL")} stat={data.stat.all} />
          <StrategyStat name={t('t.3years', "3 YEARS")} stat={data.stat.y3} />
       </Box>
-      <Box>History: {data?.stat?.d250.slice(0, 20).map((z, i) => <span key={i}>
+      <Box>{t('t.history', 'History')}: {data?.stat?.d250.slice(0, 20).map((z, i) => <span key={i}>
          <span className={`act mode_${z.score > 0 ? 'buy' : (z.score < 0 ? 'sell' : '-')} ${z.score > 0.5 || z.score < -0.5 ? 'h_act' : ''}`}>
             {z.score > 0 ? t('t.buy.s', 'B') : (z.score < 0 ? t('t.sell.s', 'S') : t('t.unknown.s', '-'))}
          </span>

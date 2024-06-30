@@ -28,6 +28,7 @@ const tr = {
       't.gain.min.max': '收益 最小/最大',
       't.loss.min': '损失 最小',
       't.op.window': '操作窗口',
+      't.history': '历史',
       't.sell': '卖出',
       't.buy': '买入',
       't.sell.s': '卖',
