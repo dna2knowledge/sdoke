@@ -97,7 +97,7 @@ function compile(tokens, opt) {
          const v = opt.importSignature[sig];
          const i0 = v && v.startsWith('_') ? parseInt(v.substring(1)) : 0;
          if (i0 > maxI) maxI = i0;
-         stat.cache[k] = v;
+         stat.cache[sig] = v;
       });
       stat.i = maxI + 1;
    }
@@ -142,6 +142,7 @@ function compileMergeOp(op, opS, valS, stat) {
       }
       opS.pop();
       lastOp = opS[opS.length-1];
+      pr0 = getPriority(lastOp);
    }
    if (op) opS.push(op);
 }
@@ -239,8 +240,9 @@ function compileSub(tokens, i, out, stat) {
    return i;
 }
 
-async function evaluate(expr, data, cache) {
-   return await evaluateNode(expr.V[0], data, cache || {});
+async function evaluate(expr, data, opt) {
+   opt = opt || {};
+   return await evaluateNode(expr.V[0], data, opt.cache || {});
 }
 async function evaluateNode(expr, data, cache) {
    if (!expr) return null;
