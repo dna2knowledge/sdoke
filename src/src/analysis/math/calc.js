@@ -613,6 +613,10 @@ async function evaluateFuncCall(name, args, data, cache, id) {
          args = evaluateFlatFuncCallArgs(args);
          v = args.reduce((a, b) => a+b, 0);
          v = args.map(z => z / v); break;
+      case 'abs':
+      case 'math.abs':
+         args = evaluateFlatFuncCallArgs(args);
+         v = args.map(z => Math.abs(z)); break;
       case 'round':
       case 'math.round':
          args = evaluateFlatFuncCallArgs(args);
