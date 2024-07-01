@@ -60,7 +60,8 @@ export async function rsiEvaluateStrategy(item) {
          y3: stat_3y,
       };
       for (let i = rows.length-1, j = 1; i >= rows.length-250 && i >= 0; i--, j++) {
-         const di = (await analyze([{ raw: rows.slice(ai-j, i) }]))[0];
+         const k = ai < j ? 0 : ai-j;
+         const di = (await analyze([{ raw: rows.slice(k, i) }]))[0];
          c0.stat.d250.push(di);
       }
       ret = c0;

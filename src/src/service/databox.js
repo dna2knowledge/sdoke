@@ -110,6 +110,20 @@ const stockApi = {
     },
     getStockStrategyList: () => db.get("stock.strategy.list"),
     setStockStrategyList: (list) => db.set("stock.strategy.list", list),
+    getStockStrategy: async (name) => {
+      const list = await stockApi.getStockStrategyList();
+      return list.find(z => z.name === name);
+    },
+    setStockStrategy: async (name, stg) => {
+      const list = await stockApi.getStockStrategyList();
+      const item = list.find(z => z.name === name);
+      if (item) {
+         const i = list.indexOf(item);
+         list.splice(i, 1, stg);
+         await stockApi.setStockStrategyList(list);
+      }
+      return item;
+    },
     getStockTradeYears: () => db.get('stock.trade.list.years'),
     setStockTradeYears: (list) => db.set('stock.trade.list.years', list),
     getStockTradeList: (year) => db.get(`stock.trade.list.${year}`),

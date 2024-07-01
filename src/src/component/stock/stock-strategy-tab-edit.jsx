@@ -99,7 +99,7 @@ function StrategyVisualization(props) {
    }, [data]);
 
    const onAddClick = () => {
-      const newlist = [...visualizations, { G: '', V: '' }];
+      const newlist = [...visualizations, { G: '', F: '' }];
       setVisualizations(newlist);
       eventbus.emit('stock.strategy.edit.update', { T: 'vis', V: newlist });
    };
@@ -113,7 +113,7 @@ function StrategyVisualization(props) {
          key={i} t="vis" i={i}
          kl={t('t.vis.group', "Group")}
          vl={t('t.vis.visformula', "Visualization Formula")}
-         kn={4} vn={8} k="G" v="V" data={z} />)}
+         kn={4} vn={8} k="G" v="F" data={z} />)}
       <Box><Tooltip title={t('t.add.vis', 'Add Visualization')}>
          <IconButton onClick={onAddClick}><AddIcon /></IconButton>
       </Tooltip></Box>
@@ -184,7 +184,7 @@ export default function StockStrategyEditTab (props) {
          name: newname,
          desc: newdesc,
          rule: [{ C: '.C.rsi15() < 30', F: '1' }, { C: '.C.rsi15() > 70', F: '-1' }, { C: '', F: '1 - 2 * (.C.rsi15() - 30) / (70 - 30)' }],
-         vis: [{ G: 'rsi.rsi15', V: '.C.rsi15.atrange(index(-250, 0))' }],
+         vis: [{ G: 'rsi.rsi15', F: '.C.rsi15.atrange(index(-250, 0))' }],
       });
    };
    const onDeleteClick = () => {

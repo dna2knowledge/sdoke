@@ -45,11 +45,13 @@ export default function StockStrategy() {
       eventbus.on('stock.strategy.edit', onStockStrategyEdit);
       eventbus.on('stock.strategy.save', onStockStrategySave);
       eventbus.on('stock.strategy.del', onStockStrategyDel);
+      eventbus.comp.register('stock.strategy');
       return () => {
          eventbus.off('stock.strategy.add', onStockStrategyAdd);
          eventbus.off('stock.strategy.edit', onStockStrategyEdit);
          eventbus.off('stock.strategy.save', onStockStrategySave);
          eventbus.off('stock.strategy.del', onStockStrategyDel);
+         eventbus.comp.unregister('stock.strategy');
       };
 
       function onStockStrategyAdd() {
@@ -95,7 +97,7 @@ export default function StockStrategy() {
          delete local.data.selectedStockStrategy.dirty;
          // TODO: grammar check for all fields
          item.rule = item.rule.filter(z => /*z.C &&*/ z.F);
-         item.vis = item.vis.filter(z => /*z.G &&*/ z.V);
+         item.vis = item.vis.filter(z => /*z.G &&*/ z.F);
          if (item0) {
             if (isNew) {
                if (!confirm(t(

@@ -6,9 +6,12 @@ import NoData from '$/component/shared/no-data';
 import eventbus from '$/service/eventbus';
 import databox from '$/service/databox';
 import { rsiEvaluateStrategy } from '$/analysis/strategy/rsibase';
+import { customEvaluateStrategy } from '../../analysis/strategy/customized';
 import local from '$/service/local';
 
 import { useTranslation } from 'react-i18next';
+
+const exampleStrategyName = 'strategy-example.rsibase';
 
 function StrategyStat(props) {
    const { t } = useTranslation('viewer');
@@ -51,7 +54,8 @@ export default function StockOneStrategy() {
    const { t } = useTranslation('viewer');
 
    const [meta, setMeta] = useState(null);
-   const [strategy, setStrategy] = useState(local.data?.view?.selectedStrategy || 'strategy-example.rsibase');
+   const [customizedStrategyList, setCustomizedStrategyList] = useState([]);
+   const [strategy, setStrategy] = useState(local.data?.view?.selectedStrategy || exampleStrategyName);
    const [loading, setLoading] = useState(true);
    const [data, setData] = useState(null);
    const oneKey = useRef(null);
@@ -71,10 +75,20 @@ export default function StockOneStrategy() {
             }
          } */
          const history = await databox.stock.getStockHistory(meta.code);
-         if (strategy === 'strategy-example.rsibase') {
+         if (strategy === exampleStrategyName) {
             ret = await rsiEvaluateStrategy({ meta, raw: history });
          } else {
-            // TODO calc with customized strategy
+            const stg = await databox.stock.getStockStrategy(strategy);
+            if (stg) {
+               ret = await customEvaluateStrategy({ meta, raw: history }, stg);
+            } else {
+               eventbus.emit('toast', {
+                  content: t('strategy.warn.nosuch.strategy', 'Sorry, there is no such strategy.'),
+                  severity: 'error'
+               });
+               setLoading(false);
+               return;
+            }
          }
       } catch(err) { }
       setLoading(false);
@@ -98,6 +112,13 @@ export default function StockOneStrategy() {
    };
 
    useEffect(() => {
+      databox.stock.getStockStrategyList().then(rawList => {
+         rawList = rawList || [];
+         setCustomizedStrategyList(rawList);
+      });
+   }, []);
+
+   useEffect(() => {
       eventbus.on('stock.strategy.one', handleStockOne);
       return () => {
          eventbus.off('stock.strategy.one', handleStockOne);
@@ -106,7 +127,7 @@ export default function StockOneStrategy() {
          if (!data) return;
          setMeta(data.meta);
          if (!local.data.view) local.data.view = {};
-         data.strategy = data.strategy || local.data.view.selectedStrategy || strategy || 'strategy-example.rsibase';
+         data.strategy = data.strategy || local.data.view.selectedStrategy || strategy || exampleStrategyName;
          local.data.view.selectedStrategy = data.strategy;
          setStrategy(data.strategy);
          if (data.meta) updateData(data.meta, data.strategy);
@@ -121,18 +142,37 @@ export default function StockOneStrategy() {
       eventbus.emit('stock.strategy.one', { meta, strategy: evt.target.value });
    }
 
+   const onGoToStrategyClick = () => {
+      if (strategy === exampleStrategyName) {
+         eventbus.emit('toast', {
+            content: t('strategy.warn.thisisjustanexample', 'This is just an example strategy. Please go to Stock Strategy page to create your own.'),
+            severity: 'warning'
+         });
+         return;
+      }
+      window.location.hash = '#/strategy';
+      const strategyname = strategy;
+      (async () => {
+         const item = await databox.stock.getStockStrategy(strategyname);
+         if (item) {
+            await eventbus.comp.waitUntil('stock.strategy');
+            eventbus.emit('stock.strategy.edit', item);
+         } else {
+            eventbus.emit('toast', {
+               content: t('strategy.warn.nosuch.strategy', 'Sorry, there is no such strategy.'),
+               severity: 'error'
+            });
+         }
+      })();
+   };
+
    if (!meta) return null;
    if (loading) return <NoData>{t(
       'tip.strategy.loading',
       'Loading {{strategy}} data for {{code}} {{name}} ...',
       { strategy, code: meta.code, name: meta.name }
    )}</NoData>;
-   if (!data || !data.stat) return <NoData>{t(
-      'tip.strategy.nodata',
-      'No Data; no {{strategy}} records for {{code}} {{name}}',
-      { strategy, code: meta.code, name: meta.name }
-   )}</NoData>
-   const mode = data.score > 0 ? 'buy' : (data.score < 0 ? 'sell' : 'unknown');
+   const mode = data ? (data.score > 0 ? 'buy' : (data.score < 0 ? 'sell' : 'unknown')) : '';
    return <Box sx={{
       textAlign: 'center',
       '.mode_sell': { textTransform: 'uppercase', color: 'green', backgroundColor: '#cfc' },
@@ -145,22 +185,31 @@ export default function StockOneStrategy() {
          <Tooltip title={t('t.refresh', 'Refresh')}><IconButton onClick={onUpdateClick}><UpdateIcon /></IconButton></Tooltip>
          <span><Select sx={{ lineHeight: '0.4375em', '.MuiSelect-select.MuiInputBase-input': { minHeight: 0 } }}
             value={strategy} onChange={onSwitchStrategyClick}>
-            <MenuItem value={'strategy-example.rsibase'}>{t('t.strategy.example.rsibase', 'Strategy Example (RSI)')}</MenuItem>
+            <MenuItem value={exampleStrategyName}>{t('t.strategy.example.rsibase', 'Strategy Example (RSI)')}</MenuItem>
+            {customizedStrategyList.map((z, i) => <MenuItem key={i} value={z.name} >{z.name}</MenuItem>)}
          </Select></span>
-         <Tooltip title={t('t.goto.edit.strategy', 'Go to strategy editing')}><IconButton type="button" sx={{ p: '10px' }}><SwitchAccessShortcutIcon/></IconButton></Tooltip>
+         <Tooltip title={t('t.goto.edit.strategy', 'Go to strategy editing')}>
+            <IconButton onClick={onGoToStrategyClick} sx={{ p: '10px' }}><SwitchAccessShortcutIcon/></IconButton>
+         </Tooltip>
       </Box>
-      <Box>
-         <span className={`mode_${mode}`}> {t(`t.${mode}`, mode)}</span>
-         <span className={"act"}> {t('t.score', 'score')}={isNaN(data.score) ? '-' : `${data.score.toFixed(4)}`}</span>
-      </Box>
-      <Box sx={{ display: 'flex' }}>
-         <StrategyStat name={t('t.all', "ALL")} stat={data.stat.all} />
-         <StrategyStat name={t('t.3years', "3 YEARS")} stat={data.stat.y3} />
-      </Box>
-      <Box>{t('t.history', 'History')}: {data?.stat?.d250.slice(0, 20).map((z, i) => <span key={i}>
-         <span className={`act mode_${z.score > 0 ? 'buy' : (z.score < 0 ? 'sell' : '-')} ${z.score > 0.5 || z.score < -0.5 ? 'h_act' : ''}`}>
-            {z.score > 0 ? t('t.buy.s', 'B') : (z.score < 0 ? t('t.sell.s', 'S') : t('t.unknown.s', '-'))}
-         </span>
-      </span>)}</Box>
+      {!data || !data.stat ? <NoData>{t(
+         'tip.strategy.nodata',
+         'No Data; no {{strategy}} records for {{code}} {{name}}',
+         { strategy, code: meta.code, name: meta.name }
+      )}</NoData> : <Box>
+         <Box>
+            <span className={`mode_${mode}`}> {t(`t.${mode}`, mode)}</span>
+            <span className={"act"}> {t('t.score', 'score')}={isNaN(data.score) ? '-' : `${data.score.toFixed(4)}`}</span>
+         </Box>
+         <Box sx={{ display: 'flex' }}>
+            <StrategyStat name={t('t.all', "ALL")} stat={data.stat.all} />
+            <StrategyStat name={t('t.3years', "3 YEARS")} stat={data.stat.y3} />
+         </Box>
+         <Box>{t('t.history', 'History')}: {data?.stat?.d250.slice(0, 20).map((z, i) => <span key={i}>
+            <span className={`act mode_${z.score > 0 ? 'buy' : (z.score < 0 ? 'sell' : '-')} ${z.score > 0.5 || z.score < -0.5 ? 'h_act' : ''}`}>
+               {z.score > 0 ? t('t.buy.s', 'B') : (z.score < 0 ? t('t.sell.s', 'S') : t('t.unknown.s', '-'))}
+            </span>
+         </span>)}</Box>
+      </Box>}
    </Box>;
 }
