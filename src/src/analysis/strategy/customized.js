@@ -11,6 +11,61 @@ strategy object {
 }
  */
 
+async function compileVis(stg) {
+   if (!stg) return null;
+   if (!stg.vis.length) return [];
+   let signature = {};
+   const r = [];
+   const groupIdMap = {};
+   for (let i = 0, n = stg.vis.length; i < n; i++) {
+      const compiled = {};
+      r.push(compiled);
+      const vis = stg.vis[i];
+      let group = '', id = null;
+      if (vis.G) {
+         const ps = vis.G.split('.');
+         group = ps[0];
+         if (ps.length > 1) id = ps.slice(1).join('.');
+      }
+      if (!groupIdMap[group]) groupIdMap[group] = 1;
+      if (!id) id = `_${groupIdMap[group]}`;
+      groupIdMap[group] ++;
+      compiled.group = group;
+      compiled.id = id;
+      if (vis.F) {
+         compiled.F = calc.compile(calc.tokenize(vis.F), {
+            importSignature: signature,
+            exportSignature: true,
+         });
+         if (!compiled.F.err) {
+            signature = compiled.F._signature;
+            delete compiled.F._signature;
+         }
+      } else {
+         compiled.F = 0;
+      }
+   }
+   return r;
+}
+
+export async function customEvaluateStrategyForVisualization(item, stg) {
+   if (!stg) return null;
+   const compiledVis = await compileVis(stg);
+   const r = [];
+   const opt = { cache: {} };
+   for (let i = 0, n = compiledVis.length; i < n; i++) {
+      const vis = compiledVis[i];
+      if (vis.F === 0) {
+         vis.val = [];
+      } else {
+         vis.val = await calc.evaluate(vis.F, item.raw, opt);
+         if (!vis.val) vis.val = [];
+      }
+      r.push(vis);
+   }
+   return r;
+}
+
 async function compileRule(stg) {
    if (!stg) return null;
    if (!stg.rule.length) return [];

@@ -6,7 +6,7 @@ import NoData from '$/component/shared/no-data';
 import eventbus from '$/service/eventbus';
 import databox from '$/service/databox';
 import { rsiEvaluateStrategy } from '$/analysis/strategy/rsibase';
-import { customEvaluateStrategy } from '../../analysis/strategy/customized';
+import { customEvaluateStrategy, customEvaluateStrategyForVisualization } from '../../analysis/strategy/customized';
 import local from '$/service/local';
 
 import { useTranslation } from 'react-i18next';
@@ -76,11 +76,18 @@ export default function StockOneStrategy() {
          } */
          const history = await databox.stock.getStockHistory(meta.code);
          if (strategy === exampleStrategyName) {
+            local.data.view.index = null;
             ret = await rsiEvaluateStrategy({ meta, raw: history });
          } else {
             const stg = await databox.stock.getStockStrategy(strategy);
             if (stg) {
-               ret = await customEvaluateStrategy({ meta, raw: history }, stg);
+               const item = { meta, raw: history };
+               customEvaluateStrategyForVisualization(item, stg).then(visData => {
+                  // TODO: send data to stock-one-chart and draw index data
+                  local.data.view.index = visData;
+                  eventbus.emit('stock.chart.index');
+               });
+               ret = await customEvaluateStrategy(item, stg);
             } else {
                eventbus.emit('toast', {
                   content: t('strategy.warn.nosuch.strategy', 'Sorry, there is no such strategy.'),

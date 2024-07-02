@@ -106,6 +106,8 @@ export default function StockPanel() {
       }
       function onStockPinnedClick(data) {
          setSelected(data && data.code);
+         local.data.view.strategy = null;
+         local.data.view.index = null;
          eventbus.emit('stock.one', data);
          eventbus.emit('stock.strategy.one', { meta: data });
       }

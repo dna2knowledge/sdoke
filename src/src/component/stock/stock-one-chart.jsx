@@ -112,26 +112,138 @@ function paintBasic(canvas, data) {
    }
 }
 
+const hslColors = [
+   'hsl(360 100% 50%)',
+   'hsl(225 100% 50%)',
+   'hsl(90 100% 50%)',
+   'hsl(315 100% 50%)',
+   'hsl(135 100% 50%)',
+   'hsl(270 100% 50%)',
+   'hsl(0 100% 50%)',
+   'hsl(180 100% 50%)',
+   'hsl(45 100% 50%)',
+];
+function randomHsl() {
+   const h = Math.round(Math.random() * 360);
+   const s = Math.round(Math.random() * 70 + 30);
+   const l = Math.round(Math.random() * 40 + 30);
+   return `hsl(${h} ${s}% ${l}%)`;
+}
+function paintIndex(canvas, data) {
+   if (!data.index) {
+      canvas.style.display = 'none';
+      return;
+   }
+   const vis = {};
+   data.index.forEach(z => {
+      if (!z.group) return; // TODO draw '' group on primary chart (BOLL, SMA)
+      if (!vis[z.group]) vis[z.group] = [];
+      vis[z.group].push(z);
+   });
+   const nvis = Object.keys(vis).length;
+   if (!nvis) return;
+
+   const n = data?.data?.raw?.length || 1;
+   const h1 = 80;
+   const h0 = h1 * nvis;
+   canvas.style.display = 'block';
+   canvas.style.height = `${h0}px`;
+   canvas.height = h0;
+
+   const wc = canvas.offsetWidth;
+   let scale = Math.floor(wc / n);
+   if (scale <= 0) scale = 1;
+   else if (scale > 10) scale = 10;
+   const shiftw = Math.floor((wc - n * scale) / 2);
+   const pen = canvas.getContext('2d');
+   const w0 = 365 * scale;
+   const lx = scale;
+
+   pen.fillStyle = 'white';
+   pen.fillRect(0, 0, w0, h0);
+   pen.lineWidth = lx;
+
+   Object.keys(vis).forEach((gn, i) => {
+      const group = vis[gn];
+      pen.fillStyle = '#ccc';
+      let min = Infinity, max = 0;
+      group.forEach(one => {
+         if (Array.isArray(one.val)) {
+            one.val.forEach(z => {
+               if (z < min) min = z;
+               if (z > max) max = z;
+            });
+         } else {
+            if (one.val < min) min = one.val;
+            if (one.val > max) max = one.val;
+         }
+      });
+
+      pen.save();
+      pen.translate(0, h1 * i);
+      // TODO: draw info
+      const dm = max === min ? (max/2) : (max-min);
+      if (max === min) min = 0;
+      pen.lineWidth = 1;
+      group.forEach((one, j) => {
+         const color = j < hslColors.length ? hslColors[j] : randomHsl();
+         pen.strokeStyle = color;
+         pen.fillStyle = color;
+         let lasty = null;
+         const shiftn = n - one.val.length;
+         if (Array.isArray(one.val)) {
+            one.val.forEach((z, k) => {
+               const x = shiftw + (k+shiftn)*lx;
+               if (x < shiftw) return;
+               const y = h1 - Math.round((z - min) / dm * h1);
+               if (lasty) {
+                  pen.beginPath();
+                  pen.moveTo(x - lx, lasty);
+                  pen.lineTo(x, y);
+                  pen.stroke();
+               }
+               pen.fillRect(x-1, y-1, 2, 2);
+               lasty = y;
+            });
+         } else {
+            const y = h1 - Math.round((one.val - min) / dm * h1);
+            pen.beginPath();
+            pen.moveTo(shiftw, y);
+            pen.lineTo(shiftw + n * lx, y);
+            pen.stroke();
+         }
+      });
+      pen.restore();
+   });
+}
+
 export default function StockOneChart() {
    const { t } = useTranslation('viewer');
 
    const canvasRef = useRef(null);
+   const indexCanvasRef = useRef(null);
    const tooltipRef = useRef(null);
    const dataRef = useRef({});
 
    useEffect(() => {
       const canvas = canvasRef.current;
-      if (!canvas) return;
+      const indexCanvas = indexCanvasRef.current;
+      if (!canvas || !indexCanvas) return;
       canvas.style.width = '100%';
       canvas.style.height = '150px';
       canvas.width = canvas.offsetWidth;
       canvas.height = 150;
+      indexCanvas.style.width = '100%';
+      indexCanvas.width = canvas.offsetWidth;
+      indexCanvas.style.display = 'none';
       if (local.data.view) {
          Object.assign(dataRef.current, {
             data: local.data.view.one,
             strategy: local.data.view.strategy,
+            index: local.data.view.index,
          });
          paintBasic(canvasRef.current, dataRef.current);
+         paintIndex(indexCanvasRef.current, dataRef.current);
       }
    });
 
@@ -174,10 +286,12 @@ export default function StockOneChart() {
       eventbus.comp.register('stock.chart');
       eventbus.on('stock.chart.basic', handleStockChartBasic);
       eventbus.on('stock.chart.strategy', handleStockChartStrategy);
+      eventbus.on('stock.chart.index', handleStockChartIndex);
       canvasRef.current.addEventListener('mousemove', cursorMove);
       return () => {
          eventbus.off('stock.chart.basic', handleStockChartBasic);
          eventbus.off('stock.chart.strategy', handleStockChartStrategy);
+         eventbus.off('stock.chart.index', handleStockChartIndex);
          eventbus.comp.unregister('stock.chart');
          if (canvasRef.current) canvasRef.current.removeEventListener('mousemove', cursorMove);
       };
@@ -185,17 +299,32 @@ export default function StockOneChart() {
          if (!canvasRef.current) return;
          if (!local.data.view.one) local.data.view.one = [];
          dataRef.current.data = local.data.view.one;
+         dataRef.current.strategy = local.data.view.strategy;
+         dataRef.current.index = local.data.view.index;
          paintBasic(canvasRef.current, dataRef.current);
+         paintIndex(indexCanvasRef.current, dataRef.current);
       }
       function handleStockChartStrategy() {
          if (!canvasRef.current) return;
+         dataRef.current.data = local.data.view.one;
          dataRef.current.strategy = local.data.view.strategy;
+         dataRef.current.index = local.data.view.index;
          paintBasic(canvasRef.current, dataRef.current);
+         paintIndex(indexCanvasRef.current, dataRef.current);
+      }
+      function handleStockChartIndex() {
+         if (!canvasRef.current) return;
+         dataRef.current.data = local.data.view.one;
+         dataRef.current.strategy = local.data.view.strategy;
+         dataRef.current.index = local.data.view.index;
+         paintBasic(canvasRef.current, dataRef.current);
+         paintIndex(indexCanvasRef.current, dataRef.current);
       }
    }, []);
 
    return <Box>
       <canvas ref={canvasRef}>(Not support &lt;canvas&gt;)</canvas>
+      <canvas ref={indexCanvasRef}>(Not support &lt;canvas&gt;)</canvas>
       <Box sx={{ textAlign: 'right' }} ref={tooltipRef}>&nbsp;</Box>
    </Box>;
 }

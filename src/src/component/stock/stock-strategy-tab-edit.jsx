@@ -183,8 +183,16 @@ export default function StockStrategyEditTab (props) {
          new: !!data?.new,
          name: newname,
          desc: newdesc,
-         rule: [{ C: '.C.rsi15() < 30', F: '1' }, { C: '.C.rsi15() > 70', F: '-1' }, { C: '', F: '1 - 2 * (.C.rsi15() - 30) / (70 - 30)' }],
-         vis: [{ G: 'rsi.rsi15', F: '.C.rsi15.atrange(index(-250, 0))' }],
+         rule: [
+            { C: '.C.rsi15() < 30', F: '1' },
+            { C: '.C.rsi15() > 70', F: '-1' },
+            { C: '', F: '1 - 2 * (.C.rsi15() - 30) / (70 - 30)' },
+         ],
+         vis: [
+            { G: 'rsi.70', F: '70' },
+            { G: 'rsi.rsi15', F: '.C.rsi15.atrange(index(-250, 0))' },
+            { G: 'rsi.30', F: '30' },
+         ],
       });
    };
    const onDeleteClick = () => {
