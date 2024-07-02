@@ -107,7 +107,7 @@ async function getRtFromTencent(codes) {
    try {
       if (!codes || !codes.length) return [];
       const ret = [];
-      const url = `http://qt.gtimg.cn/q=${codes.join(',')}`;
+      const url = `https://qt.gtimg.cn/q=${codes.join(',')}`;
       const r = await fetch(url, { method: 'GET' });
       const raw = await r.text();
       raw.split(';').forEach(function (line) {
