@@ -165,7 +165,6 @@ function paintIndex(canvas, data) {
 
    Object.keys(vis).forEach((gn, i) => {
       const group = vis[gn];
-      pen.fillStyle = '#ccc';
       let min = Infinity, max = 0;
       group.forEach(one => {
          if (Array.isArray(one.val)) {
@@ -181,6 +180,12 @@ function paintIndex(canvas, data) {
 
       pen.save();
       pen.translate(0, h1 * i);
+      let box = pen.measureText(gn);
+      pen.fillStyle = '#aaa';
+      pen.font = '14px serif';
+      pen.fillText(gn, Math.round((wc - box.width) / 2), 12);
+      pen.fillText(max.toFixed(2), 10, 12);
+      pen.fillText(min.toFixed(2), 10, h1 - 3);
       // TODO: draw info
       const dm = max === min ? (max/2) : (max-min);
       if (max === min) min = 0;
@@ -288,12 +293,14 @@ export default function StockOneChart() {
       eventbus.on('stock.chart.strategy', handleStockChartStrategy);
       eventbus.on('stock.chart.index', handleStockChartIndex);
       canvasRef.current.addEventListener('mousemove', cursorMove);
+      indexCanvasRef.current.addEventListener('mousemove', cursorMove);
       return () => {
          eventbus.off('stock.chart.basic', handleStockChartBasic);
          eventbus.off('stock.chart.strategy', handleStockChartStrategy);
          eventbus.off('stock.chart.index', handleStockChartIndex);
          eventbus.comp.unregister('stock.chart');
          if (canvasRef.current) canvasRef.current.removeEventListener('mousemove', cursorMove);
+         if (indexCanvasRef.current) indexCanvasRef.current.removeEventListener('mousemove', cursorMove);
       };
       function handleStockChartBasic() {
          if (!canvasRef.current) return;
