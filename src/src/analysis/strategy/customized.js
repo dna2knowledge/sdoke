@@ -11,7 +11,7 @@ strategy object {
 }
  */
 
-async function compileVis(stg) {
+export async function compileVis(stg) {
    if (!stg) return null;
    if (!stg.vis.length) return [];
    let signature = {};
@@ -66,7 +66,7 @@ export async function customEvaluateStrategyForVisualization(item, stg) {
    return r;
 }
 
-async function compileRule(stg) {
+export async function compileRule(stg) {
    if (!stg) return null;
    if (!stg.rule.length) return [];
    let signature = {};
@@ -104,7 +104,7 @@ async function compileRule(stg) {
    return r;
 }
 
-async function analyzeOne(item, compiledRule) {
+export async function analyzeOne(item, compiledRule) {
    const data = item.raw;
    if (!compiledRule || !compiledRule.length) return 0;
    const opt = { cache: {} };

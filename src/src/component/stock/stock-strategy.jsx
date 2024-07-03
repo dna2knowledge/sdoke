@@ -136,6 +136,15 @@ export default function StockStrategy() {
 
    const onCreateStrategyClick = () => eventbus.emit('stock.strategy.add');
 
+   const onTabChange = (_, val) => {
+      setTab(val);
+      if (val === 'suggest') {
+         if (!selected) return;
+         if (selected.new) return;
+         eventbus.emit('stock.strategy.suggest', selected);
+      }
+   };
+
    return <Box sx={{ width: '100%', height: '100%', maxWidth: '800px', minWidth: '200px', margin: '0 auto', display: 'flex', flexDirection: 'column' }}>
       <Box sx={{ mb: '10px' }}>
          <Autocomplete sx={{ ml: 1, flex: '1 0 auto', '.MuiInputBase-input': { height: '10px' } }}
@@ -163,7 +172,7 @@ export default function StockStrategy() {
       </Box>
       {selected ?
       (<Box sx={{ display: 'flex', flexDirection: 'column', flex: '1 0 auto' }}><Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
-        <Tabs value={tab} onChange={(_, val) => setTab(val)}>
+        <Tabs value={tab} onChange={onTabChange}>
           <Tab value="edit" label={t('t.basicinfo', "Basic Info")} />
           <Tab value="suggest" label={t('t.search', "Search")} />
         </Tabs>

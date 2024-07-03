@@ -84,6 +84,8 @@ const tr = {
       'tip.warn.discard.new': '确认放弃编辑这个新策略',
       'tip.warn.delete': '确认删除策略',
       'tip.warn.notsaved': '正在编辑中的策略还没有保存。',
+      'tip.suggest.noresult': '没有数据',
+      'tip.suggest.loading': '正在加载数据…',
       't.strategy.name': '策略名称',
       't.create.strategy': '添加新策略',
       't.basicinfo': '基本信息',
@@ -106,6 +108,8 @@ const tr = {
       't.fillexample': '填入演示信息',
       't.delete': '删除',
       't.example.desc.rsibase': 'RSI (<30 => 买入, >70 => 卖出)',
+      't.score': '分数',
+      't.stock': '股票',
    },
    search: {
       't.search': '筛选',
