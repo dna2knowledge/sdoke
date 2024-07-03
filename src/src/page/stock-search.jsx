@@ -8,6 +8,7 @@ import SearchIcon from '@mui/icons-material/Search';
 import KeyboardArrowLeftIcon from '@mui/icons-material/KeyboardArrowLeft';
 import KeyboardArrowRightIcon from '@mui/icons-material/KeyboardArrowRight';
 import NoData from '$/component/shared/no-data';
+import StockLink from '$/component/stock/stock-link';
 import eventbus from '$/service/eventbus';
 import databox from '$/service/databox';
 import local from '$/service/local';
@@ -111,20 +112,6 @@ async function sortStock(stockList, sortFormula, t) {
       eventbus.emit('stock.search.progress', { i: 0, n: 0 });
    }
    return stockList;
-}
-
-function StockLink(props) {
-   const { data } = props;
-   const onStockTitleClick = () => {
-      const holdData = data;
-      eventbus.comp.waitUntil('comp.stock.stock-panel').then(() => {
-         eventbus.emit('stock.pinned.click', {
-            code: holdData.code,
-            name: holdData.name,
-         });
-      });
-   };
-   return <Box><a href="#/" onClick={onStockTitleClick}>{data.code} {data.name}</a></Box>;
 }
 
 function StockSearchResultList() {
