@@ -70,6 +70,7 @@ const tr = {
       'strategy.warn.internal.error': '没有数据；发生了一个内部错误。',
       'strategy.warn.nosuch.strategy': '抱歉，这个策略已经不存在。',
       'tip.strategy.loading': '正在为 {{code}} {{name}} 应用策略 "{{strategy}}" ...',
+      'tip.one.loading': '正在加载数据 ',
       'tip.one.nodata': '没有数据；无法获取 {{code}} {{name}} 的数据。',
       'tip.strategy.nodata': '没有数据；无法获取 {{code}} {{name}} 在策略 "{{strategy}}" 下的数据。',
       'strategy.warn.thisisjustanexample': '选择的策略只用于演示。请到“策略编辑”页面创建您自己的交易策略。'

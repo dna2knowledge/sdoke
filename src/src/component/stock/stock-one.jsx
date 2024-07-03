@@ -59,7 +59,7 @@ export default function StockOne() {
    }, []);
 
    if (!meta) return null;
-   if (loading) return <NoData>Loading data for {meta.code} {meta.name} ...</NoData>;
+   if (loading) return <NoData>{t('tip.one.loading', 'Loading data for')} {meta.code} {meta.name} ...</NoData>;
    return <Box>
       { data && data.length ? (<Box>
          <Box sx={{ textAlign: 'center', width: '100%' }}>
