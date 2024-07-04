@@ -4,6 +4,8 @@ import dailyToWeekly from '$/analysis/transform/weekly';
 import dailyToMonthly from '$/analysis/transform/monthly';
 import smaIndex from '$/analysis/index/sma';
 import rsiIndex from '$/analysis/index/rsi';
+import cciIndex from '$/analysis/index/cci';
+import wrIndex from '$/analysis/index/wr';
 
 export const version = '0.1';
 const dayms = 24 * 3600 * 1000;
@@ -344,15 +346,17 @@ async function evaluateQualifier(name, data, cache) {
    let cmd = ps.shift();
    switch(cmd) {
       case 'w':
-      case 'weekly':
-         qualified.data = cache[`_stock_${code}_w`] || dailyToWeekly(qualified.data);
-         cache[`_stock_${code}_w`] = qualified.data;
-         break;
+      case 'weekly': {
+         const k = `_stock_${code}_w`;
+         qualified.data = cache[k] || dailyToWeekly(qualified.data);
+         cache[k] = qualified.data;
+         break; }
       case 'm':
-      case 'monthly':
-         qualified.data = cache[`_stock_${code}_m`] || dailyToMonthly(qualified.data);
-         cache[`_stock_${code}_m`] = qualified.data;
-         break;
+      case 'monthly': {
+         k = `_stock_${code}_m`;
+         qualified.data = cache[k] || dailyToMonthly(qualified.data);
+         cache[k] = qualified.data;
+         break; }
       default: ps.unshift(cmd);
    }
    cmd = ps[0];
@@ -391,6 +395,41 @@ async function evaluateQualifier(name, data, cache) {
          } else {
             const n = data.length;
             qualified.data = smaIndex(data.map(z => z[qualified.col]), win);
+            qualified.data = qualified.data.map((z, i) => ({ v: z, T: data[n-i-1]?.T }));
+            qualified.data.reverse();
+            cache[key] = qualified.data;
+         }
+         cache[key] = qualified.data;
+         qualified.col = 'v';
+         tr = true;
+      } else if (cmd.startsWith('cci')) {
+         const win = parseInt(cmd.substring(3)) || 14;
+         const key = `_stock_${code}_cci${win}`;
+         if (cache[key]) {
+            qualified.data = cache[key];
+         } else {
+            const n = data.length;
+            qualified.data = cciIndex(
+               data.map(z => z[qualified.col]),
+               data.map(z => z.H),
+               data.map(z => z.L),
+               win
+            );
+            qualified.data = qualified.data.map((z, i) => ({ v: z, T: data[n-i-1]?.T }));
+            qualified.data.reverse();
+            cache[key] = qualified.data;
+         }
+         cache[key] = qualified.data;
+         qualified.col = 'v';
+         tr = true;
+      } else if (cmd.startsWith('wr')) {
+         const win = parseInt(cmd.substring(2)) || 6;
+         const key = `_stock_${code}_wr${win}`;
+         if (cache[key]) {
+            qualified.data = cache[key];
+         } else {
+            const n = data.length;
+            qualified.data = wrIndex(data.map(z => z[qualified.col]), win);
             qualified.data = qualified.data.map((z, i) => ({ v: z, T: data[n-i-1]?.T }));
             qualified.data.reverse();
             cache[key] = qualified.data;
