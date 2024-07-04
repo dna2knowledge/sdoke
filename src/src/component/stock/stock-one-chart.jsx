@@ -203,7 +203,7 @@ function paintIndex(canvas, data) {
                if (x < shiftw) return;
                const y = h1 - Math.round((z - min) / dm * h1);
                if (lasty === null) {
-                  pen.moveTo(x, lasty);
+                  pen.moveTo(x, y);
                } else {
                   pen.lineTo(x, y);
                }
