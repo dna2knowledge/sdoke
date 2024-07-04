@@ -10,6 +10,8 @@ function GridTextEditor(props) {
    const {i, t, k, v, kl, vl, kn, vn, data} = props;
    const [key, setKey] = useState(data[k] || '');
    const [val, setVal] = useState(data[v] || '');
+   if (key !== data[k]) setKey(data[k]);
+   if (val !== data[v]) setVal(data[v]);
 
    const onRemoveClick = () => {
       eventbus.emit(`stock.strategy.edit.${t}.remove`, { i });
@@ -52,7 +54,7 @@ function StrategyScoreRule(props) {
          setRules(newlist);
          eventbus.emit('stock.strategy.edit.update', { T: 'rule', V: newlist });
       }
-   }, [data]);
+   }, [data, rules]);
 
    const onAddClick = () => {
       const newlist = [...rules, { C: '', F: '' }];
@@ -96,7 +98,7 @@ function StrategyVisualization(props) {
          setVisualizations(newlist);
          eventbus.emit('stock.strategy.edit.update', { T: 'vis', V: newlist });
       }
-   }, [data]);
+   }, [data, visualizations]);
 
    const onAddClick = () => {
       const newlist = [...visualizations, { G: '', F: '' }];
