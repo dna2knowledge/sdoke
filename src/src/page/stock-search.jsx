@@ -1,18 +1,20 @@
 import { useState, useEffect } from 'react';
 import {
-   Box, Button, IconButton,
+   Box, Button, IconButton, Tooltip,
    TextField, Pagination, LinearProgress,
    Table, TableHead, TableBody, TableRow, TableCell,
 } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
 import KeyboardArrowLeftIcon from '@mui/icons-material/KeyboardArrowLeft';
 import KeyboardArrowRightIcon from '@mui/icons-material/KeyboardArrowRight';
+import DownloadIcon from '@mui/icons-material/Download';
 import NoData from '$/component/shared/no-data';
 import StockLink from '$/component/stock/stock-link';
 import eventbus from '$/service/eventbus';
 import databox from '$/service/databox';
 import local from '$/service/local';
 import calc from '$/analysis/math/calc';
+import download from '$/util/file-download';
 
 import { useTranslation } from 'react-i18next';
 
@@ -287,6 +289,20 @@ export default function StockSearch() {
       });
    };
 
+   const onDownloadClick = () => {
+      if (!local.data.searchResult) return;
+      const i = local.data.searchResult.i;
+      const step = local.data.searchResult.steps[i];
+      if (!step) return;
+      download(
+         t('t.search.download.filename', `stockSearch.csv`),
+         `${t('t.score', 'Score')},${t('t.stock', 'Stock')}," "
+"${t('t.filter.formula', 'Filter Formula')}: ${step.query}"
+"${t('t.sort.formula', 'Sort Formula')}: ${step.sort}"
+${step.list.length ? step.list.map(z => `${z.score || 0},"${z.code}","${z.name}"`).join('\n') : t('tip.nodata', 'No satisified stock')}`
+      );
+   };
+
    return <Box sx={{ width: '100%', height: '100%', overflowY: 'hidden' }}>
       <Box sx={{ width: '100%', height: '100%', maxWidth: '800px', minWidth: '200px', margin: '0 auto', display: 'flex', flexDirection: 'column' }}>
          <Box sx={{ display: 'flex', flexDirection: 'column', width: '100%', mb: '10px' }}>
@@ -300,9 +316,12 @@ export default function StockSearch() {
                <IconButton onClick={onRoundPrev}><KeyboardArrowLeftIcon/></IconButton>
                <span>{t('t.round', 'Round {{v}}', { v: round })}</span>, <span>{t('t.result.total', 'Total {{v}}', { v: total })}</span>
                <IconButton onClick={onRoundNext}><KeyboardArrowRightIcon/></IconButton>
-               <Button type="button" onClick={() => onSearch(false, false)}><SearchIcon /> {t('t.search', 'Search')}</Button>
-               <Button type="button" onClick={() => onSearch(false, true)}><SearchIcon /> {t('t.search.fav', 'Search in fav')}</Button>
-               <Button type="button" onClick={() => onSearch(true, false)}><SearchIcon /> {t('t.search.result', 'Search in result')}</Button>
+               <Tooltip title={t('t.download', 'Download result')}>
+                  <IconButton onClick={onDownloadClick}><DownloadIcon /></IconButton>
+               </Tooltip>
+               <Button onClick={() => onSearch(false, false)}><SearchIcon /> {t('t.search', 'Search')}</Button>
+               <Button onClick={() => onSearch(false, true)}><SearchIcon /> {t('t.search.fav', 'Search in fav')}</Button>
+               <Button onClick={() => onSearch(true, false)}><SearchIcon /> {t('t.search.result', 'Search in result')}</Button>
             </Box>
          </Box>
          <Box><StockSearchProgressBar/></Box>

@@ -4,11 +4,13 @@ import {
    Table, TableRow, TableCell, TableBody, TableHead,
 } from '@mui/material';
 import UpdateIcon from '@mui/icons-material/Update';
+import DownloadIcon from '@mui/icons-material/Download';
 import NoData from '$/component/shared/no-data';
 import StockLink from '$/component/stock/stock-link';
 import eventbus from '$/service/eventbus';
 import databox from '$/service/databox';
 import local from '$/service/local';
+import download from '$/util/file-download';
 import { compileRule, analyzeOne } from '$/analysis/strategy/customized';
 
 import { useTranslation } from 'react-i18next';
@@ -67,9 +69,11 @@ function StockSearchResultList() {
    useEffect(() => {
       eventbus.on('stock.strategy.suggest.search', onStockSuggestUpdate);
       eventbus.on('stock.strategy.suggest.result', onStockSuggestResultUpdate);
+      eventbus.on('stock.strategy.suggest.download', onStockSuggestDownload);
       return () => {
          eventbus.off('stock.strategy.suggest.search', onStockSuggestUpdate);
          eventbus.off('stock.strategy.suggest.result', onStockSuggestResultUpdate);
+         eventbus.off('stock.strategy.suggest.download', onStockSuggestDownload);
       };
 
       function onStockSuggestUpdate() {
@@ -85,6 +89,15 @@ function StockSearchResultList() {
          setPageTotal(Math.ceil(list.length / pageSize));
          setPageList(list.slice(0, pageSize));
          setLoading(false);
+      }
+
+      function onStockSuggestDownload() {
+         if (!data) return;
+         download(
+            t('t.search.download.filename', `stockSearch.csv`),
+            `${t('t.score', 'Score')},${t('t.stock', 'Stock')}," "
+${data.length ? data.map(z => `${z.score || 0},"${z.code}","${z.name}"`).join('\n') : t('tip.nodata', 'No satisified stock')}`
+         );
       }
    });
 
@@ -197,6 +210,9 @@ export default function StockStrategyEditTab (props) {
       local.data.strategySuggest = null;
       if (last) eventbus.emit('stock.strategy.suggest', {...last, fav: true});
    };
+   const onDownloadClick = () => {
+      eventbus.emit('stock.strategy.suggest.download');
+   };
 
    return <Box sx={{
       display: tab === 'suggest' ? 'flex' : 'none',
@@ -207,9 +223,14 @@ export default function StockStrategyEditTab (props) {
       mb: 1
    }}>
       <Box>
-         <Tooltip title={t('t.refresh', 'Refresh')}><IconButton onClick={onRefreshClick}><UpdateIcon /></IconButton></Tooltip>
+         <Tooltip title={t('t.refresh', 'Refresh')}>
+            <IconButton onClick={onRefreshClick}><UpdateIcon /></IconButton>
+         </Tooltip>
          <Tooltip><Button onClick={onFilterClick}>{t('t.filter', 'Filter')}</Button></Tooltip>
          <Tooltip><Button onClick={onFilterFavClick}>{t('t.filter.fav', 'Filter in Fav')}</Button></Tooltip>
+         <Tooltip title={t('t.download', 'Download result')}>
+            <IconButton onClick={onDownloadClick}><DownloadIcon /></IconButton>
+         </Tooltip>
       </Box>
       {data.new ? <NoData>
          {t('tip.warn.notsaved', 'Stock strategy has been not saved yet.')}

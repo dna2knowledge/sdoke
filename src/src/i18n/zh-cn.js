@@ -86,6 +86,7 @@ const tr = {
       'tip.warn.notsaved': '正在编辑中的策略还没有保存。',
       'tip.suggest.noresult': '没有数据',
       'tip.suggest.loading': '正在加载数据…',
+      'tip.nodata': '没有符合条件的股票',
       't.strategy.name': '策略名称',
       't.create.strategy': '添加新策略',
       't.basicinfo': '基本信息',
@@ -113,6 +114,8 @@ const tr = {
       't.filter': '筛选',
       't.filter.fav': '在收藏中筛选',
       't.refresh': '刷新',
+      't.download': '下载结果列表',
+      't.search.download.filename': '股票筛选结果.csv',
    },
    search: {
       't.search': '筛选',
@@ -123,6 +126,7 @@ const tr = {
       'tip.sort.syntax.error': '排序公式语法错误',
       'tip.noquery': '没有数据；输入公式进行筛选',
       'tip.noresult': '没有数据；筛选条件：',
+      'tip.nodata': '没有符合条件的股票',
       't.filter.formula': '筛选公式',
       't.sort.formula': '排序公式',
       't.round': '第 {{v}} 轮',
@@ -130,6 +134,8 @@ const tr = {
       't.search': '筛选',
       't.search.fav': '在收藏中筛选',
       't.search.result': '在结果中筛选',
+      't.download': '下载结果列表',
+      't.search.download.filename': '股票筛选结果.csv',
    },
    trade: {
       't.refresh': '刷新',
