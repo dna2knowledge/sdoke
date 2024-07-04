@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
 import {
-   Box, LinearProgress,
+   Box, LinearProgress, Pagination, IconButton, Tooltip, Button,
    Table, TableRow, TableCell, TableBody, TableHead,
 } from '@mui/material';
+import UpdateIcon from '@mui/icons-material/Update';
 import NoData from '$/component/shared/no-data';
 import StockLink from '$/component/stock/stock-link';
 import eventbus from '$/service/eventbus';
@@ -130,18 +131,20 @@ export default function StockStrategyEditTab (props) {
          eventbus.off('stock.strategy.suggest.cancel', onSuggestCancel);
       };
 
-      async function onSuggest(stg) {
+      async function onSuggest(data) {
+         if (!data) return;
+         const { stg, fav } = data;
          if (!stg) {
             local.data.strategySuggest = null;
             eventbus.emit('stock.strategy.suggest.progress', { i: 0, n: 0 });
             eventbus.emit('stock.strategy.suggest.result', { list: [] });
             return;
          }
-         const sig = JSON.stringify(stg);
-         /*if (local.data.strategySuggest) {
+         const sig = `${JSON.stringify(stg)}${fav ? '-fav' : ''}`;
+         if (local.data.strategySuggest) {
             if (local.data.strategySuggest.sig === sig) return;
-         }*/
-         const list = dup((await databox.stock.getStockList()) || []);
+         }
+         const list = dup((fav ? (await databox.stock.getPinnedStockList()) : (await databox.stock.getStockList())) || []);
          if (!list.length) {
             local.data.strategySuggest = null;
             eventbus.emit('stock.strategy.suggest.progress', { i: 0, n: 0 });
@@ -151,16 +154,17 @@ export default function StockStrategyEditTab (props) {
          const ts = new Date().getTime();
          local.data.strategySuggest = {
             ts, sig,
-            strategy: stg.name,
+            strategy: stg,
             i: 0, n: list.length,
             result: list,
          };
          const compiledRule = await compileRule(stg);
+         eventbus.emit('stock.strategy.suggest.search');
          eventbus.emit('stock.strategy.suggest.progress', { i: 0, n: list.length });
          for (let i = 0, n = list.length; i < n; i++) {
             if (!local.data.strategySuggest) return; // canceled
             const stock = list[i];
-            eventbus.emit('stock.strategy.suggest.progress', { i: 0, n: list.length, meta: stock });
+            eventbus.emit('stock.strategy.suggest.progress', { i: i+1, n: list.length, meta: stock });
             const data = (await databox.stock.getStockHistoryRaw(stock.code)) || [];
             const r = await analyzeOne({ meta: stock, raw: data }, compiledRule);
             stock.score = r ? r.score : -Infinity;
@@ -171,9 +175,28 @@ export default function StockStrategyEditTab (props) {
       }
 
       function onSuggestCancel() {
+         const prevList = local.data.strategySuggest?.result || [];
          local.data.strategySuggest = null;
+         eventbus.emit('stock.strategy.suggest.result', { list: prevList });
       }
    });
+
+   const onRefreshClick = () => {
+      const stg = local.data.strategySuggest?.strategy;
+      const sig = local.data.strategySuggest?.sig;
+      local.data.strategySuggest = null;
+      if (stg) eventbus.emit('stock.strategy.suggest', { stg, fav: sig.endsWith('-fav'), });
+   };
+   const onFilterClick = () => {
+      const stg = local.data.strategySuggest?.strategy;
+      local.data.strategySuggest = null;
+      if (stg) eventbus.emit('stock.strategy.suggest', { stg, fav: false, });
+   };
+   const onFilterFavClick = () => {
+      const stg = local.data.strategySuggest?.strategy;
+      local.data.strategySuggest = null;
+      if (stg) eventbus.emit('stock.strategy.suggest', { stg, fav: true, });
+   };
 
    return <Box sx={{
       display: tab === 'suggest' ? 'flex' : 'none',
@@ -183,9 +206,14 @@ export default function StockStrategyEditTab (props) {
       overflowY: 'hidden',
       mb: 1
    }}>
+      <Box>
+         <Tooltip title={t('t.refresh', 'Refresh')}><IconButton onClick={onRefreshClick}><UpdateIcon /></IconButton></Tooltip>
+         <Tooltip><Button onClick={onFilterClick}>{t('t.filter', 'Filter')}</Button></Tooltip>
+         <Tooltip><Button onClick={onFilterFavClick}>{t('t.filter.fav', 'Filter in Fav')}</Button></Tooltip>
+      </Box>
       {data.new ? <NoData>
          {t('tip.warn.notsaved', 'Stock strategy has been not saved yet.')}
-      </NoData> : <Box sx={{ display: 'flex', height: '100%' }}>
+      </NoData> : <Box sx={{ display: 'flex', height: '100%', flexDirection: 'column' }}>
          <Box><StockSuggestProgressBar /></Box>
          <StockSearchResultList />
       </Box>}

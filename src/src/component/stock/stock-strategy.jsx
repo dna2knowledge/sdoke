@@ -141,7 +141,7 @@ export default function StockStrategy() {
       if (val === 'suggest') {
          if (!selected) return;
          if (selected.new) return;
-         eventbus.emit('stock.strategy.suggest', selected);
+         eventbus.emit('stock.strategy.suggest', { stg: selected, fav: false });
       }
    };
 

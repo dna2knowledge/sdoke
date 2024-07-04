@@ -14,7 +14,7 @@ import { useTranslation } from 'react-i18next';
 const exampleStrategyName = 'strategy-example.rsibase';
 
 function StrategyStat(props) {
-   const { t } = useTranslation('strategy');
+   const { t } = useTranslation('viewer');
 
    const { name, stat } = props;
    let rateK = 'num_blue', gainMinK = 'num_red', gainHiK = 'num_red', gainMaxK = 'num_red', lossK = 'num_green';

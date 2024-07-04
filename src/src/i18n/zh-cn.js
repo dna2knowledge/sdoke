@@ -110,6 +110,9 @@ const tr = {
       't.example.desc.rsibase': 'RSI (<30 => 买入, >70 => 卖出)',
       't.score': '分数',
       't.stock': '股票',
+      't.filter': '筛选',
+      't.filter.fav': '在收藏中筛选',
+      't.refresh': '刷新',
    },
    search: {
       't.search': '筛选',
