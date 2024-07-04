@@ -134,6 +134,7 @@ export default function StockStrategyEditTab (props) {
       async function onSuggest(data) {
          if (!data) return;
          const { stg, fav } = data;
+         local.data.lastStrategySuggest = data;
          if (!stg) {
             local.data.strategySuggest = null;
             eventbus.emit('stock.strategy.suggest.progress', { i: 0, n: 0 });
@@ -182,20 +183,19 @@ export default function StockStrategyEditTab (props) {
    });
 
    const onRefreshClick = () => {
-      const stg = local.data.strategySuggest?.strategy;
-      const sig = local.data.strategySuggest?.sig;
+      const last = local.data.lastStrategySuggest;
       local.data.strategySuggest = null;
-      if (stg) eventbus.emit('stock.strategy.suggest', { stg, fav: sig.endsWith('-fav'), });
+      if (last) eventbus.emit('stock.strategy.suggest', last);
    };
    const onFilterClick = () => {
-      const stg = local.data.strategySuggest?.strategy;
+      const last = local.data.lastStrategySuggest;
       local.data.strategySuggest = null;
-      if (stg) eventbus.emit('stock.strategy.suggest', { stg, fav: false, });
+      if (last) eventbus.emit('stock.strategy.suggest', {...last, fav: false});
    };
    const onFilterFavClick = () => {
-      const stg = local.data.strategySuggest?.strategy;
+      const last = local.data.lastStrategySuggest;
       local.data.strategySuggest = null;
-      if (stg) eventbus.emit('stock.strategy.suggest', { stg, fav: true, });
+      if (last) eventbus.emit('stock.strategy.suggest', {...last, fav: true});
    };
 
    return <Box sx={{
