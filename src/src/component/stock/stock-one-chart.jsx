@@ -197,16 +197,24 @@ function paintIndex(canvas, data) {
          let lasty = null;
          const shiftn = n - one.val.length;
          if (Array.isArray(one.val)) {
+            pen.beginPath();
             one.val.forEach((z, k) => {
                const x = shiftw + (k+shiftn)*lx;
                if (x < shiftw) return;
                const y = h1 - Math.round((z - min) / dm * h1);
-               if (lasty) {
-                  pen.beginPath();
-                  pen.moveTo(x - lx, lasty);
+               if (lasty === null) {
+                  pen.moveTo(x, lasty);
+               } else {
                   pen.lineTo(x, y);
-                  pen.stroke();
                }
+               lasty = y;
+            });
+            pen.stroke();
+            lasty = null;
+            one.val.forEach((z, k) => {
+               const x = shiftw + (k+shiftn)*lx;
+               if (x < shiftw) return;
+               const y = h1 - Math.round((z - min) / dm * h1);
                pen.fillRect(x-1, y-1, 2, 2);
                lasty = y;
             });
