@@ -738,6 +738,9 @@ async function evaluateFuncCall(name, args, data, cache, id) {
       case 'log':
       case 'math.log':
          v = evaluateOp('_log', [args[0], args[1]], data, cache, id); break;
+      case 'debug':
+         console.log('[debug] calc -', args);
+         v = args; break;
       default:
          v = null;
    }
