@@ -1,6 +1,7 @@
 import databox from '$/service/databox';
 import { lr } from '$/analysis/math/mse';
 import ft from '$/analysis/math/fourier';
+import { polylineize } from '$/analysis/math/polyline';
 import dailyToWeekly from '$/analysis/transform/weekly';
 import dailyToMonthly from '$/analysis/transform/monthly';
 import smaIndex from '$/analysis/index/sma';
@@ -731,6 +732,11 @@ async function evaluateFuncCall(name, args, data, cache, id) {
          const stI = isNaN(args[1]) ? 0 : args[1];
          const edI = isNaN(args[2]) ? list.length : args[2];
          v = list.slice(stI, edI);
+         break; }
+      case 'polylineize': {
+         const list = Array.isArray(args[0]) ? args[0] : [];
+         const win = isNaN(args[1]) ? 20 : args[1];
+         v = polylineize(list, win);
          break; }
       case 'pow':
       case 'math.pow':
