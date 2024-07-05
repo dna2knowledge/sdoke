@@ -1,5 +1,6 @@
 import databox from '$/service/databox';
 import { lr } from '$/analysis/math/mse';
+import ft from '$/analysis/math/fourier';
 import dailyToWeekly from '$/analysis/transform/weekly';
 import dailyToMonthly from '$/analysis/transform/monthly';
 import smaIndex from '$/analysis/index/sma';
@@ -714,6 +715,10 @@ async function evaluateFuncCall(name, args, data, cache, id) {
       case 'math.arctan':
          args = evaluateFlatFuncCallArgs(args);
          v = args.map(z => Math.atan(z)); break;
+      case 'dft':
+      case 'math.dft':
+         args = evaluateFlatFuncCallArgs(args);
+         v = ft.dft(args).map(z => ft.complex.magnitude(z)); break;
       case 'leastsquare':
       case 'math.leastsquare':
          args = evaluateFlatFuncCallArgs(args);
@@ -721,6 +726,12 @@ async function evaluateFuncCall(name, args, data, cache, id) {
          v = kb ? [kb.k, kb.b] : null;
          break;
       // 2
+      case 'slice': {
+         const list = Array.isArray(args[0]) ? args[0] : [];
+         const stI = isNaN(args[1]) ? 0 : args[1];
+         const edI = isNaN(args[2]) ? list.length : args[2];
+         v = list.slice(stI, edI);
+         break; }
       case 'pow':
       case 'math.pow':
          v = evaluateOp('^', [args[0], args[1]], data, cache, id); break;
