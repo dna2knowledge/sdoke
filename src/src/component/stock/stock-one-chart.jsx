@@ -147,6 +147,7 @@ function paintIndex(canvas, data) {
    pen.fillRect(0, 0, w0, h0);
    pen.lineWidth = lx;
 
+   let ci = 0; // color index
    Object.keys(vis).forEach((gn, i) => {
       const group = vis[gn];
       let min = Infinity, max = 0;
@@ -174,8 +175,9 @@ function paintIndex(canvas, data) {
       const dm = max === min ? (max/2) : (max-min);
       if (max === min) min = 0;
       pen.lineWidth = 1;
-      group.forEach((one, j) => {
-         const color = one.c || pickHSLColor(j);
+      group.forEach(one => {
+         const color = one.c || pickHSLColor(ci);
+         ci ++;
          pen.strokeStyle = color;
          pen.fillStyle = color;
          let lasty = null;
