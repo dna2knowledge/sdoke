@@ -91,6 +91,10 @@ export default function StockStrategy() {
             content: t('tip.warn.name.required', 'Strategy name is required')
          });
          const item0 = strategyList.find(z => z.name === item.name);
+         if (selected && selected.name !== item.name) {
+            const origin = strategyList.find(z => z.name === selected.name);
+            if (origin) strategyList.splice(strategyList.indexOf(origin), 1);
+         }
          const isNew = item.new;
          delete item.new;
          delete item.dirty;
