@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react';
 import { Box, TextField, Grid, Button, IconButton, Divider, Tooltip } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import CloseIcon from '@mui/icons-material/Close';
+import ArrowUpwardIcon from '@mui/icons-material/ArrowUpward';
+import ArrowDownwardIcon from '@mui/icons-material/ArrowDownward';
 import eventbus from '$/service/eventbus';
 
 import { useTranslation } from 'react-i18next';
@@ -13,12 +15,14 @@ function GridTextEditor(props) {
    if (key !== data[k]) setKey(data[k]);
    if (val !== data[v]) setVal(data[v]);
 
-   const onRemoveClick = () => {
-      eventbus.emit(`stock.strategy.edit.${t}.remove`, { i });
-   };
+   const onRemoveClick = () => eventbus.emit(`stock.strategy.edit.${t}.remove`, { i });
+   const onUpwardClick = () => eventbus.emit(`stock.strategy.edit.${t}.up`, { i, j: i-1 });
+   const onDownwardClick = () => eventbus.emit(`stock.strategy.edit.${t}.down`, { i, j: i+1 });
 
-   return <Box sx={{ display: 'flex' }}>
-      <IconButton sx={{ width: '40px', height: '40px', marginTop: '12px' }} onClick={onRemoveClick}><CloseIcon /></IconButton>
+   return <Box sx={{ display: 'flex', '.item-btn': { width: '40px', height: '40px', marginTop: '12px' } }}>
+      <IconButton className="item-btn" onClick={onDownwardClick}><ArrowDownwardIcon /></IconButton>
+      <IconButton className="item-btn" onClick={onUpwardClick}><ArrowUpwardIcon /></IconButton>
+      <IconButton className="item-btn" onClick={onRemoveClick}><CloseIcon /></IconButton>
       <Grid sx={{ flex: '1 0 auto', width: '0px' }} container spacing={2}>
       <Grid item xs={kn}><TextField fullWidth label={kl} variant="standard" value={key} onChange={(evt) => {
          const x = evt.target.value;
@@ -43,13 +47,37 @@ function StrategyScoreRule(props) {
 
    useEffect(() => {
       eventbus.on('stock.strategy.edit.rule.remove', onEditRemove);
+      eventbus.on('stock.strategy.edit.rule.up', onEditUpward);
+      eventbus.on('stock.strategy.edit.rule.down', onEditDownward);
       return () => {
          eventbus.off('stock.strategy.edit.rule.remove', onEditRemove);
+         eventbus.off('stock.strategy.edit.rule.up', onEditUpward);
+         eventbus.off('stock.strategy.edit.rule.down', onEditDownward);
       };
 
       function onEditRemove(evt) {
          if (!data) return;
          rules.splice(evt.i, 1);
+         const newlist = [...rules];
+         setRules(newlist);
+         eventbus.emit('stock.strategy.edit.update', { T: 'rule', V: newlist });
+      }
+      function onEditUpward(evt) {
+         if (!data) return;
+         if (evt.i <= 0) return;
+         const t = rules[evt.i];
+         rules[evt.i] = rules[evt.j];
+         rules[evt.j] = t;
+         const newlist = [...rules];
+         setRules(newlist);
+         eventbus.emit('stock.strategy.edit.update', { T: 'rule', V: newlist });
+      }
+      function onEditDownward(evt) {
+         if (!data) return;
+         if (evt.i >= rules.length) return;
+         const t = rules[evt.i];
+         rules[evt.i] = rules[evt.j];
+         rules[evt.j] = t;
          const newlist = [...rules];
          setRules(newlist);
          eventbus.emit('stock.strategy.edit.update', { T: 'rule', V: newlist });
@@ -87,13 +115,37 @@ function StrategyVisualization(props) {
 
    useEffect(() => {
       eventbus.on('stock.strategy.edit.vis.remove', onEditRemove);
+      eventbus.on('stock.strategy.edit.vis.up', onEditUpward);
+      eventbus.on('stock.strategy.edit.vis.down', onEditDownward);
       return () => {
          eventbus.off('stock.strategy.edit.vis.remove', onEditRemove);
-      };
+         eventbus.off('stock.strategy.edit.vis.up', onEditUpward);
+         eventbus.off('stock.strategy.edit.vis.down', onEditDownward);
+         };
 
       function onEditRemove(data) {
          if (!data) return;
          visualizations.splice(data.i, 1);
+         const newlist = [...visualizations];
+         setVisualizations(newlist);
+         eventbus.emit('stock.strategy.edit.update', { T: 'vis', V: newlist });
+      }
+      function onEditUpward(evt) {
+         if (!data) return;
+         if (evt.i <= 0) return;
+         const t = visualizations[evt.i];
+         visualizations[evt.i] = visualizations[evt.j];
+         visualizations[evt.j] = t;
+         const newlist = [...visualizations];
+         setVisualizations(newlist);
+         eventbus.emit('stock.strategy.edit.update', { T: 'vis', V: newlist });
+      }
+      function onEditDownward(evt) {
+         if (!data) return;
+         if (evt.i >= visualizations.length) return;
+         const t = visualizations[evt.i];
+         visualizations[evt.i] = visualizations[evt.j];
+         visualizations[evt.j] = t;
          const newlist = [...visualizations];
          setVisualizations(newlist);
          eventbus.emit('stock.strategy.edit.update', { T: 'vis', V: newlist });
