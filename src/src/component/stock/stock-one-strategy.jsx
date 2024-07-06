@@ -136,6 +136,8 @@ export default function StockOneStrategy() {
          if (!local.data.view) local.data.view = {};
          data.strategy = data.strategy || local.data.view.selectedStrategy || strategy || exampleStrategyName;
          local.data.view.selectedStrategy = data.strategy;
+         local.data.view.strategy = null;
+         local.data.view.index = null;
          setStrategy(data.strategy);
          if (data.meta) updateData(data.meta, data.strategy);
       }
