@@ -4,7 +4,10 @@ import AddIcon from '@mui/icons-material/Add';
 import CloseIcon from '@mui/icons-material/Close';
 import ArrowUpwardIcon from '@mui/icons-material/ArrowUpward';
 import ArrowDownwardIcon from '@mui/icons-material/ArrowDownward';
+import CircleIcon from '@mui/icons-material/Circle';
 import eventbus from '$/service/eventbus';
+import selectColor from '$/util/color-select';
+import pickHSLColor from '$/util/color-hsl-pick';
 
 import { useTranslation } from 'react-i18next';
 
@@ -18,11 +21,22 @@ function GridTextEditor(props) {
    const onRemoveClick = () => eventbus.emit(`stock.strategy.edit.${t}.remove`, { i });
    const onUpwardClick = () => eventbus.emit(`stock.strategy.edit.${t}.up`, { i, j: i-1 });
    const onDownwardClick = () => eventbus.emit(`stock.strategy.edit.${t}.down`, { i, j: i+1 });
+   const onChangeColor = async (evt) => {
+      // data['c'] is reserved for coloring
+      const color = await selectColor(evt.target, data?.c || null);
+      if (color) {
+         data.c = color;
+      } else {
+         delete data.c;
+      }
+      eventbus.emit(`stock.strategy.edit.vis.color`, { i });
+   };
 
    return <Box sx={{ display: 'flex', '.item-btn': { width: '40px', height: '40px', marginTop: '12px' } }}>
       <IconButton className="item-btn" onClick={onDownwardClick}><ArrowDownwardIcon /></IconButton>
       <IconButton className="item-btn" onClick={onUpwardClick}><ArrowUpwardIcon /></IconButton>
       <IconButton className="item-btn" onClick={onRemoveClick}><CloseIcon /></IconButton>
+      {t === 'vis' ? <IconButton className="item-btn" sx={{ color: data?.c || pickHSLColor(i) }} onClick={onChangeColor}><CircleIcon /></IconButton> : null}
       <Grid sx={{ flex: '1 0 auto', width: '0px' }} container spacing={2}>
       <Grid item xs={kn}><TextField fullWidth label={kl} variant="standard" value={key} onChange={(evt) => {
          const x = evt.target.value;
@@ -117,11 +131,13 @@ function StrategyVisualization(props) {
       eventbus.on('stock.strategy.edit.vis.remove', onEditRemove);
       eventbus.on('stock.strategy.edit.vis.up', onEditUpward);
       eventbus.on('stock.strategy.edit.vis.down', onEditDownward);
+      eventbus.on('stock.strategy.edit.vis.color', onEditColor);
       return () => {
          eventbus.off('stock.strategy.edit.vis.remove', onEditRemove);
          eventbus.off('stock.strategy.edit.vis.up', onEditUpward);
          eventbus.off('stock.strategy.edit.vis.down', onEditDownward);
-         };
+         eventbus.off('stock.strategy.edit.vis.color', onEditColor);
+      };
 
       function onEditRemove(data) {
          if (!data) return;
@@ -146,6 +162,12 @@ function StrategyVisualization(props) {
          const t = visualizations[evt.i];
          visualizations[evt.i] = visualizations[evt.j];
          visualizations[evt.j] = t;
+         const newlist = [...visualizations];
+         setVisualizations(newlist);
+         eventbus.emit('stock.strategy.edit.update', { T: 'vis', V: newlist });
+      }
+      function onEditColor(evt) {
+         if (!data) return;
          const newlist = [...visualizations];
          setVisualizations(newlist);
          eventbus.emit('stock.strategy.edit.update', { T: 'vis', V: newlist });

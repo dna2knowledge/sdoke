@@ -2,6 +2,7 @@ import { useRef, useEffect } from 'react';
 import { Box } from '@mui/material';
 import eventbus from '$/service/eventbus';
 import local from '$/service/local';
+import pickHSLColor from '$/util/color-hsl-pick'
 
 import { useTranslation } from 'react-i18next';
 
@@ -112,23 +113,6 @@ function paintBasic(canvas, data) {
    }
 }
 
-const hslColors = [
-   'hsl(360 100% 50%)',
-   'hsl(225 100% 50%)',
-   'hsl(90 100% 50%)',
-   'hsl(315 100% 50%)',
-   'hsl(135 100% 50%)',
-   'hsl(270 100% 50%)',
-   'hsl(0 100% 50%)',
-   'hsl(180 100% 50%)',
-   'hsl(45 100% 50%)',
-];
-function randomHsl() {
-   const h = Math.round(Math.random() * 360);
-   const s = Math.round(Math.random() * 70 + 30);
-   const l = Math.round(Math.random() * 40 + 30);
-   return `hsl(${h} ${s}% ${l}%)`;
-}
 function paintIndex(canvas, data) {
    if (!data.index) {
       canvas.style.display = 'none';
@@ -191,7 +175,7 @@ function paintIndex(canvas, data) {
       if (max === min) min = 0;
       pen.lineWidth = 1;
       group.forEach((one, j) => {
-         const color = j < hslColors.length ? hslColors[j] : randomHsl();
+         const color = one.c || pickHSLColor(j);
          pen.strokeStyle = color;
          pen.fillStyle = color;
          let lasty = null;

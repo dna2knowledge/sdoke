@@ -32,6 +32,7 @@ export async function compileVis(stg) {
       groupIdMap[group] ++;
       compiled.group = group;
       compiled.id = id;
+      compiled.c = vis.c;
       if (vis.F) {
          compiled.F = calc.compile(calc.tokenize(vis.F), {
             importSignature: signature,
@@ -176,6 +177,6 @@ export async function customEvaluateStrategy(item, stg) {
          c0.stat.d250.push(di);
       }
       ret = c0;
-   } catch(_) { ret = {}; console.log(_); }
+   } catch(_) { ret = {}; }
    return ret;
 }
