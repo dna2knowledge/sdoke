@@ -4,11 +4,11 @@ export default function rsi(vals, win) {
    if (n < win || win < 2) return r;
    const wm1 = win-1;
    let avggain = 0, avgloss = 0;
-   for (let i = n-1, m = n-win+1; i >= m; i--) {
+   for (let i = n-1, m = n-win+1; i >= m && i >= 0; i--) {
       const d = vals[i] - vals[i-1];
       if (d > 0) avggain += d; else avgloss -= d;
    }
-   for (let i = n-1; i >= wm1; i--) {
+   for (let i = n-1; i >= wm1 && i-win >= 0; i--) {
       const ag = avggain / wm1;
       const al = avgloss / wm1;
       const x = 100 * (1 - 1/(1+ag/al));

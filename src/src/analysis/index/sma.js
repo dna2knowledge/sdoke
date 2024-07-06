@@ -5,10 +5,10 @@ export default function sma(vals, win) {
    const wm1 = win-1;
    const wp1 = win+1;
    let avg = 0;
-   for (let i = n-1, m = n-win; i >= m; i--) {
+   for (let i = n-1, m = n-win; i >= m && i >= 0; i--) {
       avg += vals[i];
    }
-   for (let i = n-1; i >= wm1; i--) {
+   for (let i = n-1; i >= wm1 && i-win >= 0; i--) {
       const x = avg / win;
       r.push(x);
       avg += vals[i-win] - vals[i];
