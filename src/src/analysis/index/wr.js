@@ -17,7 +17,7 @@ export default function wr(vals, win) {
       if (min === max) {
          r.push(50);
       } else {
-         r.push((vals[i] - min) / (max - min) * 100);
+         r.push(100 - (vals[i] - min) / (max - min) * 100);
       }
    }
    return r;
