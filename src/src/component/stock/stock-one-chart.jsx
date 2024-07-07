@@ -264,7 +264,11 @@ export default function StockOneChart() {
          info.t = t;
          info.x = evt.clientX;
          info.y = evt.clientY;
-         const stg = dataRef.current.strategy?.stat?.d250?.[i]?.score || undefined;
+         const stg = (
+            i === 249 ?
+            dataRef.current.strategy?.score :
+            dataRef.current.strategy?.stat?.d250?.[248-i]?.score
+         ) || undefined;
          const vis = dataRef.current.index ? dataRef.current.index.map((z, j) => ({
             g: z.group,
             i: z.id,
@@ -302,7 +306,7 @@ export default function StockOneChart() {
             canvasRef.current.removeEventListener('mousemove', cursorMove);
             canvasRef.current.removeEventListener('mouseleave', cursorLeave);
          }
-         if (indexCanvasRef) {
+         if (indexCanvasRef.current) {
             indexCanvasRef.current.removeEventListener('mousemove', cursorMove);
             indexCanvasRef.current.removeEventListener('mouseleave', cursorLeave);
          }
