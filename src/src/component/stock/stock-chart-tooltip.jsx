@@ -42,9 +42,12 @@ function buildInfo(container, info) {
       gs.forEach(gn => {
          a(container, a(o('div'), txt(o('span'), `${gn}:`)));
          info.vis[gn].forEach(z => {
+            const div = o('div');
             const span = o('span');
             span.style.color = z.c;
-            a(container, a(o('div'), txt(span, `-- ${z.i}: ${z.v.toFixed(2)}`)));
+            span.style.fontWeight = 'bold';
+            a(container, a(div, txt(span, `-- ${z.i}`)));
+            a(div, txt(o('span'), `: ${z.v.toFixed(2)}`));
          });
       });
    }
