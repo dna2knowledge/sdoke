@@ -738,6 +738,12 @@ async function evaluateFuncCall(name, args, data, cache, id) {
          const win = isNaN(args[1]) ? 20 : args[1];
          v = polylineize(list, win);
          break; }
+      case 'threshold': {
+         const list = Array.isArray(args[0]) ? args[0] : [];
+         const downv = isNaN(args[1]) ? 0 : args[1];
+         const upv = isNaN(args[2]) ? 1 : args[2];
+         v = list.map(z => z < downv ? downv : (z > upv ? upv : z) );
+         break; }
       case 'pow':
       case 'math.pow':
          v = evaluateOp('^', [args[0], args[1]], data, cache, id); break;
