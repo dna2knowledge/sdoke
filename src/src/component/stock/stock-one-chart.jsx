@@ -1,5 +1,6 @@
 import { useRef, useEffect } from 'react';
 import { Box } from '@mui/material';
+import StockChartTooltip from '$/component/stock/stock-chart-tooltip';
 import eventbus from '$/service/eventbus';
 import local from '$/service/local';
 import pickHSLColor from '$/util/color-hsl-pick'
@@ -221,7 +222,6 @@ export default function StockOneChart() {
 
    const canvasRef = useRef(null);
    const indexCanvasRef = useRef(null);
-   const tooltipRef = useRef(null);
    const dataRef = useRef({});
 
    useEffect(() => {
@@ -259,27 +259,30 @@ export default function StockOneChart() {
       if (dataRef.current.i === i) return;
       dataRef.current.i = i;
       const one = dataRef.current.data?.raw?.[i];
-      tooltipRef.current.innerHTML = '&nbsp;';
       if (one) {
-         tooltipRef.current.appendChild(document.createTextNode(
-            `${new Date(one.T).toISOString().split('T')[0]} `
-         ));
-         tooltipRef.current.appendChild(document.createTextNode(
-            `${t(
-               't.open', 'open'
-            )}=${one.O.toFixed(2)} ${t(
-               't.close', 'close'
-            )}=${one.C.toFixed(2)} ${t(
-               't.low', 'low'
-            )}/${t(
-               't.high', 'high'
-            )}=${one.L.toFixed(2)}/${one.H.toFixed(2)}`
-         ));
-         tooltipRef.current.appendChild(document.createTextNode(
-            ` ${t('t.vol', 'vol')}=${one.V}`
-         ));
+         const info = {...one};
+         info.t = t;
+         info.x = evt.clientX;
+         info.y = evt.clientY;
+         const stg = dataRef.current.strategy?.stat?.d250?.[i]?.score || undefined;
+         const vis = dataRef.current.index ? dataRef.current.index.map((z, j) => ({
+            g: z.group,
+            i: z.id,
+            c: z.c || pickHSLColor(j),
+            v: Array.isArray(z.val) ? z.val[i] : z.val,
+         })).filter(z => !isNaN(z.v)).reduce((a, z) => {
+            if (!a[z.g]) a[z.g] = [];
+            a[z.g].push({ i: z.i, v: z.v, c: z.c });
+            return a;
+         }, {}) : undefined;
+         info.stg = stg;
+         info.vis = vis;
+         eventbus.emit('stock.chart.tooltip', info);
+      } else {
+         eventbus.emit('stock.chart.tooltip', null);
       }
    };
+   const cursorLeave = (evt) => eventbus.emit('stock.chart.tooltip', null);
 
    useEffect(() => {
       eventbus.comp.register('stock.chart');
@@ -288,13 +291,21 @@ export default function StockOneChart() {
       eventbus.on('stock.chart.index', handleStockChartIndex);
       canvasRef.current.addEventListener('mousemove', cursorMove);
       indexCanvasRef.current.addEventListener('mousemove', cursorMove);
+      canvasRef.current.addEventListener('mouseleave', cursorLeave);
+      indexCanvasRef.current.addEventListener('mouseleave', cursorLeave);
       return () => {
          eventbus.off('stock.chart.basic', handleStockChartBasic);
          eventbus.off('stock.chart.strategy', handleStockChartStrategy);
          eventbus.off('stock.chart.index', handleStockChartIndex);
          eventbus.comp.unregister('stock.chart');
-         if (canvasRef.current) canvasRef.current.removeEventListener('mousemove', cursorMove);
-         if (indexCanvasRef.current) indexCanvasRef.current.removeEventListener('mousemove', cursorMove);
+         if (canvasRef.current) {
+            canvasRef.current.removeEventListener('mousemove', cursorMove);
+            canvasRef.current.removeEventListener('mouseleave', cursorLeave);
+         }
+         if (indexCanvasRef) {
+            indexCanvasRef.current.removeEventListener('mousemove', cursorMove);
+            indexCanvasRef.current.removeEventListener('mouseleave', cursorLeave);
+         }
       };
       function handleStockChartBasic() {
          if (!canvasRef.current) return;
@@ -326,6 +337,6 @@ export default function StockOneChart() {
    return <Box>
       <canvas ref={canvasRef}>(Not support &lt;canvas&gt;)</canvas>
       <canvas ref={indexCanvasRef}>(Not support &lt;canvas&gt;)</canvas>
-      <Box sx={{ textAlign: 'right' }} ref={tooltipRef}>&nbsp;</Box>
+      <StockChartTooltip />
    </Box>;
 }
