@@ -291,6 +291,9 @@ function evaluateConstant(name, cache) {
       case 'e':
       case 'math.e':
          v = Math.E; break;
+      case 'inf':
+      case 'math.inf':
+         v = Infinity; break;
       case 'today':
          v = new Date().getTime(); break;
       default:
