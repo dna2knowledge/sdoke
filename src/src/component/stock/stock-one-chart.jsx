@@ -1,5 +1,6 @@
 import { useRef, useEffect } from 'react';
 import { Box } from '@mui/material';
+import StockChartRangeSlider from '$/component/stock/stock-chart-rangeslider';
 import StockChartTooltip from '$/component/stock/stock-chart-tooltip';
 import eventbus from '$/service/eventbus';
 import local from '$/service/local';
@@ -190,9 +191,9 @@ function paintIndex(canvas, data) {
                if (x < shiftw) return;
                const y = h1 - Math.round((z - min) / dm * h1);
                if (lasty === null) {
-                  pen.moveTo(x, y);
+                  pen.moveTo(x+lx/2, y);
                } else {
-                  pen.lineTo(x, y);
+                  pen.lineTo(x+lx/2, y);
                }
                lasty = y;
             });
@@ -202,7 +203,7 @@ function paintIndex(canvas, data) {
                const x = shiftw + (k+shiftn)*lx;
                if (x < shiftw) return;
                const y = h1 - Math.round((z - min) / dm * h1);
-               pen.fillRect(x-1, y-1, 2, 2);
+               pen.fillRect(x+lx/2-1, y-1, 2, 2);
                lasty = y;
             });
          } else {
@@ -215,6 +216,71 @@ function paintIndex(canvas, data) {
       });
       pen.restore();
    });
+}
+
+function repaint(kCanvas, indexCanvas, data) {
+   if (!kCanvas) return;
+   if (!local.data.view.one) local.data.view.one = [];
+   if (!local.data.view.chartConfig) local.data.view.chartConfig = { i: 0, n: 250 };
+   data.config = local.data.view.chartConfig;
+   const n0 = local.data.view.one.raw.length;
+   const i = data.config.i;
+   const n = data.config.n > n0 ? n0 : data.config.n;
+   data.data = {...local.data.view.one};
+   data.data.raw = data.data.raw.slice(i, i+n);
+   data.strategy = local.data.view.strategy;
+   if (data.strategy) {
+      data.strategy = {...data.strategy};
+      data.strategy.stat = {...data.strategy.stat};
+      const stat = data.strategy.stat;
+      const dn = stat.d250.length;
+      if (dn >= 250) {
+         stat.d250 = stat.d250.slice(0, 250);
+         stat.d250.reverse();
+         const last = stat.d250[i];
+         stat.d250 = stat.d250.slice(i+1, i+n);
+         stat.d250.reverse();
+         data.strategy.score = last.score;
+      } else {
+         stat.d250 = stat.d250.slice();
+         stat.d250.reverse();
+         let i1 = i+1-250+dn, i2 = i1+n;
+         if (i2 <= 0) {
+            data.strategy = null;
+         } else if (i1 < 0) {
+            const last = stat.d250[0];
+            stat.d250 = stat.d250.slice(1, i2);
+            data.strategy.score = last.score;
+            stat.d250.reverse();
+         } else {
+            const last = stat.d250[i1];
+            stat.d250 = stat.d250.slice(i1+1, i2);
+            data.strategy.score = last.score;
+            stat.d250.reverse();
+         }
+      }
+   };
+   data.index = local.data.view.index;
+   if (data.index) {
+      data.index = data.index.map(z => {
+         const dup = {...z};
+         if (Array.isArray(dup.val)) {
+            let n1 = dup.val.length;
+            let i1 = n1 - n0 + i;
+            n1 = i1 + n;
+            if (n1 < 0) dup.val = [];
+            else if (i1 < 0) {
+               i1 = 0;
+               dup.val = dup.val.slice(i1, n1);
+            } else {
+               dup.val = dup.val.slice(i1, n1);
+            }
+         }
+         return dup;
+      });
+   }
+   paintBasic(kCanvas, data);
+   paintIndex(indexCanvas, data);
 }
 
 export default function StockOneChart() {
@@ -264,10 +330,12 @@ export default function StockOneChart() {
          info.t = t;
          info.x = evt.clientX;
          info.y = evt.clientY;
+         const d250 = dataRef.current.strategy?.stat?.d250;
+         const dn = d250?.length || 0;
          const stg = (
-            i === 249 ?
+            i >= dn-1 ?
             dataRef.current.strategy?.score :
-            dataRef.current.strategy?.stat?.d250?.[248-i]?.score
+            dataRef.current.strategy?.stat?.d250?.[dn-2-i]?.score
          ) || undefined;
          const vis = dataRef.current.index ? dataRef.current.index.map((z, j) => ({
             g: z.group,
@@ -290,17 +358,17 @@ export default function StockOneChart() {
 
    useEffect(() => {
       eventbus.comp.register('stock.chart');
-      eventbus.on('stock.chart.basic', handleStockChartBasic);
-      eventbus.on('stock.chart.strategy', handleStockChartStrategy);
-      eventbus.on('stock.chart.index', handleStockChartIndex);
+      eventbus.on('stock.chart.basic', handleStockChartRepaint);
+      eventbus.on('stock.chart.strategy', handleStockChartRepaint);
+      eventbus.on('stock.chart.index', handleStockChartRepaint);
       canvasRef.current.addEventListener('mousemove', cursorMove);
       indexCanvasRef.current.addEventListener('mousemove', cursorMove);
       canvasRef.current.addEventListener('mouseleave', cursorLeave);
       indexCanvasRef.current.addEventListener('mouseleave', cursorLeave);
       return () => {
-         eventbus.off('stock.chart.basic', handleStockChartBasic);
-         eventbus.off('stock.chart.strategy', handleStockChartStrategy);
-         eventbus.off('stock.chart.index', handleStockChartIndex);
+         eventbus.off('stock.chart.basic', handleStockChartRepaint);
+         eventbus.off('stock.chart.strategy', handleStockChartRepaint);
+         eventbus.off('stock.chart.index', handleStockChartRepaint);
          eventbus.comp.unregister('stock.chart');
          if (canvasRef.current) {
             canvasRef.current.removeEventListener('mousemove', cursorMove);
@@ -311,34 +379,16 @@ export default function StockOneChart() {
             indexCanvasRef.current.removeEventListener('mouseleave', cursorLeave);
          }
       };
-      function handleStockChartBasic() {
-         if (!canvasRef.current) return;
-         if (!local.data.view.one) local.data.view.one = [];
-         dataRef.current.data = local.data.view.one;
-         dataRef.current.strategy = local.data.view.strategy;
-         dataRef.current.index = local.data.view.index;
-         paintBasic(canvasRef.current, dataRef.current);
-         paintIndex(indexCanvasRef.current, dataRef.current);
-      }
-      function handleStockChartStrategy() {
-         if (!canvasRef.current) return;
-         dataRef.current.data = local.data.view.one;
-         dataRef.current.strategy = local.data.view.strategy;
-         dataRef.current.index = local.data.view.index;
-         paintBasic(canvasRef.current, dataRef.current);
-         paintIndex(indexCanvasRef.current, dataRef.current);
-      }
-      function handleStockChartIndex() {
-         if (!canvasRef.current) return;
-         dataRef.current.data = local.data.view.one;
-         dataRef.current.strategy = local.data.view.strategy;
-         dataRef.current.index = local.data.view.index;
-         paintBasic(canvasRef.current, dataRef.current);
-         paintIndex(indexCanvasRef.current, dataRef.current);
+      function handleStockChartRepaint() {
+         repaint(canvasRef.current, indexCanvasRef.current, dataRef.current);
       }
    }, []);
 
    return <Box>
+      <Box sx={{ display: 'flex' }}>
+         <Box sx={{ flex: '1 0 auto' }}></Box>
+         <StockChartRangeSlider />
+      </Box>
       <canvas ref={canvasRef}>(Not support &lt;canvas&gt;)</canvas>
       <canvas ref={indexCanvasRef}>(Not support &lt;canvas&gt;)</canvas>
       <StockChartTooltip />
