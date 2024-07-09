@@ -5,9 +5,14 @@ import { evaluateStrategy } from '$/analysis/strategy/framework';
 strategy object {
    name, desc,
    rule: [{C, F}, ...],
-   vis: [{G, V}, ...], 
+   vis: [{G, V}, ...],
    e.g. rule: [{ C: '.C.rsi15() < 30', F: '1' }, { C: '.C.rsi15() > 70', F: '-1' }, { C: '', F: '1 - 2 * (.C.rsi15() - 30) / (70 - 30)' }],
    e.g. vis: [{ G: 'rsi.rsi15', F: '.C.rsi15.atrange(index(-250, 0))' }],
+             30 -> const value, always show
+             fft(.C.atrange(index(-250, 0))) -> not related to time, always show
+             .C.rsi15.atrange(index(-250, 0)) -> it only show in Daily view
+             .w.C.rsi15.atrange(index(-250, 0)) -> it only show in Weekly view
+             .m.C.rsi15.atrange(index(-250, 0)) -> it only show in Monthly view
 }
  */
 
