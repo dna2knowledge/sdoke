@@ -29,6 +29,8 @@ const {
     net
 } = require('electron');
 
+app.commandLine.appendSwitch('lang', 'en-US');
+
 const instanceLock = app.requestSingleInstanceLock();
 if (!instanceLock) app.quit(); else {
 // if needed: app.on('second-instance', (event, commandLine, workingDirectory, additionalData) => { mainWindow.focus(); });
