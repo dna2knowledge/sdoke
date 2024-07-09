@@ -254,6 +254,7 @@ async function repaint(kCanvas, indexCanvas, data) {
       const n0 = data.data.raw.length;
       const i = data.config.i;
       const n = data.config.n > n0 ? n0 : data.config.n;
+      data.config.n0 = nshow > n0 ? n0 : nshow;
       if (n0-nshow+i < 0) {
          data.data.raw = data.data.raw.slice(0, n);
       } else {

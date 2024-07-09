@@ -123,7 +123,7 @@ export default function StockChartRangeSlider() {
          if (!sliderStat?.o) return;
          const chartconfig = local.data.view.chartConfig;
          const box = sliderRef.current.getBoundingClientRect();
-         const n = local.data.view.one?.raw?.length || 0;
+         const n = local.data.view?.one?.raw?.length || 0;
          x -= box.left;
          const dx = x - sliderStat.x;
          if (n < 20) {
@@ -134,6 +134,7 @@ export default function StockChartRangeSlider() {
                case 'block':
                   chartconfig.i = sliderStat.i + dx > 0 ? (sliderStat.i + dx) : 0;
                   if (chartconfig.i + sliderStat.n > n) chartconfig.i = n - sliderStat.n;
+                  if (chartconfig.i + chartconfig.n > chartconfig.n0) chartconfig.i = chartconfig.n0 - chartconfig.n;
                   break;
                case 'Lrange':
                   chartconfig.i = sliderStat.i + dx > 0 ? (sliderStat.i + dx) : 0;
@@ -152,6 +153,9 @@ export default function StockChartRangeSlider() {
                      chartconfig.n = 20;
                      if (chartconfig.i + chartconfig.n > n) chartconfig.i = n - chartconfig.n;
                      if (chartconfig.i < 0) chartconfig.i = 0;
+                  }
+                  if (chartconfig.i + chartconfig.n > chartconfig.n0) {
+                     chartconfig.n = chartconfig.n0 - chartconfig.i;
                   }
                }
             }
