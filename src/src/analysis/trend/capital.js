@@ -1,6 +1,8 @@
 import databox from '$/service/databox';
 
-async function getData(datePoint, range) {
+async function getData(datePoint, range, opt) {
+   opt = opt || {};
+   opt.progressFn = opt.progressFn || (() => {});
    if (!datePoint) datePoint = new Date();
    const ts = datePoint.getTime();
    const stockList = (await databox.stock.getStockList()) || [];
@@ -21,8 +23,10 @@ async function getData(datePoint, range) {
       default: rangen = 1;
    }
    const last = {};
+   opt.progressFn(0, todo.length);
    for (let i = 0, n = todo.length; i < n; i++) {
       const item = todo[i];
+      opt.progressFn(i, n);
       const H = await databox.stock.getStockHistory(item.code);
       if (!H) continue;
       let j = H.length-1;
@@ -37,6 +41,7 @@ async function getData(datePoint, range) {
       Cs.reverse();
       last[item.code] = { tag: item.area, name: item.name, code: item.code, C: Cs.map(z => z.C) };
    }
+   opt.progressFn(0, 0);
    last._ = alignedTs;
 
    return last;
@@ -108,8 +113,8 @@ function aggregate(data, range) {
    return { S: Sareas, K: Kareas };
 }
 
-async function act(pointDate, range) {
-   const data = await getData(pointDate, range);
+async function act(pointDate, range, opt) {
+   const data = await getData(pointDate, range, opt);
    if (!data) return null;
    let lastts = data._;
    delete data._;

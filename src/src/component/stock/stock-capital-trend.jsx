@@ -175,6 +175,7 @@ export default function CapitalTrend() {
    const [anchor] = useState('left');
    const [suggested, setSuggested] = useState(false);
    const [loading, setLoading] = useState(false);
+   const [rate, setRate] = useState('');
    const [data, setData] = useState(null);
    const [unit, setUnit] = useState(local.data.captr?.unit || 'daily');
    const [viewtype, setViewtype] = useState(local.data.captr?.viewtype || 'histogram');
@@ -199,7 +200,15 @@ export default function CapitalTrend() {
          if (local.data.captr[unit]) {
             ret = local.data.captr[unit];
          } else {
-            const retp = await captialTrendAnalysis.act(null, unit);
+            const retp = await captialTrendAnalysis.act(null, unit, {
+               progressFn: (i, n) => {
+                  if (n === 0) {
+                     setRate('');
+                     return;
+                  }
+                  setRate(`${i}/${n} - ${(i/n*100).toFixed(2)}%`);
+               },
+            });
             // assemble partial results
             ret = retp;
          }
@@ -249,7 +258,7 @@ export default function CapitalTrend() {
    }, [unit, viewtype, loading]);
 
    return <Drawer open={suggested} anchor={anchor} onClose={onClose}>
-      {suggested ? (loading ? <NoData>{t('tip.captr.loading', 'Loading capital trend data ...')}</NoData>
+      {suggested ? (loading ? <NoData>{t('tip.captr.loading', 'Loading capital trend data ...')} {rate}</NoData>
       : (data ? <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%', padding: '10px' }}>
          <Box sx={{ marginBottom: '10px' }}>
             <Tooltip title={t('t.close.ui', 'Close')}><IconButton onClick={() => setSuggested(false)}><CloseIcon /></IconButton></Tooltip>
