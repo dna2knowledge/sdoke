@@ -19,7 +19,7 @@ function paintRangeSlider(canvas) {
       index: local.data.view.index,
       config: local.data.view.chartConfig,
    };
-   if (!data.config) data.config = { i: 0, n: 250, t: 'd', sliderData: null };
+   if (!data.config) return;
    const hdata = (data.config.sliderData || data.one?.raw || []).map(z => z.C);
    if (hdata.length < data.config.n) data.config.n = hdata.length;
    const chartconfig = data.config;
@@ -171,7 +171,24 @@ export default function StockChartRangeSlider() {
          document.body.removeChild(sliderStat.div);
          sliderStat.div.removeEventListener('mousemove', onMouseMove);
          sliderStat.div.removeEventListener('mouseup', _onDrop);
-         if (sliderStat.change) eventbus.emit('stock.chart.basic');
+         if (sliderStat.change) {
+            const chartconfig = local.data.view.chartConfig;
+            switch(chartconfig.t) {
+               case 'w':
+                  chartconfig.wi = chartconfig.i;
+                  chartconfig.wn = chartconfig.n;
+                  break;
+               case 'm':
+                  chartconfig.mi = chartconfig.i;
+                  chartconfig.mn = chartconfig.n;
+                  break;
+               case 'd':
+               default:
+                  chartconfig.di = chartconfig.i;
+                  chartconfig.dn = chartconfig.n;
+            }
+            eventbus.emit('stock.chart.basic');
+         }
          sliderStat.change = false;
          sliderStat.div = null;
          sliderStat.x = null;

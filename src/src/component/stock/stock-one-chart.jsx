@@ -228,7 +228,14 @@ function paintIndex(canvas, data) {
 const nshow = 250;
 function initChartConfig() {
    // t = 'd'/daily, 'w'/weekly, 'm'/monthly
-   if (!local.data.view.chartConfig) local.data.view.chartConfig = { i: 0, n: nshow, t: 'd' };
+   if (!local.data.view.chartConfig) local.data.view.chartConfig = {
+      i: 0, n: nshow,
+      di: 0, dn: nshow,
+      wi: 0, wn: nshow,
+      mi: 0, mn: nshow,
+      t: 'd',
+      sliderData: null,
+   };
 }
 
 const repaintStat = {
@@ -432,17 +439,26 @@ export default function StockOneChart() {
 
    const onDayClick = () => {
       initChartConfig();
-      local.data.view.chartConfig.t = 'd';
+      const chartconfig = local.data.view.chartConfig;
+      chartconfig.t = 'd';
+      chartconfig.i = chartconfig.di;
+      chartconfig.n = chartconfig.dn;
       repaint(canvasRef.current, indexCanvasRef.current, dataRef.current);
    };
    const onWeekClick = () => {
       initChartConfig();
-      local.data.view.chartConfig.t = 'w';
+      const chartconfig = local.data.view.chartConfig;
+      chartconfig.t = 'w';
+      chartconfig.i = chartconfig.wi;
+      chartconfig.n = chartconfig.wn;
       repaint(canvasRef.current, indexCanvasRef.current, dataRef.current);
    };
    const onMonthClick = () => {
       initChartConfig();
-      local.data.view.chartConfig.t = 'm';
+      const chartconfig = local.data.view.chartConfig;
+      chartconfig.t = 'm';
+      chartconfig.i = chartconfig.mi;
+      chartconfig.n = chartconfig.mn;
       repaint(canvasRef.current, indexCanvasRef.current, dataRef.current);
    };
 
