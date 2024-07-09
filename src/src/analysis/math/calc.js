@@ -859,10 +859,228 @@ function evaluateOpArr(op, op1arr, op2arr) {
    return r;
 }
 
+// type = 0: unknown, 1: single, 2: array, 3: daily, 4: weekly, 5: monthly, 6: yearly
+const TYPE = {
+   UNKNOWN: 0,
+   SINGLE: 1,
+   ARRAY: 2,
+   DAILY: 3,
+   WEEKLY: 4,
+   MONTHLY: 5,
+   YEARLY: 6,
+}
+async function evaluateType(expr, opt) {
+   opt = opt || {};
+   return await evaluateNodeType(expr.V[0],opt.cache || {});
+}
+async function evaluateNodeType(expr, cache) {
+   if (!expr) return TYPE.UNKNOWN;
+   if (expr.op) { // operator
+      const args = [];
+      for (let i = 0, n = expr.V.length; i < n; i++) {
+         args.push(await evaluateNodeType(expr.V[i], cache));
+      }
+      expr.r = await evaluateOpType(expr.op, args, cache, expr.id);
+      return expr.r;
+   } else if (expr.ref) { // ref
+      expr.r = await evaluateRefType(cache, expr.id);
+      return expr.r;
+   } else if (expr.F) { // function
+      const args = [];
+      for (let i = 0, n = expr.A.V.length; i < n; i++) {
+         args.push(await evaluateNodeType(expr.A.V[i], cache));
+      }
+      expr.r = await evaluateFuncCallType(expr.v, args, cache, expr.id);
+      return expr.r;
+   } else if ('v' in expr) { // literal
+      expr.r = TYPE.SINGLE;
+      return expr.r;
+   } else if ('V' in expr) { // (...)
+      expr.r = await evaluateNodeType(expr.V[0], cache);
+      if (expr.id) cache[expr.id] = expr.r;
+      return expr.r;
+   } else return TYPE.UNKNOWN;
+}
+async function evaluateRefType(cache, id) {
+   if (cache[id]) return cache[id];
+   return TYPE.UNKNOWN;
+}
+async function evaluateQualifierType(name, cache) {
+   const qualified = {};
+   const ps = name.split('.');
+   ps.shift(); // code
+   let cmd = ps.shift();
+   switch(cmd) {
+      case 'w':
+      case 'weekly':
+         qualified.data = TYPE.WEEKLY; break;
+      case 'm':
+      case 'monthly':
+         qualified.data = TYPE.MONTHLY; break;
+      default:
+         qualified.data = TYPE.DAILY;
+         ps.unshift(cmd);
+   }
+   cmd = ps[0];
+   if (!allowedBasicKey.includes(cmd)) cmd = keyMap[cmd];
+   if (!allowedBasicKey.includes(cmd)) {
+      qualified.err = `invalid "${ps[0]}"`;
+      return qualified;
+   }
+   ps.shift();
+   cmd = ps.shift();
+
+   if (cmd) {
+      // support .C.rsi6() > .C.rsi9()
+      // rsiN, smaN, cciN, wrN
+      let tr = false;
+      if (cmd.startsWith('rsi')) {
+         tr = true;
+      } else if (cmd.startsWith('sma')) {
+         tr = true;
+      } else if (cmd.startsWith('cci')) {
+         tr = true;
+      } else if (cmd.startsWith('wr')) {
+         tr = true;
+      }
+      if (tr) cmd = ps.shift();
+   }
+
+   qualified.func = cmd || `get${qualified.col}`;
+   return qualified;
+}
+async function evaluateFuncCallType(name, args, cache, id) {
+   if (cache[id]) return cache[id];
+   let v = TYPE.UNKNOWN;
+   if (!name) return TYPE.UNKNOWN;
+   let qualified = null;
+   if (name.indexOf('.') >= 0 && !name.startsWith('math.')) {
+      // .C(...) = .C.at(...), .close.at(...), .close.atrange(...), .weekly.close()
+      // sh600001.C.at(...)
+      qualified = await evaluateQualifierType(name, cache);
+      if (qualified.err) {
+         // TODO handle evaulate error
+         cache[id] = TYPE.UNKNOWN;
+         return TYPE.UNKNOWN;
+      }
+      name = qualified.func;
+      switch (name) {
+      case 'at':
+      case 'getC': // = .C.at
+      case 'getO': // = .O.at
+      case 'getH': // = .H.at
+      case 'getL': // = .L.at
+      case 'getV': // = .V.at
+      case 'getv': // = .v.at
+         cache[id] = TYPE.ARRAY;
+         return TYPE.ARRAY;
+      case 'atrange':
+         cache[id] = qualified.data;
+         return qualified.data;
+      }
+   }
+   switch(name) {
+      case 'day':
+      case 'thisweek':
+      case 'week':
+      case 'thismonth':
+      case 'month':
+      case 'thisyear':
+      case 'year':
+      case 'index':
+      case 'leastsquare':
+      case 'math.leastsquare':
+         v = TYPE.ARRAY; break;
+      case 'flat':
+         v = Math.max(...args); if (v < 0) v = TYPE.UNKNOWN; break;
+      case 'pi':
+      case 'math.pi':
+      case 'e':
+      case 'math.e':
+      case 'rnd':
+      case 'random':
+      case 'math.rnd':
+      case 'math.random':
+      case 'today':
+      case 'sum':
+      case 'math.sum':
+      case 'avg':
+      case 'math.avg':
+      case 'average':
+      case 'math.average':
+      case 'max':
+      case 'math.max':
+      case 'min':
+      case 'math.min':
+      case 'count':
+      case 'math.count':
+      case 'count1':
+      case 'math.count1':
+      case 'count0':
+      case 'math.count0':
+         v = TYPE.SINGLE; break;
+      case 'norm':
+      case 'math.norm':
+      case 'softmax':
+      case 'math.softmax':
+      case 'abs':
+      case 'math.abs':
+      case 'round':
+      case 'math.round':
+      case 'ceil':
+      case 'math.ceil':
+      case 'floor':
+      case 'math.floor':
+      case 'sin':
+      case 'math.sin':
+      case 'cos':
+      case 'math.cos':
+      case 'sqrt':
+      case 'math.sqrt':
+      case 'exp':
+      case 'math.exp':
+      case 'ln':
+      case 'math.ln':
+      case 'arctan':
+      case 'math.arctan':
+      case 'dft':
+      case 'math.dft':
+         args = evaluateFlatFuncCallArgs(args);
+         v = Math.max(...args); if (v < 0) v = TYPE.UNKNOWN; break;
+      case 'slice':
+      case 'polylineize':
+      case 'threshold':
+         v = args[0] || TYPE.UNKNOWN; break;
+      case 'pow':
+      case 'math.pow':
+         v = evaluateOpType('^', [args[0], args[1]], cache, id); break;
+      case 'log':
+      case 'math.log':
+         v = evaluateOpType('_log', [args[0], args[1]], cache, id); break;
+      case 'debug':
+         v = args; break;
+      default:
+         v = TYPE.UNKNOWN;
+   }
+   cache[id] = v;
+   return v;
+}
+function evaluateOpType(op, vals, cache, id) {
+   if (cache[id]) return cache[id];
+   const op1T = vals[0];
+   const op2T = vals[1];
+   if (op === 'not') {
+      return op2T;
+   } else {
+      return op1T > op2T ? op1T : op2T;
+   }
+}
+
 const api = {
    tokenize,
    compile,
    evaluate,
+   evaluateType,
 };
 window._debugCalc = api;
 export default api;
