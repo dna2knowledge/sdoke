@@ -255,6 +255,7 @@ async function repaint(kCanvas, indexCanvas, data) {
       const i = data.config.i;
       const n = data.config.n > n0 ? n0 : data.config.n;
       data.config.n0 = nshow > n0 ? n0 : nshow;
+      data.config.sliderData = data.data.raw;
       if (n0-nshow+i < 0) {
          data.data.raw = data.data.raw.slice(0, n);
       } else {
@@ -329,6 +330,7 @@ async function repaint(kCanvas, indexCanvas, data) {
       }
       paintBasic(kCanvas, data);
       paintIndex(indexCanvas, data);
+      eventbus.emit('stock.chart.rangeslider');
    } catch { }
    repaintStat.busy = false;
 }

@@ -19,8 +19,8 @@ function paintRangeSlider(canvas) {
       index: local.data.view.index,
       config: local.data.view.chartConfig,
    };
-   const hdata = (data.one?.raw || []).map(z => z.C);
-   if (!data.config) data.config = { i: 0, n: 250 };
+   if (!data.config) data.config = { i: 0, n: 250, t: 'd', sliderData: null };
+   const hdata = (data.config.sliderData || data.one?.raw || []).map(z => z.C);
    if (hdata.length < data.config.n) data.config.n = hdata.length;
    const chartconfig = data.config;
 
@@ -65,6 +65,7 @@ export default function StockChartRangeSlider() {
    useEffect(() => {
       const sliderStat = {};
       eventbus.on('stock.chart.basic', handleStockChartRepaint);
+      eventbus.on('stock.chart.rangeslider', handleStockChartRepaint);
       if (sliderRef.current) {
          sliderRef.current.style.cursor = 'pointer';
          sliderRef.current.addEventListener('mousedown', onMouseDown);
@@ -74,6 +75,7 @@ export default function StockChartRangeSlider() {
       }
       return () => {
          eventbus.off('stock.chart.basic', handleStockChartRepaint);
+         eventbus.off('stock.chart.rangeslider', handleStockChartRepaint);
          if (sliderRef.current) {
             sliderRef.current.removeEventListener('mousedown', onMouseDown);
             sliderRef.current.removeEventListener('touchstart', onTouchStart);
