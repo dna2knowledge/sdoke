@@ -225,6 +225,7 @@ function paintIndex(canvas, data) {
    });
 }
 
+const nshow = 250;
 function initChartConfig() {
    // t = 'd'/daily, 'w'/weekly, 'm'/monthly
    if (!local.data.view.chartConfig) local.data.view.chartConfig = { i: 0, n: nshow, t: 'd' };
@@ -237,7 +238,6 @@ async function repaint(kCanvas, indexCanvas, data) {
    if (repaintStat.busy) return;
    if (!kCanvas) return;
    repaintStat.busy = true;
-   const nshow = 250;
    try {
       if (!local.data.view.one) local.data.view.one = {};
       initChartConfig();
