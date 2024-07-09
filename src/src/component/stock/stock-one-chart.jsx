@@ -109,10 +109,10 @@ function paintBasic(canvas, data) {
             }
          } else if (item.O < item.C) {
             pen.fillStyle = 'red'; pen.fillRect(x-1, ymin, lxw, ymax-ymin);
-            pen.fillRect(x-lx/2, yst, lx, yed - yst);
+            pen.fillRect(x-lx/2, yst, lx, yed === yst ? 1 : (yed - yst));
          } else if (item.O > item.C) {
             pen.fillStyle = 'green'; pen.fillRect(x-1, ymin,lxw, ymax-ymin);
-            pen.fillRect(x-lx/2, yed, lx, yst - yed);
+            pen.fillRect(x-lx/2, yed, lx, yed === yst ? 1 : (yst - yed));
          } else {
             pen.fillStyle = 'gray'; pen.fillRect(x-1, ymin, lxw, ymax-ymin);
             pen.fillRect(x-lx/2, yst, lx, 2);
