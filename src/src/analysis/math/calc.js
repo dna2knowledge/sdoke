@@ -358,7 +358,7 @@ async function evaluateQualifier(name, data, cache) {
          break; }
       case 'm':
       case 'monthly': {
-         k = `_stock_${code}_m`;
+         const k = `_stock_${code}_m`;
          qualified.data = cache[k] || dailyToMonthly(qualified.data);
          cache[k] = qualified.data;
          break; }
@@ -514,7 +514,7 @@ async function evaluateFuncCall(name, args, data, cache, id) {
                const n = data.length;
                const ia = n - 1 + pair[1];
                const ib = n - 1 + pair[2];
-               data.slice(ia, ib+1).forEach(x => v.push(x ? x[qualified.col] : NaN));
+               data.slice(ia < 0 ? 0 : ia, ib < 0 ? 0 : ib+1).forEach(x => v.push(x ? x[qualified.col] : NaN));
             } else {
                const tsa = pair[0];
                const tsb = pair[1];
@@ -860,7 +860,7 @@ function evaluateOpArr(op, op1arr, op2arr) {
 }
 
 // type = 0: unknown, 1: single, 2: array, 3: daily, 4: weekly, 5: monthly, 6: yearly
-const TYPE = {
+export const TYPE = {
    UNKNOWN: 0,
    SINGLE: 1,
    ARRAY: 2,

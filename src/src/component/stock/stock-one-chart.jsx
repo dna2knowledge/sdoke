@@ -1,10 +1,16 @@
 import { useRef, useEffect } from 'react';
-import { Box } from '@mui/material';
+import { Box, IconButton, Tooltip } from '@mui/material';
+import DayIcon from '@mui/icons-material/Today';
+import WeekIcon from '@mui/icons-material/DateRange';
+import MonthIcon from '@mui/icons-material/CalendarMonth';
 import StockChartRangeSlider from '$/component/stock/stock-chart-rangeslider';
 import StockChartTooltip from '$/component/stock/stock-chart-tooltip';
 import eventbus from '$/service/eventbus';
 import local from '$/service/local';
 import pickHSLColor from '$/util/color-hsl-pick'
+import dailyToWeekly from '$/analysis/transform/weekly';
+import dailyToMonthly from '$/analysis/transform/monthly';
+import { TYPE } from '$/analysis/math/calc';
 
 import { useTranslation } from 'react-i18next';
 
@@ -80,35 +86,36 @@ function paintBasic(canvas, data) {
          pen.save(); pen.beginPath(); pen.strokeStyle = '#5ff'; pen.moveTo(vx, 0); pen.lineTo(vx, 4); pen.stroke(); pen.restore();
       }
       let lastitem = null;
+      const lxw = Math.ceil(lx/5);
       data.forEach((item, i) => {
          const ymin = Math.round(h0 * (1 - (item.L - min)/h));
          const yst = Math.round(h0 * (1 - (item.O - min)/h));
          const yed = Math.round(h0 * (1 - (item.C - min)/h));
          const ymax = Math.round(h0 * (1 - (item.H - min)/h));
          const x = i * lx + shiftw;
-         if (item.O === item.C && item.O === item.L && item.O === item.H) {
+         if (item.O === item.C) {
             const cr = lastitem ? ((item.C - lastitem.C) / lastitem.C) : 0;
             if (cr < -0.099) {
                const yex =  Math.round(h0 * (1 - (lastitem.C - min)/h));
-               pen.strokeStyle = 'green'; pen.beginPath(); pen.moveTo(x, yst); pen.lineTo(x, yex); pen.stroke();
+               pen.fillStyle = 'green'; pen.fillRect(x-1, ymin, lxw, ymax-ymin);
+               pen.fillRect(x-lx/2, yex, lx, yst - yex);
             } else if (cr > 0.099) {
                const yex =  Math.round(h0 * (1 - (lastitem.C - min)/h));
-               pen.strokeStyle = 'red'; pen.beginPath(); pen.moveTo(x, yst); pen.lineTo(x, yex); pen.stroke();
+               pen.fillStyle = 'red'; pen.fillRect(x-1, ymin, lxw, ymax-ymin);
+               pen.fillRect(x-lx/2, yst, lx, yex - yst);
             } else {
-               pen.strokeStyle = 'gray'; pen.beginPath(); pen.moveTo(x, yst); pen.lineTo(x, yst+2); pen.stroke();
+               pen.fillStyle = '#gray'; pen.fillRect(x-1, ymin, lxw, ymax-ymin);
+               pen.fillRect(x-lx/2, yst, lx, 2);
             }
          } else if (item.O < item.C) {
-            if (ymin > yst) {pen.beginPath(); pen.strokeStyle = '#f66'; pen.moveTo(x, ymin); pen.lineTo(x, yst); pen.stroke();}
-            if (ymax < yed) {pen.strokeStyle = '#f66'; pen.beginPath(); pen.moveTo(x, yed); pen.lineTo(x, ymax); pen.stroke();}
-            pen.strokeStyle = 'red'; pen.beginPath(); pen.moveTo(x, yst); pen.lineTo(x, yed); pen.stroke();
+            pen.fillStyle = 'red'; pen.fillRect(x-1, ymin, lxw, ymax-ymin);
+            pen.fillRect(x-lx/2, yst, lx, yed - yst);
          } else if (item.O > item.C) {
-            if (ymin > yed) {pen.strokeStyle = '#6f6'; pen.beginPath(); pen.moveTo(x, ymin); pen.lineTo(x, yed); pen.stroke();}
-            if (ymax < yst) {pen.strokeStyle = '#6f6'; pen.beginPath(); pen.moveTo(x, yst); pen.lineTo(x, ymax); pen.stroke();}
-            pen.strokeStyle = 'green'; pen.beginPath(); pen.moveTo(x, yed); pen.lineTo(x, yst); pen.stroke();
+            pen.fillStyle = 'green'; pen.fillRect(x-1, ymin,lxw, ymax-ymin);
+            pen.fillRect(x-lx/2, yed, lx, yst - yed);
          } else {
-            if (ymin > yed) {pen.strokeStyle = 'gray'; pen.beginPath(); pen.moveTo(x, ymin); pen.lineTo(x, yed); pen.stroke();}
-            if (ymax < yst) {pen.strokeStyle = 'gray'; pen.beginPath(); pen.moveTo(x, yst); pen.lineTo(x, ymax); pen.stroke();}
-            pen.strokeStyle = 'gray'; pen.beginPath(); pen.moveTo(x, yed+2); pen.lineTo(x, yst); pen.stroke();
+            pen.fillStyle = 'gray'; pen.fillRect(x-1, ymin, lxw, ymax-ymin);
+            pen.fillRect(x-lx/2, yst, lx, 2);
          }
          lastitem = item;
       });
@@ -218,69 +225,111 @@ function paintIndex(canvas, data) {
    });
 }
 
-function repaint(kCanvas, indexCanvas, data) {
+function initChartConfig() {
+   // t = 'd'/daily, 'w'/weekly, 'm'/monthly
+   if (!local.data.view.chartConfig) local.data.view.chartConfig = { i: 0, n: nshow, t: 'd' };
+}
+
+const repaintStat = {
+   busy: false,
+};
+async function repaint(kCanvas, indexCanvas, data) {
+   if (repaintStat.busy) return;
    if (!kCanvas) return;
-   if (!local.data.view.one) local.data.view.one = [];
-   if (!local.data.view.chartConfig) local.data.view.chartConfig = { i: 0, n: 250 };
-   data.config = local.data.view.chartConfig;
-   const n0 = local.data.view.one.raw.length;
-   const i = data.config.i;
-   const n = data.config.n > n0 ? n0 : data.config.n;
-   data.data = {...local.data.view.one};
-   data.data.raw = data.data.raw.slice(i, i+n);
-   data.strategy = local.data.view.strategy;
-   if (data.strategy) {
-      data.strategy = {...data.strategy};
-      data.strategy.stat = {...data.strategy.stat};
-      const stat = data.strategy.stat;
-      const dn = stat.d250.length;
-      if (dn >= 250) {
-         stat.d250 = stat.d250.slice(0, 250);
-         stat.d250.reverse();
-         const last = stat.d250[i];
-         stat.d250 = stat.d250.slice(i+1, i+n);
-         stat.d250.reverse();
-         data.strategy.score = last.score;
-      } else {
-         stat.d250 = stat.d250.slice();
-         stat.d250.reverse();
-         let i1 = i+1-250+dn, i2 = i1+n;
-         if (i2 <= 0) {
-            data.strategy = null;
-         } else if (i1 < 0) {
-            const last = stat.d250[0];
-            stat.d250 = stat.d250.slice(1, i2);
-            data.strategy.score = last.score;
-            stat.d250.reverse();
-         } else {
-            const last = stat.d250[i1];
-            stat.d250 = stat.d250.slice(i1+1, i2);
-            data.strategy.score = last.score;
-            stat.d250.reverse();
-         }
+   repaintStat.busy = true;
+   const nshow = 250;
+   try {
+      if (!local.data.view.one) local.data.view.one = {};
+      initChartConfig();
+      data.config = local.data.view.chartConfig;
+      if (!data.config.n) data.config.n = nshow;
+
+      data.data = {...local.data.view.one};
+      switch(data.config.t) {
+         case 'w':
+            data.data.raw = dailyToWeekly(local.data.view.one.raw); break;
+         case 'm':
+            data.data.raw = dailyToMonthly(local.data.view.one.raw); break;
       }
-   };
-   data.index = local.data.view.index;
-   if (data.index) {
-      data.index = data.index.map(z => {
-         const dup = {...z};
-         if (Array.isArray(dup.val)) {
-            let n1 = dup.val.length;
-            let i1 = n1 - n0 + i;
-            n1 = i1 + n;
-            if (n1 < 0) dup.val = [];
-            else if (i1 < 0) {
-               i1 = 0;
-               dup.val = dup.val.slice(i1, n1);
+      const n0 = data.data.raw.length;
+      const i = data.config.i;
+      const n = data.config.n > n0 ? n0 : data.config.n;
+      if (n0-nshow+i < 0) {
+         data.data.raw = data.data.raw.slice(0, n);
+      } else {
+         data.data.raw = data.data.raw.slice(n0-nshow+i, n0-nshow+i+n);
+      }
+
+      data.strategy = local.data.view.strategy;
+      // TODO if 'w', 'm', scan 'd' data into bucket of 'w' or 'm'
+      if (data.strategy && data.config.t === 'd') {
+         data.strategy = {...data.strategy};
+         data.strategy.stat = {...data.strategy.stat};
+         const stat = data.strategy.stat;
+         const dn = stat.d250.length;
+         if (dn >= nshow) {
+            stat.d250 = stat.d250.slice(0, nshow);
+            stat.d250.reverse();
+            const last = stat.d250[i];
+            stat.d250 = stat.d250.slice(i+1, i+n);
+            stat.d250.reverse();
+            data.strategy.score = last.score;
+         } else {
+            stat.d250 = stat.d250.slice();
+            stat.d250.reverse();
+            let i1 = i+1-250+dn, i2 = i1+n;
+            if (i2 <= 0) {
+               data.strategy = null;
+            } else if (i1 < 0) {
+               const last = stat.d250[0];
+               stat.d250 = stat.d250.slice(1, i2);
+               data.strategy.score = last.score;
+               stat.d250.reverse();
             } else {
-               dup.val = dup.val.slice(i1, n1);
+               const last = stat.d250[i1];
+               stat.d250 = stat.d250.slice(i1+1, i2);
+               data.strategy.score = last.score;
+               stat.d250.reverse();
             }
          }
-         return dup;
-      });
-   }
-   paintBasic(kCanvas, data);
-   paintIndex(indexCanvas, data);
+      } else {
+         data.strategy = null;
+      }
+      data.index = local.data.view.index;
+      if (data.index) {
+         data.index = data.index.map((z, j) => {
+            switch(data.config.t) {
+               case 'd':
+                  if (z.type > TYPE.DAILY) return null;
+                  break;
+               case 'w':
+                  if (z.type > TYPE.WEEKLY || z.type === TYPE.DAILY) return null;
+                  break;
+               case 'm':
+                  if (z.type > TYPE.MONTHLY || z.type === TYPE.DAILY || z.type === TYPE.WEEKLY) return null;
+                  break;
+            }
+            const dup = {...z};
+            if (Array.isArray(dup.val)) {
+               let n1 = dup.val.length;
+               let i1 = n1 - nshow + i;
+               n1 = i1 + n;
+               if (n1 < 0) dup.val = [];
+               else if (i1 < 0) {
+                  i1 = 0;
+                  dup.val = dup.val.slice(i1, n1);
+               } else {
+                  dup.val = dup.val.slice(i1, n1);
+               }
+            }
+            if (!dup.c) dup.c = pickHSLColor(j);
+            return dup;
+         }).filter(z => !!z);
+      }
+      paintBasic(kCanvas, data);
+      paintIndex(indexCanvas, data);
+   } catch { }
+   repaintStat.busy = false;
 }
 
 export default function StockOneChart() {
@@ -302,13 +351,7 @@ export default function StockOneChart() {
       indexCanvas.width = canvas.offsetWidth;
       indexCanvas.style.display = 'none';
       if (local.data.view) {
-         Object.assign(dataRef.current, {
-            data: local.data.view.one,
-            strategy: local.data.view.strategy,
-            index: local.data.view.index,
-         });
-         paintBasic(canvasRef.current, dataRef.current);
-         paintIndex(indexCanvasRef.current, dataRef.current);
+         repaint(canvasRef.current, indexCanvas.current, dataRef.current);
       }
    });
 
@@ -384,9 +427,35 @@ export default function StockOneChart() {
       }
    }, []);
 
+   const onDayClick = () => {
+      initChartConfig();
+      local.data.view.chartConfig.t = 'd';
+      repaint(canvasRef.current, indexCanvasRef.current, dataRef.current);
+   };
+   const onWeekClick = () => {
+      initChartConfig();
+      local.data.view.chartConfig.t = 'w';
+      repaint(canvasRef.current, indexCanvasRef.current, dataRef.current);
+   };
+   const onMonthClick = () => {
+      initChartConfig();
+      local.data.view.chartConfig.t = 'm';
+      repaint(canvasRef.current, indexCanvasRef.current, dataRef.current);
+   };
+
    return <Box>
       <Box sx={{ display: 'flex' }}>
-         <Box sx={{ flex: '1 0 auto' }}></Box>
+         <Box sx={{ flex: '1 0 auto' }}>
+            <Tooltip title={t('t.daily', 'Daily')}>
+               <IconButton onClick={onDayClick}><DayIcon /></IconButton>
+            </Tooltip>
+            <Tooltip title={t('t.weekly', 'Weekly')}>
+               <IconButton onClick={onWeekClick}><WeekIcon /></IconButton>
+            </Tooltip>
+            <Tooltip title={t('t.monthly', 'Monthly')}>
+               <IconButton onClick={onMonthClick}><MonthIcon /></IconButton>
+            </Tooltip>
+         </Box>
          <StockChartRangeSlider />
       </Box>
       <canvas ref={canvasRef}>(Not support &lt;canvas&gt;)</canvas>

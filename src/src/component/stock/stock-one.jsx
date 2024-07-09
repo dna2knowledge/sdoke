@@ -23,8 +23,8 @@ export default function StockOne() {
       let ret;
       setLoading(true);
       try {
-         ret = await databox.stock.getStockHistory(one.code);
-         ret = ret.slice(ret.length < 250 ? 0 : (ret.length-250));
+         ret = (await databox.stock.getStockHistory(one.code)) || [];
+         ret = ret.map(z => ({...z}));
       } catch(err) { }
       setLoading(false);
       if (oneKey.current !== key) return false;

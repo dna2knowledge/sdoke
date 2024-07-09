@@ -53,12 +53,15 @@ export async function customEvaluateStrategyForVisualization(item, stg) {
    if (!stg) return null;
    const compiledVis = await compileVis(stg);
    const r = [];
+   const typeopt = { cache: {} };
    const opt = { cache: {} };
    for (let i = 0, n = compiledVis.length; i < n; i++) {
       const vis = compiledVis[i];
       if (vis.F === 0) {
          vis.val = [];
+         vis.type = 0;
       } else {
+         vis.type = await calc.evaluateType(vis.F, typeopt);
          vis.val = await calc.evaluate(vis.F, item.raw, opt);
          if (!vis.val) vis.val = [];
       }
