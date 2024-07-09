@@ -87,6 +87,7 @@ function createWindow () {
     browserWindowOpts.webPreferences.sandbox = false;
 
     mainWindow = new BrowserWindow(browserWindowOpts);
+    mainWindow.setMenu(null);
 
     // Load a local HTML file or a remote URL.
     const cdvUrl = cdvElectronSettings.browserWindowInstance.loadURL.url;
