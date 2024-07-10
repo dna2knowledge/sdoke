@@ -152,6 +152,11 @@ export default function StockOneStrategy() {
    }
 
    const onGoToStrategyClick = () => {
+      if (!meta) return;
+      local.data.viewBack = {
+         code: meta.code,
+         name: meta.name,
+      };
       if (strategy === exampleStrategyName) {
          eventbus.emit('toast', {
             content: t('strategy.warn.thisisjustanexample', 'This is just an example strategy. Please go to Stock Strategy page to create your own.'),

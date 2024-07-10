@@ -116,6 +116,7 @@ const tr = {
       't.refresh': '刷新',
       't.download': '下载结果列表',
       't.search.download.filename': '股票筛选结果.csv',
+      't.back': '返回',
    },
    search: {
       't.search': '筛选',

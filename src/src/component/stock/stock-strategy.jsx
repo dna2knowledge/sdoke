@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
-import { Box, Tabs, Tab, Autocomplete, TextField, Button } from '@mui/material';
+import { Box, Tabs, Tab, Autocomplete, TextField, Button, IconButton, Tooltip } from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
+import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import NoData from '$/component/shared/no-data';
 import StockStrategyEditTab from '$/component/stock/stock-strategy-tab-edit';
 import StockStrategySuggestTab from '$/component/stock/stock-strategy-tab-suggest';
@@ -149,8 +150,25 @@ export default function StockStrategy() {
       }
    };
 
+   const backData = local.data.viewBack;
+   const onBackClick = () => {
+      const holdData = local.data.viewBack;
+      if (!holdData) return;
+      local.data.viewBack = null;
+      eventbus.comp.waitUntil('comp.stock.stock-panel').then(() => {
+         eventbus.emit('stock.pinned.click', {
+            code: holdData.code,
+            name: holdData.name,
+         });
+      });
+      window.location.hash = '#/';
+   };
+
    return <Box sx={{ width: '100%', height: '100%', maxWidth: '800px', minWidth: '200px', margin: '0 auto', display: 'flex', flexDirection: 'column' }}>
-      <Box sx={{ mb: '10px' }}>
+      <Box sx={{ mb: '10px', display: 'flex' }}>
+         {backData ? <Tooltip title={`${t('t.back', 'Back to')} ${backData.code} ${backData.name}`}>
+            <IconButton onClick={onBackClick}><ArrowBackIcon /></IconButton>
+         </Tooltip> : null}
          <Autocomplete sx={{ ml: 1, flex: '1 0 auto', '.MuiInputBase-input': { height: '10px' } }}
             options={strategyList}
             getOptionLabel={option => `${option.name}`}
