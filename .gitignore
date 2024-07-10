@@ -137,3 +137,4 @@ platforms/electron/www/
 platforms/electron/platform_www/native.js
 platforms/electron/platform_www/native.js.map
 platforms/electron/platform_www/prebuilds
+.vscode
