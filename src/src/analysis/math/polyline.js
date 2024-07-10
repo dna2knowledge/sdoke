@@ -49,7 +49,7 @@ function getKeypoints(data, srate) {
    return r.filter(x => x !== null);
 }
 
-function lineSmooth(data, r) {
+export function lineSmooth(data, r) {
    const n = data.length;
    return data.map((x, i) => {
       let a = i - r;

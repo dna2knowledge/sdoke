@@ -1,7 +1,7 @@
 import databox from '$/service/databox';
 import { lr } from '$/analysis/math/mse';
 import ft from '$/analysis/math/fourier';
-import { polylineize } from '$/analysis/math/polyline';
+import { lineSmooth, polylineize } from '$/analysis/math/polyline';
 import dailyToWeekly from '$/analysis/transform/weekly';
 import dailyToMonthly from '$/analysis/transform/monthly';
 import smaIndex from '$/analysis/index/sma';
@@ -730,11 +730,24 @@ async function evaluateFuncCall(name, args, data, cache, id) {
          v = kb ? [kb.k, kb.b] : null;
          break;
       // 2
+      case 'range': {
+         const stI = isNaN(args[0]) ? 0 : args[0];
+         const edI = isNaN(args[1]) ? 100 : args[1];
+         v = [];
+         for (let i = stI; i < edI; i++) {
+            v.push(i);
+         }
+         break; }
       case 'slice': {
          const list = Array.isArray(args[0]) ? args[0] : [];
          const stI = isNaN(args[1]) ? 0 : args[1];
          const edI = isNaN(args[2]) ? list.length : args[2];
          v = list.slice(stI, edI);
+         break; }
+      case 'smooth': {
+         const list = Array.isArray(args[0]) ? args[0] : [];
+         const win = isNaN(args[1]) ? 20 : args[1];
+         v = lineSmooth(list, win);
          break; }
       case 'polylineize': {
          const list = Array.isArray(args[0]) ? args[0] : [];
@@ -990,6 +1003,7 @@ async function evaluateFuncCallType(name, args, cache, id) {
       case 'index':
       case 'leastsquare':
       case 'math.leastsquare':
+      case 'range':
          v = TYPE.ARRAY; break;
       case 'flat':
          v = Math.max(...args); if (v < 0) v = TYPE.UNKNOWN; break;
@@ -1048,6 +1062,7 @@ async function evaluateFuncCallType(name, args, cache, id) {
          args = evaluateFlatFuncCallArgs(args);
          v = Math.max(...args); if (v < 0) v = TYPE.UNKNOWN; break;
       case 'slice':
+      case 'smooth':
       case 'polylineize':
       case 'threshold':
          v = args[0] || TYPE.UNKNOWN; break;
