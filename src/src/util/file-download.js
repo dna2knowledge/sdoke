@@ -1,4 +1,4 @@
-export default function(filename, content) {
+export default function downloadAsFile(filename, content) {
    if (!filename || !content) return;
    const elem = document.createElement('a');
    elem.setAttribute('href', `data:text/plain;charset=utf-8,${encodeURIComponent(content)}`);

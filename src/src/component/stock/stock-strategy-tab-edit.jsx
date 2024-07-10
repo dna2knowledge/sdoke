@@ -5,9 +5,13 @@ import CloseIcon from '@mui/icons-material/Close';
 import ArrowUpwardIcon from '@mui/icons-material/ArrowUpward';
 import ArrowDownwardIcon from '@mui/icons-material/ArrowDownward';
 import CircleIcon from '@mui/icons-material/Circle';
+import DownloadIcon from '@mui/icons-material/Download';
+import UploadIcon from '@mui/icons-material/Upload';
 import eventbus from '$/service/eventbus';
 import selectColor from '$/util/color-select';
 import pickHSLColor from '$/util/color-hsl-pick';
+import downloadAsFile from '$/util/file-download';
+import { triggerFileSelect, readText } from '$/util/file-reader';
 
 import { useTranslation } from 'react-i18next';
 
@@ -277,11 +281,45 @@ export default function StockStrategyEditTab (props) {
          if (!confirm(`${t('tip.warn.discard.new', 'Are you sure to discard the new stock strategy')} ${data.name ? `"${data.name}"` : ''}?`)) return;
       } else if (!confirm(`${t('tip.warn.delete', 'Are you sure to delete the stock strategy')} "${data.name}"?`)) return;
       eventbus.emit("stock.strategy.del", data);
-   }
+   };
+   const onDownloadClick = () => {
+      const obj = {};
+      obj.type = 'strategy';
+      obj.name = data.name;
+      obj.desc = data.desc;
+      obj.rule = data.rule;
+      obj.vis = data.vis;
+      downloadAsFile(
+         t('t.strategy.download.filename', 'strategy.sdoke'),
+         JSON.stringify(obj)
+      );
+   };
+   const onUploadClick = async () => {
+      const file = (await triggerFileSelect() || [])[0];
+      if (!file) return;
+      try {
+         const obj = JSON.parse(await readText(file));
+         if (!obj || obj.type !== 'strategy') throw 'invalid';
+         setName(obj.name);
+         setDesc(obj.desc);
+         setData(obj);
+      } catch(_) {
+         eventbus.emit('toast', {
+            severity: 'error',
+            content: t('tip.strategy.upload.fail', 'Failed to upload strategy data, please check file format.')
+         });
+      }
+   };
 
    return <Box sx={{ display: tab === 'edit' ? 'block' : 'none', overflowY: 'auto', height: '0px', flex: '1 0 auto' }}>
       <Box sx={{ mt: 1 }}>
          <Button variant="contained" color="success" onClick={onSaveClick}>{t('t.save', 'Save')}</Button>
+         <Tooltip title={t('t.strategy.download', 'Strategy Download')}>
+            <IconButton onClick={onDownloadClick}><DownloadIcon /></IconButton>
+         </Tooltip>
+         <Tooltip title={t('t.strategy.upload', 'Strategy Upload')}>
+            <IconButton onClick={onUploadClick}><UploadIcon /></IconButton>
+         </Tooltip>
          <Button onClick={onCancelClick}>{t('t.cancel', 'Cancel/Reset')}</Button>
          <Button onClick={onFillExampleClick}>{t('t.fillexample', 'Fill Example')}</Button>
          <Button onClick={onDeleteClick} color="error">{t('t.delete', 'Delete')}</Button>

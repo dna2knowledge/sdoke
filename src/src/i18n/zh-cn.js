@@ -117,6 +117,10 @@ const tr = {
       't.download': '下载结果列表',
       't.search.download.filename': '股票筛选结果.csv',
       't.back': '返回',
+      't.strategy.download': '策略下载备份',
+      't.strategy.upload': '策略上传还原',
+      't.strategy.download.filename': '策略.sdoke',
+      'tip.strategy.upload.fail': '无法识别上传的策略格式，请确认文件的正确性。',
    },
    search: {
       't.search': '筛选',
