@@ -23,8 +23,8 @@ function findSencondPeek(data, i) {
    return maxi;
 }
 
-function buildVis(report) {
-   const r = report;
+function buildVis(r) {
+   // r = report
    r.vis = {};
    const st = r.origin.length - r.phi - 1;
    const visPhiTs = r.origin[st].T;
@@ -69,7 +69,7 @@ export async function analyzeOneCol(data, col, win) {
 
    const Dfns = lineSmooth(norm(Df), 3).slice(n);
    let maxci = -1, maxc = -Infinity;
-   Dfns.forEach((z, i) => {
+   Ds0.slice(n).forEach((z, i) => {
       if (z > maxc) {
          maxc = z;
          maxci = i;
@@ -82,9 +82,9 @@ export async function analyzeOneCol(data, col, win) {
       cycn ++;
       const upj = Math.floor(i+fn/3);
       const dnj = Math.ceil(i-fn/3);
-      let mj = i, m = Dfns[i];
+      let mj = i, m = Ds0[i+n];
       for (let j = dnj < 0 ? 0 : dnj; j < upj && j < ni; j++) {
-         const mx = Dfns[j];
+         const mx = Ds0[j+n];
          if (mx > m) {
             mj = j;
             m = mx;
