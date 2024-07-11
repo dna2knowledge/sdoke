@@ -47,6 +47,22 @@ function buildVis(r) {
    r.vis.nextHalfPhi = r.vis.nextHalfPhi.toISOString().split('T')[0];
 }
 
+function buildTest(r) {
+   r.test = { rate: 0 };
+   let count = 0;
+   const i = r.V.length - r.phi - 1 + Math.floor(r.origin.length/2);
+   const halfw = Math.floor(r.w/2);
+   // XXX: halfw start to monitor not buy-in, so it is not accurate evaluating
+   for (let j = i; j >= halfw; j -= r.w) {
+      const edp = r.origin[i];
+      const stp = r.origin[i - halfw];
+      const rate = (edp.C - stp.C)/stp.C;
+      r.test.rate += rate;
+      count ++;
+   }
+   if (count === 0) r.test.rate = NaN; else r.test.rate /= count;
+}
+
 export async function analyzeOneCol(data, col, win) {
    const n = Math.floor(data.length/2);
    const Ds0 = data.map(z => z[col]);
@@ -104,6 +120,7 @@ export async function analyzeOneCol(data, col, win) {
       err: cycn === 0 ? 0: (esum / cycn),
    };
    buildVis(r);
+   buildTest(r);
    return r;
 }
 

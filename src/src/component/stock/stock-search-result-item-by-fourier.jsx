@@ -12,6 +12,8 @@ export default function StockSearchResultItemByFourier(props) {
             data.cycle.c.vis.watch ?
             <strong>{data.cycle.c.vis.nextHalfPhi}</strong> :
             <span>{data.cycle.c.vis.nextHalfPhi}</span>
-         } / {data.cycle.c.vis.nextPhi} / d={data.cycle.c.w} err={data.cycle.c.err.toFixed(4)}</Box>
+         } / {
+            data.cycle.c.vis.nextPhi
+         } / d={data.cycle.c.w} err={data.cycle.c.err.toFixed(2)}</Box>
    </Box>;
 }
