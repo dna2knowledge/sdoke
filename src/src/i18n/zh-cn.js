@@ -123,6 +123,7 @@ const tr = {
       'tip.strategy.upload.fail': '无法识别上传的策略格式，请确认文件的正确性。',
    },
    search: {
+      't.refresh': '刷新',
       't.search': '筛选',
       't.sort': '排序',
       't.stock': '股票',
@@ -141,6 +142,9 @@ const tr = {
       't.search.result': '在结果中筛选',
       't.download': '下载结果列表',
       't.search.download.filename': '股票筛选结果.csv',
+      't.formula': '公式筛选',
+      't.fourier': '傅里叶分析',
+      'tip.search.fourier.nodata': '股票的收藏列表为空，没有分析结果。',
    },
    trade: {
       't.refresh': '刷新',
