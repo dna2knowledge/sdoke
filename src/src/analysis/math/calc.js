@@ -1,6 +1,7 @@
 import databox from '$/service/databox';
 import { lr } from '$/analysis/math/mse';
 import ft from '$/analysis/math/fourier';
+import norm from '$/analysis/math/norm';
 import { lineSmooth, polylineize } from '$/analysis/math/polyline';
 import dailyToWeekly from '$/analysis/transform/weekly';
 import dailyToMonthly from '$/analysis/transform/monthly';
@@ -644,14 +645,7 @@ async function evaluateFuncCall(name, args, data, cache, id) {
       case 'norm':
       case 'math.norm': {
          args = evaluateFlatFuncCallArgs(args);
-         const max = Math.max(...args);
-         const min = Math.min(...args);
-         const dm = max - min;
-         if (dm === 0) {
-            v = args.map(_ => 1.0);
-         } else {
-            v = args.map(z => (z - min) / dm);
-         }
+         v = norm(args);
          break;
       }
       case 'softmax':
