@@ -126,11 +126,15 @@ export async function analyzeOne(data, win) {
    return { c: Fc, v: Fv };
 }
 
-export async function act(stockList, win) {
+export async function act(stockList, win, opt) {
    if (!stockList || !stockList.length) return null;
+   opt = opt || {};
+   const progressFn = opt.progressFn || (() => {});
    const r = [];
+   progressFn(0, stockList.length);
    for (let i = 0, n = stockList.length; i < n; i++) {
       const meta = stockList[i];
+      progressFn(i, n, meta);
       let hdata = (await databox.stock.getStockHistoryRaw(meta.code)) || [];
       if (hdata.length < 100) {
          r.push({ meta, err: 'tooNew' });
@@ -140,5 +144,6 @@ export async function act(stockList, win) {
       const report = await analyzeOne(hdata, win);
       r.push({ meta, cycle: report });
    }
+   progressFn(0, 0);
    return r;
 }

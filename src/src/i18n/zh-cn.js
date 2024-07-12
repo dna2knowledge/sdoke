@@ -145,6 +145,8 @@ const tr = {
       't.formula': '公式筛选',
       't.fourier': '傅里叶分析',
       'tip.search.fourier.nodata': '股票的收藏列表为空，没有分析结果。',
+      't.search.fourier.infav': '在收藏中',
+      't.search.fourier.inall': '在全部中',
    },
    trade: {
       't.refresh': '刷新',

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import {
-   Box, IconButton, Tooltip, LinearProgress,
+   Box, Button, IconButton, Tooltip, LinearProgress,
 } from '@mui/material';
 import UpdateIcon from '@mui/icons-material/Update';
 import NoData from '$/component/shared/no-data';
@@ -47,14 +47,20 @@ export default function StockSearchByFourier() {
    const [result, setResult] = useState(local.data.searchFourierResult || null);
 
    const updateData = async () => {
-      const rawList = await databox.stock.getPinnedStockList()
+      const domain = local.data.searchFourierDomain || 'fav';
+      eventbus.emit('loading');
+      const rawList = domain === 'fav' ? (await databox.stock.getPinnedStockList()) : (await databox.stock.getStockList());
+      const opt = {
+         progressFn: (i, n, meta) => eventbus.emit('stock.search.fourier.progress', { i, n, meta })
+      };
       if (rawList?.length) {
-         const ret = await fourierAct(rawList, 20);
+         const ret = await fourierAct(rawList, 20, opt);
          local.data.searchFourierResult = ret;
       } else {
          local.data.searchFourierResult = null;
       }
       eventbus.emit('stock.search.fourier.result');
+      eventbus.emit('loaded');
    };
 
    useEffect(() => {
@@ -82,6 +88,18 @@ export default function StockSearchByFourier() {
       local.data.searchFourierResult = null;
       updateData();
    };
+   const onInFavClick = () => {
+      const lastDomain = local.data.searchFourierDomain;
+      if (!lastDomain || lastDomain === 'fav') return;
+      local.data.searchFourierDomain = 'fav';
+      updateData();
+   };
+   const onInAllClick = () => {
+      const lastDomain = local.data.searchFourierDomain;
+      if (lastDomain === 'all') return;
+      local.data.searchFourierDomain = 'all';
+      updateData();
+   };
 
    return <Box sx={{
       width: '100%', height: '100%', maxWidth: '800px', minWidth: '200px',
@@ -90,6 +108,8 @@ export default function StockSearchByFourier() {
       <Box sx={{ display: 'flex', flexDirection: 'column', width: '100%', mb: '10px' }}>
          <Box>
             <Tooltip title={t('t.refresh', 'Refresh')}><IconButton onClick={onRefreshClick}><UpdateIcon/></IconButton></Tooltip>
+            <Button onClick={onInFavClick}>{t('t.search.fourier.infav', 'In Fav')}</Button>
+            <Button onClick={onInAllClick}>{t('t.search.fourier.inall', 'In All')}</Button>
          </Box>
       </Box>
       <Box><StockSearchProgressBar/></Box>
