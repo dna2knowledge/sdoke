@@ -5,6 +5,8 @@ import databox from '$/service/databox';
 
 const dayms = 3600 * 24 * 1000;
 
+function dayTrim(ts) { return ts - ts % dayms; }
+
 function findSencondPeek(data, i, up) {
    up = up || 5;
    let j = i-1, last = data[i];
@@ -30,14 +32,14 @@ function buildVis(r) {
    const st = r.origin.length - r.phi - 1;
    const visPhiTs = r.origin[st].T;
    r.vis.phi = new Date(visPhiTs).toISOString().split('T')[0];
-   const visNextPhiTs = visPhiTs + r.w / 5 * 7 * dayms;
+   const visNextPhiTs = dayTrim(visPhiTs + r.w / 5 * 7 * dayms);
    r.vis.nextPhi = new Date(visNextPhiTs);
    let wd = r.vis.nextPhi.getDay();
    if (wd === 6 || wd === 0) {
       r.vis.nextPhi = new Date(visNextPhiTs + 2 * dayms);
    }
    r.vis.nextPhi = r.vis.nextPhi.toISOString().split('T')[0];
-   const visNextHalfPhiTs = visPhiTs + r.w / 2 / 5 * 7 * dayms;
+   const visNextHalfPhiTs = dayTrim(visPhiTs + r.w / 2 / 5 * 7 * dayms);
    const ts = new Date().getTime();
    if (ts >= visNextHalfPhiTs) r.vis.watch = true; else r.vis.watch = false;
    r.vis.nextHalfPhi = new Date(visNextHalfPhiTs);
@@ -107,12 +109,12 @@ export async function analyzeOneCol(data, col, win) {
          i = mj;
       }
       phis.push(i);
-      st = i;
+      st = Dfns.length - i - 1;
    }
    const r =  {
       F, V: Dfns, origin: data, A, w: fn,
       cyc: phis.map(z => Dfns.length - z - 1),
-      base: phi, phi: Dfns.length - st - 1,
+      base: phi, phi: st,
       err: cycn === 0 ? 0: (esum / cycn),
    };
    buildVis(r);

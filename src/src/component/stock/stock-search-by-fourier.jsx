@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import {
-   Box, Button, IconButton, Tooltip, LinearProgress,
+   Box, Button, IconButton, Tooltip, LinearProgress, Pagination,
 } from '@mui/material';
 import UpdateIcon from '@mui/icons-material/Update';
 import NoData from '$/component/shared/no-data';
@@ -42,9 +42,13 @@ function StockSearchProgressBar() {
    </Box>;
 }
 
+const pageSize = 20;
 export default function StockSearchByFourier() {
    const { t } = useTranslation('search');
    const [result, setResult] = useState(local.data.searchFourierResult || null);
+   const [page, setPage] = useState(1);
+   const [pageTotal, setPageTotal] = useState(local.data.searchFourierResult ? Math.ceil(local.data.searchFourierResult.length/pageSize) : 0);
+   const [pageList, setPageList] = useState(local.data.searchFourierResult ? local.data.searchFourierResult.slice(page*pageSize-pageSize, page*pageSize) : []);
 
    const updateData = async () => {
       const domain = local.data.searchFourierDomain || 'fav';
@@ -56,8 +60,24 @@ export default function StockSearchByFourier() {
       if (rawList?.length) {
          const ret = await fourierAct(rawList, 20, opt);
          local.data.searchFourierResult = ret;
+         ret.forEach(z => {
+            if (!z.cycle) {
+               z._s = -Infinity;
+               return;
+            }
+            z._s = 0;
+            if (z.cycle.c.vis.watch) z._s += 3600 * 24 * 1000 * 365;
+            z._s += new Date(z.cycle.c.vis.nextHalfPhi).getTime();
+            z._s += new Date(z.cycle.c.vis.nextPhi).getTime() / 2;
+         });
+         ret.sort((a, b) => b._s - a._s);
+         setPage(1);
+         setPageTotal(Math.ceil(ret.length / pageSize));
+         setPageList(ret.slice(0, pageSize));
       } else {
          local.data.searchFourierResult = null;
+         setPage(1);
+         setPageTotal(0);
       }
       eventbus.emit('stock.search.fourier.result');
       eventbus.emit('loaded');
@@ -100,6 +120,11 @@ export default function StockSearchByFourier() {
       local.data.searchFourierDomain = 'all';
       updateData();
    };
+   const onPageChange = (_, newPage) => {
+      if (!result) return;
+      setPage(newPage);
+      setPageList(result.slice(newPage * pageSize - pageSize, newPage * pageSize));
+   };
 
    return <Box sx={{
       width: '100%', height: '100%', maxWidth: '800px', minWidth: '200px',
@@ -114,8 +139,11 @@ export default function StockSearchByFourier() {
       </Box>
       <Box><StockSearchProgressBar/></Box>
       {result ?
-         <Box sx={{ flex: '1 0 auto', height: '0px', overflowY: 'auto' }}>
-            {result.map((z, i) => <StockSearchResultItemByFourier key={i} data={z} />)}
+         <Box sx={{ flex: '1 0 auto', height: '0px', overflowY: 'hidden', flexDirection: 'column', display: 'flex' }}>
+            {pageTotal > 1 ? <Box><Pagination count={pageTotal} page={page} onChange={onPageChange}/></Box> : null}
+            <Box sx={{ flex: '1 0 auto', height: '0px', overflowY: 'auto' }}>
+               {pageList.map((z, i) => <StockSearchResultItemByFourier key={i} data={z} />)}
+            </Box>
          </Box> :
          <NoData>{t('tip.search.fourier.nodata', 'No found favorite stocks and no result.')}</NoData>}
    </Box>;
