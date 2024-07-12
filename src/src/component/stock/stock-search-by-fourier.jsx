@@ -4,11 +4,13 @@ import {
    Table, TableBody, TableHead, TableCell, TableRow,
 } from '@mui/material';
 import UpdateIcon from '@mui/icons-material/Update';
+import DownloadIcon from '@mui/icons-material/Download';
 import NoData from '$/component/shared/no-data';
 import StockSearchResultItemByFourier from '$/component/stock/stock-search-result-item-by-fourier';
 import eventbus from '$/service/eventbus';
 import databox from '$/service/databox';
 import local from '$/service/local';
+import download from '$/util/file-download';
 import { act as fourierAct } from '$/analysis/trend/fourier';
 
 import { useTranslation } from 'react-i18next';
@@ -126,6 +128,19 @@ export default function StockSearchByFourier() {
       setPage(newPage);
       setPageList(result.slice(newPage * pageSize - pageSize, newPage * pageSize));
    };
+   const onDownloadClick = () => {
+      if (!local.data.searchFourierResult) return;
+      download(
+         t('t.search.download.filename', `stockSearch.csv`),
+         `${t('t.stock', 'Stock')}," ",${t('t.period.error', 'Period/Error (Day)')},${t('t.startPeriod', 'Start')},${t('t.halfPeriod', 'Middle')},${t('t.endPeriod', 'Target')}
+${local.data.searchFourierResult.length ? 
+   local.data.searchFourierResult.map(z =>
+      z.err ? `"${z.meta.code}","${z.meta.name}","${z.err}",,,` :
+      `"${z.meta.code}","${z.meta.name}","${z.cycle.c.w}/${z.cycle.c.err.toFixed(2)}","${z.cycle.c.vis.phi}","${z.cycle.c.vis.nextHalfPhi}","${z.cycle.c.vis.nextPhi}"`
+   ).join('\n') :
+   t('tip.nodata', 'No satisified stock')}`
+      );
+   };
 
    return <Box sx={{
       width: '100%', height: '100%', maxWidth: '800px', minWidth: '200px',
@@ -134,6 +149,9 @@ export default function StockSearchByFourier() {
       <Box sx={{ display: 'flex', flexDirection: 'column', width: '100%', mb: '10px' }}>
          <Box>
             <Tooltip title={t('t.refresh', 'Refresh')}><IconButton onClick={onRefreshClick}><UpdateIcon/></IconButton></Tooltip>
+            <Tooltip title={t('t.download', 'Download result')}>
+               <IconButton onClick={onDownloadClick}><DownloadIcon /></IconButton>
+            </Tooltip>
             <Button onClick={onInFavClick}>{t('t.search.fourier.infav', 'In Fav')}</Button>
             <Button onClick={onInAllClick}>{t('t.search.fourier.inall', 'In All')}</Button>
          </Box>
