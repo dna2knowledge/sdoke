@@ -5,11 +5,12 @@ import databox from '$/service/databox';
 
 const dayms = 3600 * 24 * 1000;
 
-function findSencondPeek(data, i) {
+function findSencondPeek(data, i, up) {
+   up = up || 5;
    let j = i-1, last = data[i];
    for (; j >= 0; j--) {
-      // confine at least 1w as a cycle
-      if (data[j] > last && i - j >= 5) break;
+      // confine at least 1w by default as a cycle
+      if (data[j] > last && i - j >= up) break;
       last = data[j];
    }
    let maxi = j, max = last;
@@ -84,23 +85,18 @@ export async function analyzeOneCol(data, col, win) {
    const fn = F.length - maxi - 1;
 
    const Dfns = lineSmooth(norm(Df), 3).slice(n);
-   let maxci = -1, maxc = -Infinity;
-   Ds0.slice(n).forEach((z, i) => {
-      if (z > maxc) {
-         maxc = z;
-         maxci = i;
-      }
-   });
+   const Dssmooth = lineSmooth(Ds0, 10).slice(n);
+   const maxci = findSencondPeek(Dssmooth, Dssmooth.length-1, 1);
    const phi = Dfns.length - maxci - 1;
    const phis = [maxci];
    let esum = 0, cycn = 0, st = phi;
    for (let i = maxci+fn, ni = Dfns.length; i < ni; i += fn) {
       cycn ++;
-      const upj = Math.floor(i+fn/3);
-      const dnj = Math.ceil(i-fn/3);
-      let mj = i, m = Ds0[i+n];
+      const upj = Math.floor(i+fn/2);
+      const dnj = Math.ceil(i-fn/2);
+      let mj = i, m = Dssmooth[i];
       for (let j = dnj < 0 ? 0 : dnj; j < upj && j < ni; j++) {
-         const mx = Ds0[j+n];
+         const mx = Dssmooth[j];
          if (mx > m) {
             mj = j;
             m = mx;
