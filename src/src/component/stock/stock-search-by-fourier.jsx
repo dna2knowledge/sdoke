@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import {
    Box, Button, IconButton, Tooltip, LinearProgress, Pagination,
+   Table, TableBody, TableHead, TableCell, TableRow,
 } from '@mui/material';
 import UpdateIcon from '@mui/icons-material/Update';
 import NoData from '$/component/shared/no-data';
@@ -68,7 +69,7 @@ export default function StockSearchByFourier() {
             z._s = 0;
             if (z.cycle.c.vis.watch) z._s += 3600 * 24 * 1000 * 365;
             z._s += new Date(z.cycle.c.vis.nextHalfPhi).getTime();
-            z._s += new Date(z.cycle.c.vis.nextPhi).getTime() / 2;
+            z._s += new Date(z.cycle.c.vis.nextPhi).getTime() / 10;
          });
          ret.sort((a, b) => b._s - a._s);
          setPage(1);
@@ -141,9 +142,21 @@ export default function StockSearchByFourier() {
       {result ?
          <Box sx={{ flex: '1 0 auto', height: '0px', overflowY: 'hidden', flexDirection: 'column', display: 'flex' }}>
             {pageTotal > 1 ? <Box><Pagination count={pageTotal} page={page} onChange={onPageChange}/></Box> : null}
-            <Box sx={{ flex: '1 0 auto', height: '0px', overflowY: 'auto' }}>
-               {pageList.map((z, i) => <StockSearchResultItemByFourier key={i} data={z} />)}
-            </Box>
+            <Box sx={{ flex: '1 0 auto', height: '0px', overflowY: 'auto' }}><Table sx={{
+               '.period': { display: 'flex' },
+               '.split': { flex: '1 0 auto', textAlign: 'center' },
+            }}>
+            <TableHead>
+               <TableCell>{t('t.stock', 'Stock')}</TableCell>
+               <TableCell>{t('t.period.error', 'Period/Error (Day)')}</TableCell>
+               <TableCell>{t('t.startPeriod', 'Start')}</TableCell>
+               <TableCell>{t('t.halfPeriod', 'Middle')}</TableCell>
+               <TableCell>{t('t.endPeriod', 'Target')}</TableCell>
+            </TableHead>
+            <TableBody>
+               {pageList.map((z, i) => <StockSearchResultItemByFourier key={i} data={z} t={t} />)}
+            </TableBody>
+            </Table></Box>
          </Box> :
          <NoData>{t('tip.search.fourier.nodata', 'No found favorite stocks and no result.')}</NoData>}
    </Box>;

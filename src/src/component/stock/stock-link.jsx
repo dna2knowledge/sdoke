@@ -1,4 +1,3 @@
-import { Box } from '@mui/material';
 import eventbus from '$/service/eventbus';
 
 export default function StockLink(props) {
@@ -12,5 +11,5 @@ export default function StockLink(props) {
          });
       });
    };
-   return <Box><a href="#/" onClick={onStockTitleClick}>{data.code} {data.name}</a></Box>;
+   return <a href="#/" onClick={onStockTitleClick}>{data.code} {data.name}</a>;
 }

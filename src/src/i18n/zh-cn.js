@@ -147,6 +147,10 @@ const tr = {
       'tip.search.fourier.nodata': '股票的收藏列表为空，没有分析结果。',
       't.search.fourier.infav': '在收藏中',
       't.search.fourier.inall': '在全部中',
+      't.period.error': '周期/平均误差（天）',
+      't.startPeriod': '起始期',
+      't.halfPeriod': '关注期',
+      't.endPeriod': '结束期',
    },
    trade: {
       't.refresh': '刷新',
