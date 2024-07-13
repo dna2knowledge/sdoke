@@ -15,14 +15,16 @@ export default function StockSearch() {
       setTab(val);
    };
 
-   return <Box sx={{ width: '100%', height: '100%', overflowY: 'hidden' }}>
+   return <Box sx={{ width: '100%', height: '100%', overflowY: 'hidden', display: 'flex', flexDirection: 'column' }}>
       <Box sx={{ width: '100%', maxWidth: '800px', minWidth: '200px', margin: '0 auto' }}>
          <Tabs value={tab} onChange={onTabChange}>
             <Tab value="formula" label={t('t.formula', "Formula Search")} />
             <Tab value="fourier" label={t('t.fourier', "Fourier Search")} />
          </Tabs>
       </Box>
-      {tab === 'formula' ? <StockSearchByFormula /> : null}
-      {tab === 'fourier' ? <StockSearchByFourier /> : null}
+      <Box sx={{ height: '0px', overflowY: 'hidden', flex: '1 0 auto', mb: 1 }}>
+         {tab === 'formula' ? <StockSearchByFormula /> : null}
+         {tab === 'fourier' ? <StockSearchByFourier /> : null}
+      </Box>
    </Box>;
 }

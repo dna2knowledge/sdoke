@@ -45,7 +45,7 @@ function StockSearchProgressBar() {
    </Box>;
 }
 
-const pageSize = 20;
+const pageSize = 15;
 export default function StockSearchByFourier() {
    const { t } = useTranslation('search');
    const [result, setResult] = useState(local.data.searchFourierResult || null);
@@ -133,7 +133,7 @@ export default function StockSearchByFourier() {
       download(
          t('t.search.download.filename', `stockSearch.csv`),
          `${t('t.stock', 'Stock')}," ",${t('t.period.error', 'Period/Error (Day)')},${t('t.startPeriod', 'Start')},${t('t.halfPeriod', 'Middle')},${t('t.endPeriod', 'Target')}
-${local.data.searchFourierResult.length ? 
+${local.data.searchFourierResult.length ?
    local.data.searchFourierResult.map(z =>
       z.err ? `"${z.meta.code}","${z.meta.name}","${z.err}",,,` :
       `"${z.meta.code}","${z.meta.name}","${z.cycle.c.w}/${z.cycle.c.err.toFixed(2)}","${z.cycle.c.vis.phi}","${z.cycle.c.vis.nextHalfPhi}","${z.cycle.c.vis.nextPhi}"`
