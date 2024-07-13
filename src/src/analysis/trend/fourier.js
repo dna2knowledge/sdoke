@@ -81,10 +81,11 @@ export async function analyzeOneCol(data, col, win) {
          maxi = i;
       }
    });
-   if (F.length - 1 === maxi) {
+   if (F.length - 6 <= maxi) {
       maxi = findSencondPeek(F, maxi);
    }
-   const fn = F.length - maxi - 1;
+   let fn = F.length - maxi - 1;
+   if (fn <= 0) fn = 1;
 
    const Dfns = lineSmooth(norm(Df), 3).slice(n);
    const Dssmooth = lineSmooth(Ds0, 10).slice(n);
