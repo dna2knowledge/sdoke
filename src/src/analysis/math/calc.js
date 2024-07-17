@@ -732,6 +732,11 @@ async function evaluateFuncCall(name, args, data, cache, id) {
             v.push(i);
          }
          break; }
+      case 'get': {
+         const list = Array.isArray(args[0]) ? args[0] : [];
+         const atI = isNaN(args[1]) ? 0 : args[1];
+         v = list[atI];
+         break; }
       case 'slice': {
          const list = Array.isArray(args[0]) ? args[0] : [];
          const stI = isNaN(args[1]) ? 0 : args[1];
@@ -1026,6 +1031,7 @@ async function evaluateFuncCallType(name, args, cache, id) {
       case 'math.count1':
       case 'count0':
       case 'math.count0':
+      case 'get':
          v = TYPE.SINGLE; break;
       case 'norm':
       case 'math.norm':
