@@ -308,7 +308,7 @@ function evaluateConstant(name, cache) {
       case 'math.inf':
          v = Infinity; break;
       case 'today':
-         v = new Date().getTime(); break;
+         v = ['d', new Date().getTime()]; break;
       default:
          v = null;
    }
@@ -488,33 +488,34 @@ async function evaluateFuncCall(name, args, data, cache, id) {
       case 'getV': // = .V.at
       case 'getv': // = .v.at
       {
-         // args = [ts1, ts2, ...], args = [["i", i1, i2], ts1, ...]
+         // args = [ts1, ts2, ...], args = [["d", i1, i2], ts1, ...]
          v = [];
-         if (!args.length) args = [["i", 0]];
+         if (!args.length) args = [0];
          args.forEach(z => {
             if (Array.isArray(z)) {
-               if (z[0] === 'i') {
-                  const n = data.length;
+               if (z[0] === 'd') {
                   z.forEach((y, i) => {
                      if (i === 0) return;
-                     const item = n > y ? data[n+y-1] : null;
+                     const item = data.find(x => x.T === y);
                      v.push(item ? item[qualified.col] : NaN);
                   });
                } else {
+                  const n = data.length;
                   z.forEach(y => {
-                     const item = data.find(x => x.T === y);
+                     const item = n > y ? data[n+y-1] : null;
                      v.push(item ? item[qualified.col] : NaN);
                   });
                }
             } else {
-               const item = data.find(x => x.T === z);
+               const n = data.length;
+               const item = n > z ? data[n+z-1] : null;
                v.push(item ? item[qualified.col] : NaN);
             }
          });
          break; }
       case 'atrange':
       {
-         // args = [[ts1, ts2], ...], args = [["i", i1, i2], ...]
+         // args = [[ts1, ts2], ...], args = [["d", i1, i2], ...]
          if (args.length === 2) args = [[args[0], args[1]]];
          v = [];
          args.forEach(pair => {
@@ -523,19 +524,19 @@ async function evaluateFuncCall(name, args, data, cache, id) {
                cache[id] = null;
                return null;
             }
-            if (pair[0] === "i") {
-               const n = data.length;
-               const ia = n - 1 + pair[1];
-               const ib = n - 1 + pair[2];
-               data.slice(ia < 0 ? 0 : ia, ib < 0 ? 0 : ib+1).forEach(x => v.push(x ? x[qualified.col] : NaN));
-            } else {
-               const tsa = pair[0];
-               const tsb = pair[1];
+            if (pair[0] === "d") {
+               const tsa = pair[1];
+               const tsb = pair[2];
                // XXX should we pad NaN if for example tsa no data
                // [tsa, tsb] = [1 2 3 4 5 6 7 8 9]
                //            =     [3 4 5 6 7 8]   <-- currently we implement as this
                //            = [x x 3 4 5 6 7 8 x]
                data.filter(x => x.T >= tsa && x.T <= tsb).forEach(x => v.push(x ? x[qualified.col] : NaN));
+            } else {
+               const n = data.length;
+               const ia = n - 1 + pair[0];
+               const ib = n - 1 + pair[1];
+               data.slice(ia < 0 ? 0 : ia, ib < 0 ? 0 : ib+1).forEach(x => v.push(x ? x[qualified.col] : NaN));
             }
          });
          break; }
@@ -559,6 +560,7 @@ async function evaluateFuncCall(name, args, data, cache, id) {
          args = evaluateFlatFuncCallArgs(args);
          v = getDateTs(new Date());
          if (args.length) v = args.map(z => v + dayms * z);
+         v.unshift('d');
          break;
       case 'day': {
          const d = new Date();
@@ -566,6 +568,7 @@ async function evaluateFuncCall(name, args, data, cache, id) {
          if (!args.length) args = [0];
          args = evaluateFlatFuncCallArgs(args);
          v = args.map(z => v + z * dayms);
+         v.unshift('d');
          break; }
       case 'thisweek': {
          const d = new Date();
@@ -577,6 +580,7 @@ async function evaluateFuncCall(name, args, data, cache, id) {
          if (!args.length) args = [0];
          args = evaluateFlatFuncCallArgs(args);
          v = args.map(z => [v[0] + 7 * dayms * z, v[1] + 7 * dayms * (z + 1)]);
+         v.unshift('d');
          break; }
       case 'week': {
          const d = new Date();
@@ -585,6 +589,7 @@ async function evaluateFuncCall(name, args, data, cache, id) {
          if (!args.length) args = [0];
          args = evaluateFlatFuncCallArgs(args);
          v = args.map(z => [v[0] + 7 * dayms * z, v[1] + 7 * dayms * (z + 1)]);
+         v.unshift('d');
          break; }
       case 'thismonth': {
          const d = new Date();
@@ -603,6 +608,7 @@ async function evaluateFuncCall(name, args, data, cache, id) {
             const td = new Date(`${y+dy}-${pad0(m+dm)}-01`);
             return [td.getTime(), nextMonthTs(td)];
          });
+         v.unshift('d');
          break; }
       case 'month': {
          const d = new Date();
@@ -611,6 +617,7 @@ async function evaluateFuncCall(name, args, data, cache, id) {
          if (!args.length) args = [0];
          args = evaluateFlatFuncCallArgs(args);
          v = args.map(z => [v[0] + 30 * dayms * z, v[1] + 30 * dayms * (z + 1)]);
+         v.unshift('d');
          break; }
       case 'thisyear': {
          const d = new Date();
@@ -626,6 +633,7 @@ async function evaluateFuncCall(name, args, data, cache, id) {
             const H = new Date(`${y+z+1}-01-01`).getTime();
             return [L, H];
          });
+         v.unshift('d');
          break; }
       case 'year': {
          const d = new Date();
@@ -634,12 +642,13 @@ async function evaluateFuncCall(name, args, data, cache, id) {
          if (!args.length) args = [0];
          args = evaluateFlatFuncCallArgs(args);
          v = args.map(z => [v[0] + 365 * dayms * z, v[1] + 365 * dayms * (z + 1)]);
+         v.unshift('d');
          break; }
       case 'index': {
          // .close.atrange(index(-20, 0)) -20 = about trade month, 0 = latest trade day
+         // -N as N trade day(s) off
          args = evaluateFlatFuncCallArgs(args);
          v = args.slice();
-         v.unshift('i');
          break; }
       case 'flat':
          v = flatList(args); break;
