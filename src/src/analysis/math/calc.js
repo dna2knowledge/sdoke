@@ -207,10 +207,22 @@ function compileSub(tokens, i, out, stat) {
       } else if (stops.includes(t) || stops2.includes(t)) {
          const lastOp = opS[opS.length-1];
          if (ms === 0) {
-            // allow: and not, or not
+            // allow: and not, or not, < -1, > +3
             // disallow: + not, + +, and and, not not
             // XXX: a > = b --> not a < b, a not < b
-            if (t !== 'not' || (lastOp !== 'and' || lastOp !== 'or')) {
+            let disallow = true;
+            if (t === '-' || t === '+') {
+               if (lastOp === '<' || lastOp === '>' || lastOp === '=' || lastOp === 'and' || lastOp === 'or' || lastOp === 'not') {
+                  disallow = false;
+                  // treat -x as 0-x, +x as 0+x
+                  valS.push(0);
+               }
+            } else if (t === 'not') {
+               if (lastOp === 'and' || lastOp === 'or') {
+                  disallow = false;
+               }
+            }
+            if (disallow) {
                // compile error
                stat.err.push({ i, m: 'operator operator' });
                return tokens.length;
@@ -810,7 +822,7 @@ function evaluateOpVal(op, op1, op2) {
       case '=': return op1 === op2;
       case 'and': return (!!op1 && !!op2);
       case 'or': return (!!op1 || !!op2);
-      case 'not':  return !op2;
+      case 'not':  return op2 === undefined ? !op1 : !op2;
       case '_log': return Math.log(op1, op2);
       default: return null;
    }
@@ -864,7 +876,7 @@ function evaluateOpArr(op, op1arr, op2arr) {
       case '=': { for (let i = n1m1, j = n2m1; i >= 0 && j >= 0; i--, j--) r.unshift(op1arr[i] === op2arr[j]); break; }
       case 'and': { for (let i = n1m1, j = n2m1; i >= 0 && j >= 0; i--, j--) r.unshift(!!(op1arr[i] && op2arr[j])); break; }
       case 'or': { for (let i = n1m1, j = n2m1; i >= 0 && j >= 0; i--, j--) r.unshift(!!(op1arr[i] || op2arr[j])); break; }
-      case 'not': return op2arr.map(z => !z);
+      case 'not': return op2arr === undefined ? op1arr.map(z => !z) : op2arr.map(z => !z);
       case '_log': { for (let i = n1m1, j = n2m1; i >= 0 && j >= 0; i--, j--) r.unshift(Math.log(op1arr[i], op2arr[j])); break; }
       default: return null;
    }
