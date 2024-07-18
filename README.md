@@ -5,6 +5,8 @@ cordova to build stock data analysis and visualization application for desktop a
 
 [https://dna2github.github.io/sdoke/](https://dna2github.github.io/sdoke/)
 
+![Demo: Sdoke Viewer](https://dna2github.github.io/sdoke/screenshot/sdoke-demo-1.jpg "Sdoke Viewer")
+
 ### Build
 
 ```
@@ -16,6 +18,7 @@ webpack
 cd src
 npm install
 npm run build
+# after this build, the www folder can be deployed directly as a standalone website
 
 # ensure in electron, classic level db can work
 cp -r node_modules/classic-level/prebuilds platforms/electron/platform_www/prebuilds
