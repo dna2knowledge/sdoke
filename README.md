@@ -1,6 +1,10 @@
 # sdoke
 cordova to build stock data analysis and visualization application for desktop and mobile
 
+### Live Demo
+
+[https://dna2github.github.io/sdoke/](https://dna2github.github.io/sdoke/)
+
 ### Build
 
 ```
