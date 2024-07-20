@@ -264,18 +264,17 @@ async function repaint(kCanvas, indexCanvas, data) {
       const n = data.config.n > n0 ? n0 : data.config.n;
       data.config.n0 = nshow >= n0 ? n0 : nshow;
       data.config.sliderData = nshow >= n0 ? data.data.raw : data.data.raw.slice(n0-nshow);
-      if (n0-nshow+i < 0) {
-         data.data.raw = data.data.raw.slice(0, n);
+      if (n0 <= nshow) {
+         data.data.raw = data.data.raw.slice(i, i+n);
       } else {
          data.data.raw = data.data.raw.slice(n0-nshow+i, n0-nshow+i+n);
       }
 
-      // TODO if 'w', 'm', scan 'd' data into bucket of 'w' or 'm'
       if (local.data.view.strategy) {
          data.strategy = {...local.data.view.strategy};
          data.strategy.stat = {...data.strategy.stat};
          data.strategy.stat.d250 = data.strategy.stat.d250.slice();
-     }
+      }
       if (data.config.t === 'd' && local.data.view.strategy) {
       } else if (data.config.t === 'w' && data.data.raw?.length && local.data.view.strategyAll) {
          const mints = data.data.raw[0].T;
