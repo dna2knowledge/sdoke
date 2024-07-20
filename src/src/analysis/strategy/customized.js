@@ -68,7 +68,7 @@ export async function customEvaluateStrategyForVisualization(item, stg) {
       } else {
          vis.type = await calc.evaluateType(vis.F, typeopt);
          vis.val = await calc.evaluate(vis.F, item.raw, opt);
-         if (!vis.val) vis.val = [];
+         if (!vis.val && vis.val !== 0) vis.val = [];
       }
       r.push(vis);
    }
