@@ -188,3 +188,28 @@ export async function customEvaluateStrategy(item, stg) {
    } catch(_) { ret = {}; }
    return ret;
 }
+
+export async function customEvaluateStrategyPureHistory(item, stg, opt) {
+   // item = {meta, raw}
+   opt = opt || {};
+   try {
+      const compiledRule = await compileRule(stg);
+      const analyzeWrap = (item) => analyze(item, compiledRule);
+      const rows = item.raw;
+      opt.n = opt.n || rows.length;
+      const ats = new Date(new Date().getTime() - 3600 * 1000 * 24 * 365).getTime();
+      const ai = rows.filter(z => z.T < ats).length;
+      const edI = rows.length <= opt.n ? 0 : (rows.length-opt.n);
+      const history = [];
+      for (let i = rows.length-1, j = 0; i >= edI; i--, j++) {
+         const day = rows[i];
+         const k = ai < j ? 0 : ai-j;
+         const di = (await analyzeWrap([{ raw: rows.slice(k, i) }]))[0];
+         di.T = day.T;
+         history.push(di);
+      }
+      return history;
+   } catch {
+      return [];
+   }
+}

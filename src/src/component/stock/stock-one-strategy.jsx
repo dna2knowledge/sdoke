@@ -5,8 +5,12 @@ import SwitchAccessShortcutIcon from '@mui/icons-material/SwitchAccessShortcut';
 import NoData from '$/component/shared/no-data';
 import eventbus from '$/service/eventbus';
 import databox from '$/service/databox';
-import { rsiEvaluateStrategy } from '$/analysis/strategy/rsibase';
-import { customEvaluateStrategy, customEvaluateStrategyForVisualization } from '../../analysis/strategy/customized';
+import { rsiEvaluateStrategy, rsiEvaluateStrategyPureHistory } from '$/analysis/strategy/rsibase';
+import {
+   customEvaluateStrategy,
+   customEvaluateStrategyPureHistory,
+   customEvaluateStrategyForVisualization
+} from '../../analysis/strategy/customized';
 import local from '$/service/local';
 
 import { useTranslation } from 'react-i18next';
@@ -75,18 +79,32 @@ export default function StockOneStrategy() {
             }
          } */
          const history = await databox.stock.getStockHistory(meta.code);
+         const item = { meta, raw: history };
          if (strategy === exampleStrategyName) {
             local.data.view.index = null;
-            ret = await rsiEvaluateStrategy({ meta, raw: history });
+            (async () => {
+               const allStrategyData = await rsiEvaluateStrategyPureHistory(item);
+               if (oneKey.current !== key) return;
+               local.data.view.strategyAll = allStrategyData;
+               eventbus.emit('stock.chart.strategy');
+            })();
+            ret = await rsiEvaluateStrategy(item);
          } else {
             const stg = await databox.stock.getStockStrategy(strategy);
             if (stg) {
-               const item = { meta, raw: history };
-               customEvaluateStrategyForVisualization(item, stg).then(visData => {
-                  // TODO: send data to stock-one-chart and draw index data
+               (async () => {
+                  const visData = await customEvaluateStrategyForVisualization(item, stg);
+                  if (oneKey.current !== key) return;
                   local.data.view.index = visData;
                   eventbus.emit('stock.chart.index');
-               });
+               })();
+               (async () => {
+                  const allStrategyData = await customEvaluateStrategyPureHistory(item, stg);
+                  if (oneKey.current !== key) return;
+                  local.data.view.strategyAll = allStrategyData;
+                  eventbus.emit('stock.chart.strategy');
+               })();
+               customEvaluateStrategyPureHistory(item, stg,).then();
                ret = await customEvaluateStrategy(item, stg);
             } else {
                eventbus.emit('toast', {

@@ -244,6 +244,7 @@ const repaintStat = {
 async function repaint(kCanvas, indexCanvas, data) {
    if (repaintStat.busy) return;
    if (!kCanvas) return;
+   if (!indexCanvas) return;
    repaintStat.busy = true;
    try {
       if (!local.data.view.one) local.data.view.one = {};
@@ -269,13 +270,60 @@ async function repaint(kCanvas, indexCanvas, data) {
          data.data.raw = data.data.raw.slice(n0-nshow+i, n0-nshow+i+n);
       }
 
-      data.strategy = local.data.view.strategy;
       // TODO if 'w', 'm', scan 'd' data into bucket of 'w' or 'm'
-      if (data.strategy && data.config.t === 'd') {
-         data.strategy = {...data.strategy};
+      if (local.data.view.strategy) {
+         data.strategy = {...local.data.view.strategy};
          data.strategy.stat = {...data.strategy.stat};
+         data.strategy.stat.d250 = data.strategy.stat.d250.slice();
+     }
+      if (data.config.t === 'd' && local.data.view.strategy) {
+      } else if (data.config.t === 'w' && data.data.raw?.length && local.data.view.strategyAll) {
+         const mints = data.data.raw[0].T;
+         const maxts = data.data.raw[data.data.raw.length-1].T + 24 * 3600 * 1000 * 7;
+         const todo = local.data.view.strategyAll.filter(z => z.T >= mints && z.T < maxts);
+         const w = data.data.raw.map(z => ({ T: z.T, score: 0, n: 0 }));
+         for(let i = 0, j = w.length-1, wn = todo.length-1; i < wn && j >= 0; i++) {
+            const one = todo[i];
+            while (w[j] && w[j].T > one.T) j--;
+            if (j < 0) break;
+            const curw = w[j];
+            curw.score += one.score;
+            curw.n ++;
+         }
+         w.forEach(z => { if (z.n) z.score /= z.n; });
+         w.reverse();
+         data.strategy = {...local.data.view.strategy};
+         data.strategy.stat = {...data.strategy.stat};
+         const last = w.shift();
+         data.strategy.score = last.score;
+         data.strategy.stat.d250 = w;
+      } else if (data.config.t === 'm' && data.data.raw?.length && local.data.view.strategyAll) {
+         const mints = data.data.raw[0].T;
+         const maxts = data.data.raw[data.data.raw.length-1].T + 24 * 3600 * 1000 * 30;
+         const todo = local.data.view.strategyAll.filter(z => z.T >= mints && z.T < maxts);
+         const m = data.data.raw.map(z => ({ T: z.T, score: 0, n: 0 }));
+         for(let i = 0, j = m.length-1, mn = todo.length-1; i < mn && j >= 0; i++) {
+            const one = todo[i];
+            while (m[j] && m[j].T > one.T) j--;
+            if (j < 0) break;
+            const curm = m[j];
+            curm.score += one.score;
+            curm.n ++;
+         }
+         m.forEach(z => { if (z.n) z.score /= z.n; });
+         m.reverse();
+         data.strategy = {...local.data.view.strategy};
+         data.strategy.stat = {...data.strategy.stat};
+         const last = m.shift();
+         data.strategy.score = last.score;
+         data.strategy.stat.d250 = m;
+      } else {
+         data.strategy = null;
+      }
+      if (data.strategy) {
          const stat = data.strategy.stat;
          const dn = stat.d250.length;
+         stat.d250.unshift({ score: data.strategy.score });
          if (dn >= nshow) {
             stat.d250 = stat.d250.slice(0, nshow);
             stat.d250.reverse();
@@ -286,24 +334,15 @@ async function repaint(kCanvas, indexCanvas, data) {
          } else {
             stat.d250 = stat.d250.slice();
             stat.d250.reverse();
-            let i1 = i+1-250+dn, i2 = i1+n;
-            if (i2 <= 0) {
-               data.strategy = null;
-            } else if (i1 < 0) {
-               const last = stat.d250[0];
-               stat.d250 = stat.d250.slice(1, i2);
-               data.strategy.score = last.score;
-               stat.d250.reverse();
-            } else {
-               const last = stat.d250[i1];
-               stat.d250 = stat.d250.slice(i1+1, i2);
-               data.strategy.score = last.score;
-               stat.d250.reverse();
-            }
+            let i1 = dn - n0;
+            if (i1 < 0) i1 = 0;
+            const last = stat.d250[stat.d250.length-1];
+            stat.d250 = stat.d250.slice(i1);
+            data.strategy.score = last.score;
+            stat.d250.reverse();
          }
-      } else {
-         data.strategy = null;
       }
+
       data.index = local.data.view.index;
       if (data.index) {
          data.index = data.index.map((z, j) => {

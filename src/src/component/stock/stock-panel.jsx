@@ -108,6 +108,7 @@ export default function StockPanel() {
          setSelected(data && data.code);
          if (local.data.view) {
             local.data.view.strategy = null;
+            local.data.view.strategyAll = null;
             local.data.view.index = null;
          }
          eventbus.emit('stock.one', data);
