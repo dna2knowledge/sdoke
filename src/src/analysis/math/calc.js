@@ -361,19 +361,23 @@ async function evaluateQualifier(name, data, cache) {
    } else {
       qualified.data = data;
    }
-   let cmd = ps.shift();
+   let range = '';
+   let cmd;
+   cmd = ps.shift();
    switch(cmd) {
       case 'w':
       case 'weekly': {
          const k = `_stock_${code}_w`;
          qualified.data = cache[k] || dailyToWeekly(qualified.data);
          cache[k] = qualified.data;
+         range = 'w';
          break; }
       case 'm':
       case 'monthly': {
          const k = `_stock_${code}_m`;
          qualified.data = cache[k] || dailyToMonthly(qualified.data);
          cache[k] = qualified.data;
+         range = 'm';
          break; }
       default: ps.unshift(cmd);
    }
@@ -393,7 +397,7 @@ async function evaluateQualifier(name, data, cache) {
       let tr = false;
       if (cmd.startsWith('rsi')) {
          const win = parseInt(cmd.substring(3)) || 5;
-         const key = `_stock_${code}_rsi${win}`;
+         const key = `_stock_${code}_${range}${qualified.col}_rsi${win}`;
          if (cache[key]) {
             qualified.data = cache[key];
          } else {
@@ -407,7 +411,7 @@ async function evaluateQualifier(name, data, cache) {
          tr = true;
       } else if (cmd.startsWith('sma')) {
          const win = parseInt(cmd.substring(3)) || 5;
-         const key = `_stock_${code}_sma${win}`;
+         const key = `_stock_${code}_${range}${qualified.col}_sma${win}`;
          if (cache[key]) {
             qualified.data = cache[key];
          } else {
@@ -422,7 +426,7 @@ async function evaluateQualifier(name, data, cache) {
          tr = true;
       } else if (cmd.startsWith('cci')) {
          const win = parseInt(cmd.substring(3)) || 14;
-         const key = `_stock_${code}_cci${win}`;
+         const key = `_stock_${code}_${range}${qualified.col}_cci${win}`;
          if (cache[key]) {
             qualified.data = cache[key];
          } else {
@@ -442,7 +446,7 @@ async function evaluateQualifier(name, data, cache) {
          tr = true;
       } else if (cmd.startsWith('wr')) {
          const win = parseInt(cmd.substring(2)) || 6;
-         const key = `_stock_${code}_wr${win}`;
+         const key = `_stock_${code}_${range}${qualified.col}_wr${win}`;
          if (cache[key]) {
             qualified.data = cache[key];
          } else {
