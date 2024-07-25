@@ -61,7 +61,7 @@ export default function StockSearchByFourier() {
          progressFn: (i, n, meta) => eventbus.emit('stock.search.fourier.progress', { i, n, meta })
       };
       if (rawList?.length) {
-         const ret = await fourierAct(rawList, 20, opt);
+         const ret = await fourierAct(rawList, 5, opt);
          local.data.searchFourierResult = ret;
          ret.forEach(z => {
             if (!z.cycle) {

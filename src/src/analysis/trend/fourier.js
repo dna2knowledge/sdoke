@@ -1,6 +1,7 @@
 import ft from '$/analysis/math/fourier';
 import norm from '$/analysis/math/norm';
-import { lineSmooth, polylineize } from '$/analysis/math/polyline';
+import { lineSmooth } from '$/analysis/math/polyline';
+import sma from '$/analysis/index/sma';
 import databox from '$/service/databox';
 
 const dayms = 3600 * 24 * 1000;
@@ -69,7 +70,9 @@ function buildTest(r) {
 export async function analyzeOneCol(data, col, win) {
    const n = Math.floor(data.length/2);
    const Ds0 = data.map(z => z[col]);
-   const P = polylineize(Ds0, win);
+   // prev, use polylineize() to reduce noise const P = polylineize(Ds0, win);
+   const P = sma(Ds0, win); P.reverse();
+   if (P.length < Ds0.length) Ds0.splice(0, Ds0.length - P.length);
    const Df = Ds0.map((z, i) => z - P[i]);
    const F0 = ft.dft(Df).map(z => ft.complex.magnitude(z));
    const A = F0[0];
