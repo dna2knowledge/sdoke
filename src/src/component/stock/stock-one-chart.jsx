@@ -7,6 +7,7 @@ import StockChartRangeSlider from '$/component/stock/stock-chart-rangeslider';
 import StockChartTooltip from '$/component/stock/stock-chart-tooltip';
 import eventbus from '$/service/eventbus';
 import local from '$/service/local';
+import norm from '$/analysis/math/norm';
 import pickHSLColor from '$/util/color-hsl-pick'
 import dailyToWeekly from '$/analysis/transform/weekly';
 import dailyToMonthly from '$/analysis/transform/monthly';
@@ -42,12 +43,11 @@ function paintBasic(canvas, data) {
    const w0 = 365 * scale;
    const h0 = 150;
    const lx = scale;
-   let min = Infinity, max = 0, minm = Infinity, maxm = 0;
+   let min = Infinity, max = 0;
+   const vs = norm(data.map(z => z.V));
    data.forEach((item) => {
       if (min > item.L) min = item.L;
       if (max < item.H) max = item.H;
-      if (minm > item.V) minm = item.V;
-      if (maxm < item.V) maxm = item.V;
    });
    pen.fillStyle = 'white';
    pen.fillRect(0, 0, w0, h0);
@@ -63,18 +63,12 @@ function paintBasic(canvas, data) {
       }
    }
 
-   const hm = maxm - minm;
-   if (hm === 0) {
-      pen.fillStyle = '#ddd';
-      pen.fillRect(0, 0, w0, h0);
-   } else {
-      pen.strokeStyle = '#ddd';
-      data.forEach((item, i) => {
-         const x = i * lx + shiftw;
-         const y = Math.round(h0 * (1 - (item.V - minm)/hm));
-         pen.beginPath(); pen.moveTo(x, h0); pen.lineTo(x, y); pen.stroke();
-      });
-   }
+   pen.strokeStyle = '#ddd';
+   vs.forEach((z, i) => {
+      const x = i * lx + shiftw;
+      const y = Math.round(h0 * (1 - z));
+      pen.beginPath(); pen.moveTo(x, h0); pen.lineTo(x, y); pen.stroke();
+   });
 
    const h = max - min;
    if (h === 0) {
