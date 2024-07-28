@@ -228,7 +228,7 @@ export default function StockOneStrategy() {
          'tip.strategy.nodata',
          'No Data; no {{strategy}} records for {{code}} {{name}}',
          { strategy, code: meta.code, name: meta.name }
-      )}</NoData> : <Box>
+      )}</NoData> : <Box sx={{ overflowX: 'auto' }}>
          <Box>
             <span className={`mode_${mode}`}> {t(`t.${mode}`, mode)}</span>
             <span className={"act"}> {t('t.score', 'score')}={isNaN(data.score) ? '-' : `${data.score.toFixed(4)}`}</span>
