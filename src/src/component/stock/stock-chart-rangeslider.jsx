@@ -121,7 +121,6 @@ export default function StockChartRangeSlider() {
          sliderStat.div.addEventListener('mouseup', _onDrop);
       }
       function _onDragMove(x, y) {
-
          if (!sliderStat?.o) return;
          const chartconfig = local.data.view.chartConfig;
          const box = sliderRef.current.getBoundingClientRect();
@@ -159,8 +158,10 @@ export default function StockChartRangeSlider() {
                   if (chartconfig.i + chartconfig.n > chartconfig.n0) {
                      chartconfig.n = chartconfig.n0 - chartconfig.i;
                   }
-               }
             }
+            chartconfig.i = Math.floor(chartconfig.i);
+            chartconfig.n = Math.floor(chartconfig.n);
+         }
          if (chartconfig.i !== sliderStat.i || chartconfig.n !== sliderStat.n) {
             paintRangeSlider(sliderRef.current);
             sliderStat.change = true;
