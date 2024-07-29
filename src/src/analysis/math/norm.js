@@ -1,7 +1,7 @@
-export default function norm(list) {
+export default function norm(list, min, max) {
    if (!list || !list.length) return list;
-   const max = Math.max(...list);
-   const min = Math.min(...list);
+   min = min === undefined ? Math.min(...list) : min;
+   max = max === undefined ? Math.max(...list) : max;
    const dm = max - min;
    if (dm === 0) {
       return list.map(_ => 1.0);

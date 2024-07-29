@@ -44,7 +44,7 @@ function paintBasic(canvas, data) {
    const h0 = 150;
    const lx = scale;
    let min = Infinity, max = 0;
-   const vs = norm(data.map(z => z.V));
+   const vs = norm(data.map(z => z.V), 0);
    data.forEach((item) => {
       if (min > item.L) min = item.L;
       if (max < item.H) max = item.H;
