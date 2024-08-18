@@ -87,18 +87,18 @@ function paintBasic(canvas, data) {
          const yed = Math.round(h0 * (1 - (item.C - min)/h));
          const ymax = Math.round(h0 * (1 - (item.H - min)/h));
          const x = i * lx + shiftw;
-         if (item.O === item.C) {
+         if (item.O === 0 && item.C > 0) {
+            pen.fillStyle = 'gray'; pen.fillRect(x-lx/2, ymax, lx, 2);
+         } else if (item.O === item.C) {
             const cr = lastitem ? ((item.C - lastitem.C) / lastitem.C) : 0;
-            if (cr < -0.099) {
-               const yex =  Math.round(h0 * (1 - (lastitem.C - min)/h));
+            if (cr < 0) {
                pen.fillStyle = 'green'; pen.fillRect(x-1, ymin, lxw, ymax-ymin);
-               pen.fillRect(x-lx/2, yex, lx, yst - yex);
-            } else if (cr > 0.099) {
-               const yex =  Math.round(h0 * (1 - (lastitem.C - min)/h));
+               pen.fillRect(x-lx/2, yst, lx, 2);
+            } else if (cr > 0) {
                pen.fillStyle = 'red'; pen.fillRect(x-1, ymin, lxw, ymax-ymin);
-               pen.fillRect(x-lx/2, yst, lx, yex - yst);
+               pen.fillRect(x-lx/2, yst, lx, 2);
             } else {
-               pen.fillStyle = '#gray'; pen.fillRect(x-1, ymin, lxw, ymax-ymin);
+               pen.fillStyle = 'gray'; pen.fillRect(x-1, ymin, lxw, ymax-ymin);
                pen.fillRect(x-lx/2, yst, lx, 2);
             }
          } else if (item.O < item.C) {
