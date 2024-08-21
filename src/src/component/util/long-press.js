@@ -17,12 +17,23 @@ export default function useLongPress(ref, opt) {
    };
    const cancel = () => {
       stat.down = false;
+      if (stat.timer) {
+         clearTimeout(stat.timer);
+         stat.timer = 0;
+      }
    };
    const onMouseDown = (evt) => {
       stat.x = evt.offsetX;
       stat.y = evt.offsetY;
       stat.ts = new Date().getTime();
       stat.down = true;
+      stat.acted = false;
+      stat.timer = setTimeout(() => {
+         stat.timer = 0;
+         if (stat.acted) return;
+         stat.acted = true;
+         stat.onLongPress && stat.onLongPress(evt);
+      }, opt.ms);
    };
    const onMouseMove = (evt) => {
       if (!stat.down) return;
@@ -31,11 +42,10 @@ export default function useLongPress(ref, opt) {
    };
    const onMouseUp = (evt) => {
       if (!stat.down) return;
-      const ts = new Date().getTime();
+      const acted = stat.acted;
       cancel(); // did cancel before run outer function in case error occurs
-      if (ts - stat.ts >= opt.ms) {
-         stat.onLongPress && stat.onLongPress(evt);
-      } else {
+      if (!acted) {
+         stat.acted = true;
          stat.onClick && stat.onClick(evt);
       }
    };
@@ -47,6 +57,13 @@ export default function useLongPress(ref, opt) {
       stat.y = null;
       stat.ts = new Date().getTime();
       stat.down = true;
+      stat.acted = false;
+      stat.timer = setTimeout(() => {
+         stat.timer = 0;
+         if (stat.acted) return;
+         stat.acted = true;
+         stat.onLongPress && stat.onLongPress(evt);
+      }, opt.ms);
    };
    const onTouchMove = (evt) => {
       if (!stat.down) return;
@@ -62,11 +79,10 @@ export default function useLongPress(ref, opt) {
    };
    const onTouchUp = (evt) => {
       if (!stat.down) return;
-      const ts = new Date().getTime();
+      const acted = stat.acted;
       cancel(); // did cancel before run outer function in case error occurs
-      if (ts - stat.ts >= opt.ms) {
-         stat.onLongPress && stat.onLongPress(evt);
-      } else {
+      if (!acted) {
+         stat.acted = true;
          stat.onClick && stat.onClick(evt);
       }
    };
