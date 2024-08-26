@@ -153,6 +153,8 @@ const tr = {
       't.endPeriod': '结束期',
    },
    trade: {
+      't.trade': '实录',
+      't.watch': '观察',
       't.refresh': '刷新',
       't.add.trade': '添加交易记录',
       't.edit': '编辑',

@@ -128,6 +128,10 @@ const stockApi = {
     setStockTradeYears: (list) => db.set('stock.trade.list.years', list),
     getStockTradeList: (year) => db.get(`stock.trade.list.${year}`),
     setStockTradeList: (year, list) => db.set(`stock.trade.list.${year}`, list),
+    getStockTradeWatchYears: () => db.get('stock.tradewatch.list.years'),
+    setStockTradeWatchYears: (list) => db.set('stock.tradewatch.list.years', list),
+    getStockTradeWatchList: (year) => db.get(`stock.tradewatch.list.${year}`),
+    setStockTradeWatchList: (year, list) => db.set(`stock.tradewatch.list.${year}`, list),
 };
 
 const api = {

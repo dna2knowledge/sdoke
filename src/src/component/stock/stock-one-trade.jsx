@@ -48,14 +48,27 @@ function paintHistory(canvas, w0, h0, year, item, history) {
    pen.fillStyle = 'white';
    pen.fillRect(0, 0, w0, h0);
    if (history.length <= 1) return;
-   const stat = { max: 0, min: Infinity, last: history[0] };
+   const stat = { max: 0, min: Infinity, last: history[0], maxv: 0 };
    history.forEach(z => {
       if (!z) return;
       if (z.H > stat.max) stat.max = z.H;
       if (z.L < stat.min) stat.min = z.L;
+      if (z.V > stat.maxv) stat.maxv = z.V;
    });
    const dm = stat.max - stat.min;
+   const dmv = stat.maxv === 0 ? 1 : stat.maxv;
    const n0 = Math.floor((tsb - tsa)/config.dayms);
+
+   // draw volumn
+   for (let i = 1, n = history.length; i < n; i++) {
+      const j = n - i;
+      const z = history[j];
+      const T = z.T;
+      const w = z.V ? (z.V / dmv * w0) : 2;
+      const y = config.dh * (n0 - Math.floor((T - T0)/config.dayms));
+      pen.fillStyle = '#ddd';
+      pen.fillRect(w0 - w, y+config.dh/4, w, config.dh/2);
+   }
 
    // draw special point background
    const stI = item.B ? Math.floor((tsb - item.B.T)/config.dayms) : 0;
@@ -252,7 +265,7 @@ export default function StockOneTrade(props) {
          const i = hdata.length ? raw.indexOf(hdata[0]) : (raw.length-1);
          hdata.unshift(i === 0 ? null : raw[i-1]);
          cache.current.hdata = hdata;
-         const stP = data.B ? data.B.P : hdata[1].C;
+         const stP = data.B ? (data.B.P === -Infinity ? hdata.find(z => z.T === data.B.T)?.O : data.B.P) : hdata[1].C;
          const edP = data.S ? data.S.P : hdata[hdata.length-1].C;
          setRate(calcRate(stP, edP));
          paintHistory(canvasRef.current, w-5, h, year, data, hdata);
