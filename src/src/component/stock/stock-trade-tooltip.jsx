@@ -15,7 +15,7 @@ function buildInfo(container, info) {
    div.textContent = config.util.getDateStr(info.T);
    container.appendChild(div);
 
-   if (info.B) {
+   if (info.B && info.B.P !== -Infinity && info.B.P !== null) {
       div = document.createElement('div');
       span = document.createElement('span');
       span.className = '';

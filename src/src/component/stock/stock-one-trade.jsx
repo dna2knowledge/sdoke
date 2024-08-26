@@ -246,7 +246,7 @@ export default function StockOneTrade(props) {
                V: rt.V,
             });
          }
-         const stP = data.B ? data.B.P : hdata[1].C;
+         const stP = data.B && data.B.P !== -Infinity && data.B.P !== null ? data.B.P : hdata[1].C;
          const edP = data.S ? data.S.P : hdata[hdata.length-1].C;
          setRate(calcRate(stP, edP));
          paintHistory(canvasRef.current, w-5, h, year, data, hdata);
@@ -265,7 +265,7 @@ export default function StockOneTrade(props) {
          const i = hdata.length ? raw.indexOf(hdata[0]) : (raw.length-1);
          hdata.unshift(i === 0 ? null : raw[i-1]);
          cache.current.hdata = hdata;
-         const stP = data.B ? (data.B.P === -Infinity ? hdata.find(z => z.T === data.B.T)?.O : data.B.P) : hdata[1].C;
+         const stP = data.B ? (data.B.P === -Infinity || data.B.P === null ? hdata.find(z => z.T === data.B.T)?.O : data.B.P) : hdata[1].C;
          const edP = data.S ? data.S.P : hdata[hdata.length-1].C;
          setRate(calcRate(stP, edP));
          paintHistory(canvasRef.current, w-5, h, year, data, hdata);
