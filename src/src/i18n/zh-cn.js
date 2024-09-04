@@ -43,6 +43,7 @@ const tr = {
       't.low': '最低',
       't.high': '最高',
       't.vol': '成交量',
+      't.turnover': '换手率',
       't.gain.u': '盈利',
       't.loss.u': '亏损',
       't.standardarea': '传统',

@@ -31,12 +31,13 @@ async function getHistoryFromTencent(code, startDate) {
       item.L = Math.min(item.O, item.C) * (1 + rate + Math.random() * (-0.1-rate));
       if (item.H < Math.max(item.O, item.C)) item.H = Math.max(item.O, item.C);
       if (item.L > Math.min(item.O, item.C)) item.L = Math.min(item.O, item.C);
+      item.s = Math.random() * 100;
       item.m = (item.H + item.L) / 2 * item.V;
       t += 3600 * 1000 * 24;
       last = item;
       r.push(item);
    }
-   await wait(Math.round(Math.random() * 3) * 1000);
+   //await wait(Math.round(Math.random() * 3) * 1000);
    return r;
 }
 
@@ -56,6 +57,7 @@ async function getRtFromTencent(codes) {
             L: Math.min(O, C) * (1 - Math.random() * 0.1),
             H: Math.min(O, C) * (1 + Math.random() * 0.1),
             V: Math.random() * 10000,
+            s: Math.random() * 100,
          };
       });
    } catch(_) {

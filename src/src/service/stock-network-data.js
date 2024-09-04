@@ -57,6 +57,7 @@ async function getHistoryFromTencent(code, startDate) {
          H: parseFloat(x[3]),
          L: parseFloat(x[4]),
          V: parseInt(x[5]),
+         s: parseFloat(x[7]),
          m: parseFloat(x[8]),
       }));
    }
@@ -150,7 +151,9 @@ async function getRtFromTencent(codes) {
             // ctp[35].split('/') 14.64/55812/81726910
             //                    <price><amount><money>
             V: parseInt(ctp[36]),
+            m: parseFloat(ctp[37]),
             money: parseFloat(ctp[37]),
+            s: parseFloat(ctp[38]),
             swap_rate: parseFloat(ctp[38]),
             // ctp[39] 涨速
             // ctp[40] ?

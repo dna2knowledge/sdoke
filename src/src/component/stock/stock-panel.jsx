@@ -238,6 +238,8 @@ export default function StockPanel() {
                      last.L = rt.L;
                      last.H = rt.H;
                      last.V = rt.V;
+                     last.m = rt.m;
+                     last.s = rt.s;
                   } else {
                      h.push({
                         T: rt.T,
@@ -246,6 +248,8 @@ export default function StockPanel() {
                         L: rt.L,
                         H: rt.H,
                         V: rt.V,
+                        m: rt.m,
+                        s: rt.s,
                      });
                   }
                   await databox.stock.setStockHistoryRaw(rt.code, h);

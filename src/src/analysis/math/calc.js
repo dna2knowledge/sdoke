@@ -330,7 +330,7 @@ function evaluateFlatFuncCallArgs(args) {
    });
    return r;
 }
-const allowedBasicKey = ['C', 'O', 'H', 'L', 'V'];
+const allowedBasicKey = ['C', 'O', 'H', 'L', 'V', 'm', 's'];
 const keyMap = {
    close: 'C',
    open: 'O',
@@ -343,6 +343,10 @@ const keyMap = {
    h: 'H',
    l: 'L',
    v: 'V',
+   money: 'm', // trade amount (price * volume)
+   M: 'm',
+   swap: 's', // swap rate
+   S: 's',
 };
 async function evaluateQualifier(name, data, cache) {
    const qualified = {};
@@ -491,6 +495,8 @@ async function evaluateFuncCall(name, args, data, cache, id) {
       case 'getL': // = .L.at
       case 'getV': // = .V.at
       case 'getv': // = .v.at
+      case 'gets': // = .c.at
+      case 'getm': // = .m.at
       {
          // args = [ts1, ts2, ...], args = [["d", i1, i2], ts1, ...]
          v = [];

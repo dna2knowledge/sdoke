@@ -22,6 +22,7 @@ function buildInfo(container, info) {
    a(container, a(o('div'), txt(o('span'), `${t('t.low', 'low')}: ${info.L.toFixed(2)}`)));
    a(container, a(o('div'), txt(o('span'), `${t('t.high', 'high')}: ${info.H.toFixed(2)}`)));
    a(container, a(o('div'), txt(o('span'), `${t('t.vol', 'vol')}: ${info.V.toFixed(2)}`)));
+   if (!isNaN(info.s)) a(container, a(o('div'), txt(o('span'), `${t('t.turnover', 'turnover')}: ${info.s.toFixed(2)}`)));
    if (info && !isNaN(info.stg)) {
       const div = o('div');
       a(div, txt(o('span'), `${t('t.score', 'score')}: `));
