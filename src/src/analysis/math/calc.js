@@ -9,6 +9,7 @@ import smaIndex from '$/analysis/index/sma';
 import rsiIndex from '$/analysis/index/rsi';
 import cciIndex from '$/analysis/index/cci';
 import wrIndex from '$/analysis/index/wr';
+import bollMdIndex, { boll_val as bollValIndex } from '$/analysis/index/boll';
 
 export const version = '0.1';
 const dayms = 24 * 3600 * 1000;
@@ -456,6 +457,51 @@ async function evaluateQualifier(name, data, cache) {
          } else {
             const n = data.length;
             qualified.data = wrIndex(data.map(z => z[qualified.col]), win);
+            qualified.data = qualified.data.map((z, i) => ({ v: z, T: data[n-i-1]?.T }));
+            qualified.data.reverse();
+            cache[key] = qualified.data;
+         }
+         cache[key] = qualified.data;
+         qualified.col = 'v';
+         tr = true;
+      } else if (cmd.startsWith('bollmd')) {
+         const win = parseInt(cmd.substring(6)) || 15;
+         const key = `_stock_${code}_${range}${qualified.col}_bollmd${win}`;
+         if (cache[key]) {
+            qualified.data = cache[key];
+         } else {
+            const n = data.length;
+            qualified.data = bollMdIndex(data.map(z => z[qualified.col]), win);
+            qualified.data = qualified.data.map((z, i) => ({ v: z, T: data[n-i-1]?.T }));
+            qualified.data.reverse();
+            cache[key] = qualified.data;
+         }
+         cache[key] = qualified.data;
+         qualified.col = 'v';
+         tr = true;
+      } else if (cmd.startsWith('bollup')) {
+         const win = parseInt(cmd.substring(6)) || 15;
+         const key = `_stock_${code}_${range}${qualified.col}_bollup${win}`;
+         if (cache[key]) {
+            qualified.data = cache[key];
+         } else {
+            const n = data.length;
+            qualified.data = bollValIndex(data.map(z => z[qualified.col]), win, 2);
+            qualified.data = qualified.data.map((z, i) => ({ v: z, T: data[n-i-1]?.T }));
+            qualified.data.reverse();
+            cache[key] = qualified.data;
+         }
+         cache[key] = qualified.data;
+         qualified.col = 'v';
+         tr = true;
+      } else if (cmd.startsWith('bolldown')) {
+         const win = parseInt(cmd.substring(8)) || 15;
+         const key = `_stock_${code}_${range}${qualified.col}_bolldown${win}`;
+         if (cache[key]) {
+            qualified.data = cache[key];
+         } else {
+            const n = data.length;
+            qualified.data = bollValIndex(data.map(z => z[qualified.col]), win, -2);
             qualified.data = qualified.data.map((z, i) => ({ v: z, T: data[n-i-1]?.T }));
             qualified.data.reverse();
             cache[key] = qualified.data;
@@ -984,6 +1030,12 @@ async function evaluateQualifierType(name, cache) {
       } else if (cmd.startsWith('cci')) {
          tr = true;
       } else if (cmd.startsWith('wr')) {
+         tr = true;
+      } else if (cmd.startsWith('bollmd')) {
+         tr = true;
+      } else if (cmd.startsWith('bollup')) {
+         tr = true;
+      } else if (cmd.startsWith('bolldown')) {
          tr = true;
       }
       if (tr) cmd = ps.shift();
