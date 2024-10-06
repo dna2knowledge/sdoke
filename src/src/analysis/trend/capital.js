@@ -39,7 +39,7 @@ async function getData(datePoint, range, opt) {
       if (alignedTs !== H[j].T) continue; // the stock may quit
       const Cs = j < rangen+242 ? H.slice(0, j+1) : H.slice(j-range-242, j+1);
       Cs.reverse();
-      last[item.code] = { tag: item.area, name: item.name, code: item.code, C: Cs.map(z => z.C) };
+      last[item.code] = { tag: item.area, name: item.name, code: item.code, C: Cs.map(z => z.C), V: Cs.map(z => z.V) };
    }
    opt.progressFn(0, 0);
    last._ = alignedTs;
@@ -72,13 +72,15 @@ function aggregate(data, range) {
       let areas = Sareas;
       if (!z.code) return;
       if (z.code.startsWith('sh688') || z.code.startsWith('sz3')) areas = Kareas;
-      if (!areas[z.tag]) areas[z.tag] = { t: z.tag, n: 0, avg: 0, b: initbucket(), h: [], c: [], L: [] };
+      if (!areas[z.tag]) areas[z.tag] = { t: z.tag, n: 0, avg: 0, b: initbucket(), h: [], c: [], L: [], V: [] };
       const a = areas[z.tag];
       a.n ++;
       for (let i = rangen, n = z.C.length; i < n; i++) {
-         const hr = calcRate(z.C[i], z.C[i-rangen]);
-         a.h[i-rangen] = (a.h[i] || 0) + hr;
-         a.c[i-rangen] = (a.c[i] || 0) + 1;
+         const imr = i-rangen;
+         const hr = calcRate(z.C[i], z.C[imr]);
+         a.h[imr] = (a.h[imr] || 0) + hr;
+         a.c[imr] = (a.c[imr] || 0) + 1;
+         a.V[imr] = (a.V[imr] || 0) + z.V[i];
       }
       let rate = calcRate(z.C[rangen], z.C[0]);
       a.L.push({ code: z.code, name: z.name, rate: rate });
@@ -88,28 +90,21 @@ function aggregate(data, range) {
       const i = Math.floor((rate + 0.1) * 1000);
       a.b[i] ++;
    });
-   Object.keys(Sareas).forEach(area => {
-      const a = Sareas[area];
-      a.avg /= a.n;
-      a.h.forEach((z, i) => {
-         if (!a.c[i]) { a.h[i] = null; return; }
-         a.h[i] = z/a.c[i];
+   [Sareas, Kareas].forEach(M => {
+      Object.keys(M).forEach(area => {
+         const a = M[area];
+         a.avg /= a.n;
+         a.h.forEach((z, i) => {
+            if (!a.c[i]) { a.h[i] = null; return; }
+            a.h[i] = z/a.c[i];
+         });
+         a.h = a.h.slice(0, 201);
+         a.h.reverse();
+         a.V = a.V.slice(0, 201);
+         a.V.reverse();
+         delete a.c;
       });
-      a.h = a.h.slice(0, 201);
-      a.h.reverse();
-      delete a.c;
-   });
-   Object.keys(Kareas).forEach(area => {
-      const a = Kareas[area];
-      a.avg /= a.n;
-      a.h.forEach((z, i) => {
-         if (!a.c[i]) { a.h[i] = null; return; }
-         a.h[i] = z/a.c[i];
-      });
-      a.h = a.h.slice(0, 201);
-      a.h.reverse();
-      delete a.c;
-   });
+   })
    return { S: Sareas, K: Kareas };
 }
 

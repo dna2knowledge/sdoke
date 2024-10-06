@@ -51,21 +51,36 @@ function paintTrendHist(canvas, data) {
       pen.fillRect(i*w1, h0-h1, w1, h1);
    }
 }
-function paintTrendHistory(canvas, data) {
+function paintTrendHistory(canvas, data, dataV) {
    const pen = canvas.getContext('2d');
    const w0 = canvas.offsetWidth;
    const h0 = canvas.offsetHeight;
    if (!w0 || !h0) return;
    const w1 = 2;
-   let max = 0, min = Infinity;
+   let max = 0, min = Infinity, maxv = 0;
    data.forEach(z => {
       if (z > max) max = z;
       if (z < min) min = z;
+   });
+   dataV.forEach(z => {
+      if (z > maxv) maxv = z;
    });
    pen.fillStyle = 'white';
    pen.fillRect(0, 0, w0, h0);
    let lastpt;
    const md = max === min ? 1 : (max - min);
+
+   // draw vol
+   for (let i = 0, n = data.length; i < n; i++) {
+      const x = w1 * (i + 201-n);
+      const dv = dataV[i];
+      const hv = Math.floor(dv/maxv*h0);
+      const yv = h0 - hv;
+      pen.fillStyle = '#ccc';
+      pen.fillRect(x, yv, w1, hv);
+   }
+
+   // draw grid
    pen.fillStyle = 'black';
    pen.fillText(`${(max*100).toFixed(4)}`, 5, 14);
    pen.fillText(`${(min*100).toFixed(4)}`, 5, h0-2);
@@ -80,12 +95,15 @@ function paintTrendHistory(canvas, data) {
    pen.beginPath(); pen.moveTo(0, horg); pen.lineTo(w0, horg);
    pen.stroke(); pen.restore();
 
+   // draw rise/lose rate
    for (let i = 0, n = data.length; i < n; i++) {
       const d = data[i];
       const x = w1 * (i + 201-n);
       let h1 = Math.floor((d-min)/md*h0);
       if (max === min) h1 = Math.floor(h0/2);
       const y = h0 - h1;
+
+      pen.fillRect(x-1, y-1, 3, 3);
       if (lastpt) {
          pen.save(); if (d < 0) pen.strokeStyle = 'green'; else pen.strokeStyle = 'red';
          pen.beginPath(); pen.moveTo(lastpt.x, lastpt.y); pen.lineTo(x, y);
@@ -130,7 +148,7 @@ function CapitalTrendOne(props) {
          canvash.style.height = `${h0}px`;
          canvash.width = canvash.offsetWidth;
          canvash.height = h0;
-         paintTrendHistory(canvash, data.h);
+         paintTrendHistory(canvash, data.h, data.V);
       }
    });
 
