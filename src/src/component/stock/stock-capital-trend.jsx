@@ -172,7 +172,7 @@ function CaptialTrendGroup(props) {
 export default function CapitalTrend() {
    const { t } = useTranslation('viewer');
 
-   const [anchor] = useState('left');
+   const [anchor] = useState('right');
    const [suggested, setSuggested] = useState(false);
    const [loading, setLoading] = useState(false);
    const [rate, setRate] = useState('');
