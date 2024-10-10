@@ -1,5 +1,3 @@
-import smaIndex from '$/analysis/index/sma';
-
 export default function boll_md(vals, win) {
    const r = [];
    const n = vals.length;
