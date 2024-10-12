@@ -54,6 +54,53 @@ function buildInfo(container, info) {
    }
 }
 
+export function onCursorMove(evt, data, canvasWidthFn, t) {
+   const wc = canvasWidthFn();
+   const n = data.data?.raw?.length || 0;
+   let scale = Math.floor(wc / n);
+   if (scale <= 0) scale = 1;
+   else if (scale > 10) scale = 10;
+   const shiftw = Math.floor((wc - n * scale) / 2);
+   const x = evt.offsetX;
+   const y = evt.offsetY;
+   const i = Math.floor((x - shiftw) / scale);
+   if (data.i === i) return;
+   data.i = i;
+   const one = data.data?.raw?.[i];
+   if (one) {
+      const info = {...one};
+      info.t = t;
+      info.x = evt.clientX;
+      info.y = evt.clientY;
+      const d250 = data.strategy?.stat?.d250;
+      const dn = d250?.length || 0;
+      const stg = (
+         i >= dn-1 ?
+         data.strategy?.score :
+         data.strategy?.stat?.d250?.[dn-2-i]?.score
+      ) || undefined;
+      const vis = data.index ? data.index.map((z, j) => ({
+         g: z.group,
+         i: z.id,
+         c: z.c || pickHSLColor(j),
+         v: Array.isArray(z.val) ? z.val[i] : z.val,
+      })).filter(z => !isNaN(z.v)).reduce((a, z) => {
+         if (!a[z.g]) a[z.g] = [];
+         a[z.g].push({ i: z.i, v: z.v, c: z.c });
+         return a;
+      }, {}) : undefined;
+      info.stg = stg;
+      info.vis = vis;
+      eventbus.emit('stock.chart.tooltip', info);
+   } else {
+      eventbus.emit('stock.chart.tooltip', null);
+   }
+}
+
+export function onCursorLeave() {
+   eventbus.emit('stock.chart.tooltip', null);
+}
+
 export default function StockChartTooltip() {
    const tooltipRef = useRef(null);
    useEffect(() => {
