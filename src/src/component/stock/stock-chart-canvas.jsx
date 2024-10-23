@@ -21,6 +21,13 @@ export function paintBasic(canvas, data) {
    const overview = data.data;
    const strategy = data.strategy;
 
+   const n = data?.data?.raw?.length || 1;
+   const vis = [];
+   data.index && data.index.forEach((z, i) => {
+      if (z.group) return; // group = '' or '.xxx'
+      vis.push({ vis: z, color: z.c || pickHSLColor(i) });
+   });
+
    data = data.data.raw;
    const wc = canvas.offsetWidth;
    let scale = Math.floor(wc / data.length);
@@ -37,6 +44,17 @@ export function paintBasic(canvas, data) {
       if (item.V === 0 && item.H === 0 && item.L === 0 && item.O === 0) return;
       if (min > item.L) min = item.L;
       if (max < item.H) max = item.H;
+   });
+   vis.forEach(one => {
+      if (Array.isArray(one.val)) {
+         one.val.forEach(z => {
+            if (z < min) min = z;
+            if (z > max) max = z;
+         });
+      } else {
+         if (one.val < min) min = one.val;
+         if (one.val > max) max = one.val;
+      }
    });
    pen.fillStyle = 'white';
    pen.fillRect(0, 0, w0, h0);
@@ -103,6 +121,48 @@ export function paintBasic(canvas, data) {
          lastitem = item;
       });
    }
+
+   vis.forEach(item => paintIndexOne(pen, item.vis, min, max, shiftw, lx, h0, n, item.color));
+}
+
+function paintIndexOne(pen, visOne, min, max, shiftw, lx, h1, n, color) {
+   pen.save();
+   pen.strokeStyle = color;
+   pen.fillStyle = color;
+   pen.lineWidth = 1;
+   const dm = max - min;
+   if (Array.isArray(visOne.val)) {
+      let lasty = null;
+      const shiftn = n - visOne.val.length;
+      pen.beginPath();
+      visOne.val.forEach((z, k) => {
+         const x = shiftw + (k+shiftn)*lx;
+         if (x < shiftw) return;
+         const y = h1 - Math.round((z - min) / dm * h1);
+         if (lasty === null) {
+            pen.moveTo(x+lx/2, y);
+         } else {
+            pen.lineTo(x+lx/2, y);
+         }
+         lasty = y;
+      });
+      pen.stroke();
+      lasty = null;
+      visOne.val.forEach((z, k) => {
+         const x = shiftw + (k+shiftn)*lx;
+         if (x < shiftw) return;
+         const y = h1 - Math.round((z - min) / dm * h1);
+         pen.fillRect(x+lx/2-1, y-1, 2, 2);
+         lasty = y;
+      });
+   } else {
+      const y = h1 - Math.round((visOne.val - min) / dm * h1);
+      pen.beginPath();
+      pen.moveTo(shiftw, y);
+      pen.lineTo(shiftw + n * lx, y);
+      pen.stroke();
+   }
+   pen.restore();
 }
 
 export function paintIndex(canvas, data) {
@@ -170,39 +230,7 @@ export function paintIndex(canvas, data) {
       group.forEach(one => {
          const color = one.c || pickHSLColor(ci);
          ci ++;
-         pen.strokeStyle = color;
-         pen.fillStyle = color;
-         let lasty = null;
-         const shiftn = n - one.val.length;
-         if (Array.isArray(one.val)) {
-            pen.beginPath();
-            one.val.forEach((z, k) => {
-               const x = shiftw + (k+shiftn)*lx;
-               if (x < shiftw) return;
-               const y = h1 - Math.round((z - min) / dm * h1);
-               if (lasty === null) {
-                  pen.moveTo(x+lx/2, y);
-               } else {
-                  pen.lineTo(x+lx/2, y);
-               }
-               lasty = y;
-            });
-            pen.stroke();
-            lasty = null;
-            one.val.forEach((z, k) => {
-               const x = shiftw + (k+shiftn)*lx;
-               if (x < shiftw) return;
-               const y = h1 - Math.round((z - min) / dm * h1);
-               pen.fillRect(x+lx/2-1, y-1, 2, 2);
-               lasty = y;
-            });
-         } else {
-            const y = h1 - Math.round((one.val - min) / dm * h1);
-            pen.beginPath();
-            pen.moveTo(shiftw, y);
-            pen.lineTo(shiftw + n * lx, y);
-            pen.stroke();
-         }
+         paintIndexOne(pen, one, min, max, shiftw, lx, h1, n, color);
       });
       pen.restore();
    });
