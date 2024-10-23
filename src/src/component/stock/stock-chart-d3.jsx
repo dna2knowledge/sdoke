@@ -9,6 +9,13 @@ export function paintBasic(svg, data) {
    const overview = data.data;
    const strategy = data.strategy;
 
+   const n = data?.data?.raw?.length || 1;
+   const vis = [];
+   data.index && data.index.forEach((z, i) => {
+      if (z.group) return; // group = '' or '.xxx'
+      vis.push({ vis: z, color: z.c || pickHSLColor(i) });
+   });
+
    data = data.data.raw;
    const wc = parseInt(svg.attr('width'));
    let scale = Math.floor(wc / data.length);
@@ -26,6 +33,17 @@ export function paintBasic(svg, data) {
    data.forEach((item) => {
       if (min > item.L) min = item.L;
       if (max < item.H) max = item.H;
+   });
+   vis.forEach(one => {
+      if (Array.isArray(one.val)) {
+         one.val.forEach(z => {
+            if (z < min) min = z;
+            if (z > max) max = z;
+         });
+      } else {
+         if (one.val < min) min = one.val;
+         if (one.val > max) max = one.val;
+      }
    });
    const h = (max - min) || 1;
 
@@ -73,6 +91,38 @@ export function paintBasic(svg, data) {
    candlestick.append('rect').attr('width', lx).attr('height', vyh).attr('x', x).attr('y', vytop).attr('fill', '#ddd');
    candlestick.append('line').attr('x1', xmid).attr('y1', ymin).attr('x2', xmid).attr('y2', ymax).attr('stroke', color).attr('stroke-width', 1);
    candlestick.append('rect').attr('width', lx).attr('height', yh).attr('x', x).attr('y', ytop).attr('rx', 1).attr('stroke', color).attr('fill', color);
+   vis.forEach(item => paintIndexOne(candlestick, item.vis, min, max, wc, shiftw, lx, h0, n, item.color));
+}
+
+function paintIndexOne(g, visOne, min, max, wc, shiftw, lx, h1, n, color) {
+   const dm = max === min ? (max/2) : (max-min);
+   let lasty = null;
+   const shiftn = n - visOne.val.length;
+   if (Array.isArray(visOne.val)) {
+      const line = g.selectAll('g').data(visOne.val).enter().append('g');
+      const xm1 = (_, i) => (i+shiftn) * lx + lx/2 - 1;
+      const ym1 = (v) => h1 - Math.round((v - min) / dm * h1) - 1;
+      line.append('rect').attr('width', 2).attr('height', 2).attr('x', xm1).attr('y', ym1).attr('fill', color);
+      const d = [];
+      visOne.val.forEach((z, k) => {
+         const x = (k+shiftn)*lx;
+         if (x < 0) return;
+         const y = h1 - Math.round((z - min) / dm * h1);
+         if (lasty === null) {
+            d.push(`M${x+lx/2},${y}`)
+         } else {
+            d.push(`${x+lx/2},${y}`);
+         }
+         lasty = y;
+      });
+      const pathd = d.join(' ');
+      if (pathd) {
+         g.append('path').attr('d', d.join(' ')).attr('stroke', color).attr('fill', 'none');
+      }
+   } else {
+      const y = h1 - Math.round((visOne.val - min) / dm * h1);
+      g.append('line').attr('x1', 0).attr('y1', y).attr('x2', wc-shiftw*2).attr('y2', y).attr('stroke', color);
+   }
 }
 
 export function paintIndex(svg, data) {
@@ -131,33 +181,7 @@ export function paintIndex(svg, data) {
       group.forEach(one => {
          const color = one.c || pickHSLColor(ci);
          ci ++;
-         let lasty = null;
-         const shiftn = n - one.val.length;
-         if (Array.isArray(one.val)) {
-            const line = g.selectAll('g').data(one.val).enter().append('g');
-            const xm1 = (_, i) => (i+shiftn) * lx + lx/2 - 1;
-            const ym1 = (v) => h1 - Math.round((v - min) / dm * h1) - 1;
-            line.append('rect').attr('width', 2).attr('height', 2).attr('x', xm1).attr('y', ym1).attr('fill', color);
-            const d = [];
-            one.val.forEach((z, k) => {
-               const x = (k+shiftn)*lx;
-               if (x < 0) return;
-               const y = h1 - Math.round((z - min) / dm * h1);
-               if (lasty === null) {
-                  d.push(`M${x+lx/2},${y}`)
-               } else {
-                  d.push(`${x+lx/2},${y}`);
-               }
-               lasty = y;
-            });
-            const pathd = d.join(' ');
-            if (pathd) {
-               g.append('path').attr('d', d.join(' ')).attr('stroke', color).attr('fill', 'none');
-            }
-         } else {
-            const y = h1 - Math.round((one.val - min) / dm * h1);
-            g.append('line').attr('x1', 0).attr('y1', y).attr('x2', wc-shiftw*2).attr('y2', y).attr('stroke', color);
-         }
+         paintIndexOne(g, one, min, max, wc, shiftw, lx, h1, n, color);
       });
    });
 }
