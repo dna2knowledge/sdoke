@@ -46,6 +46,7 @@ const tr = {
       't.turnover': '换手率',
       't.gain.u': '盈利',
       't.loss.u': '亏损',
+      't.indexarea': '指标',
       't.standardarea': '传统',
       't.kcarea': '科创板/创业板',
       't.history': '历史',

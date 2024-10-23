@@ -65,13 +65,15 @@ function aggregate(data, range) {
       case 'yearly': rangen = 242; break;
       default: rangen = 1;
    }
+   const Iareas = {};
    const Sareas = {};
    const Kareas = {};
    Object.values(data).forEach(z => {
       if (z.C.length <= 1) return; // new stock
       let areas = Sareas;
       if (!z.code) return;
-      if (z.code.startsWith('sh688') || z.code.startsWith('sz3')) areas = Kareas;
+      if (z.code === 'sh000001' || z.code === 'sz399001') areas = Iareas;
+      else if (z.code.startsWith('sh688') || z.code.startsWith('sz3')) areas = Kareas;
       if (!areas[z.tag]) areas[z.tag] = { t: z.tag, n: 0, avg: 0, b: initbucket(), h: [], c: [], L: [], V: [] };
       const a = areas[z.tag];
       a.n ++;
@@ -90,7 +92,7 @@ function aggregate(data, range) {
       const i = Math.floor((rate + 0.1) * 1000);
       a.b[i] ++;
    });
-   [Sareas, Kareas].forEach(M => {
+   [Iareas, Sareas, Kareas].forEach(M => {
       Object.keys(M).forEach(area => {
          const a = M[area];
          a.avg /= a.n;
@@ -105,7 +107,7 @@ function aggregate(data, range) {
          delete a.c;
       });
    })
-   return { S: Sareas, K: Kareas };
+   return { I: Iareas, S: Sareas, K: Kareas };
 }
 
 async function act(pointDate, range, opt) {

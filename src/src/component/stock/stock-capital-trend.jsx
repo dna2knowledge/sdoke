@@ -11,7 +11,7 @@ import captialTrendAnalysis from '$/analysis/trend/capital';
 import { useTranslation } from 'react-i18next';
 
 function transform(data) {
-   return { S: transformOne(data.S), K: transformOne(data.K) };
+   return { I: transformOne(data.I), S: transformOne(data.S), K: transformOne(data.K) };
 }
 function transformOne(areas) {
    const gain = [], loss = [];
@@ -305,6 +305,9 @@ export default function CapitalTrend() {
          </Box>
          <Divider />
          <Box sx={{ flex: '1 0 auto', width: '100%', height: '0px', overflowY: 'auto' }}>
+            <Box>{t('t.indexarea', 'Index')}</Box>
+            <CaptialTrendGroup data={data.I}/>
+            <Divider />
             <Box>{t('t.standardarea', 'Standard')}</Box>
             <CaptialTrendGroup data={data.S}/>
             <Divider />
