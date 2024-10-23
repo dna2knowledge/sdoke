@@ -34,6 +34,7 @@ export function paintBasic(canvas, data) {
    let min = Infinity, max = 0;
    const vs = norm(data.map(z => z.V), 0);
    data.forEach((item) => {
+      if (item.V === 0 && item.H === 0 && item.L === 0 && item.O === 0) return;
       if (min > item.L) min = item.L;
       if (max < item.H) max = item.H;
    });
@@ -76,7 +77,7 @@ export function paintBasic(canvas, data) {
          const ymax = Math.round(h0 * (1 - (item.H - min)/h));
          const x = i * lx + shiftw;
          if (item.O === 0 && item.C > 0) {
-            pen.fillStyle = 'gray'; pen.fillRect(x-lx/2, ymax, lx, 2);
+            pen.fillStyle = 'gray'; pen.fillRect(x-lx/2, yed, lx, 2);
          } else if (item.O === item.C) {
             const cr = lastitem ? ((item.C - lastitem.C) / lastitem.C) : 0;
             if (cr < 0) {
