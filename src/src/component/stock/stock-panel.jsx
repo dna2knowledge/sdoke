@@ -79,12 +79,14 @@ export default function StockPanel() {
       eventbus.on('stock.pinned.add', onStockPinnedAdd);
       eventbus.on('stock.pinned.remove', onStockPinnedRemove);
       eventbus.on('stock.pinned.click', onStockPinnedClick);
+      eventbus.on('stock.data.redownload', onStockDataRedownload);
 
       return () => {
          eventbus.comp.unregister('comp.stock.stock-panel');
          eventbus.off('stock.pinned.add', onStockPinnedAdd);
          eventbus.off('stock.pinned.remove', onStockPinnedRemove);
          eventbus.off('stock.pinned.click', onStockPinnedClick);
+         eventbus.off('stock.data.redownload', onStockDataRedownload);
       };
 
       function onStockPinnedAdd(data) {
@@ -113,6 +115,14 @@ export default function StockPanel() {
          }
          eventbus.emit('stock.one', data);
          eventbus.emit('stock.strategy.one', { meta: data });
+      }
+      async function onStockDataRedownload(data) {
+         eventbus.emit('loading');
+         if (!data || !data.code) return;
+         await databox.stock.setStockHistoryRaw(data.code, null);
+         await databox.stock.getStockHistory(data.code);
+         eventbus.emit('loaded');
+         onStockPinnedClick(data);
       }
    }, [data, pinnedStocks, selected]);
 

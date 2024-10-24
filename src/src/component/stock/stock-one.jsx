@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { Box, IconButton, Tooltip } from '@mui/material';
 import BookmarkAddIcon from '@mui/icons-material/BookmarkAdd';
+import SettingsBackupRestoreIcon from '@mui/icons-material/SettingsBackupRestore';
 import NoData from '$/component/shared/no-data';
 import Chart from '$/component/stock/stock-one-chart';
 import eventbus from '$/service/eventbus';
@@ -68,6 +69,9 @@ export default function StockOne() {
                onClick={() => eventbus.emit('stock.pinned.add', meta)}
             ><BookmarkAddIcon /></IconButton></Tooltip> {meta.code} {meta.name}
             {meta.area ? ` (${meta.area})` : null}
+            <Tooltip title={t('t.one.redownload', 'Re-download data')}>
+               <IconButton onClick={() => eventbus.emit('stock.data.redownload', meta)}><SettingsBackupRestoreIcon /></IconButton>
+            </Tooltip>
          </Box>
          <Box><Chart /></Box>
       </Box>) : <NoData>{t(

@@ -60,6 +60,7 @@ const tr = {
       't.refresh': '刷新',
       't.goto.edit.strategy': '编辑策略',
       't.add.fav': '收藏',
+      't.one.redownload': '重新下载数据',
       't.update.history': '更新历史数据',
       't.do.captr': '资金走向分析',
       't.strategy.example.rsibase': '策略演示 (RSI)',
