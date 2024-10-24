@@ -65,6 +65,32 @@ async function getRtFromTencent(codes) {
    }
 }
 
+async function getPopularRankingFromEastmoney() {
+   return [
+      {
+         sc: 'SH000001', rk: 1, rc: 0, histRc: 0,
+         label: [
+            { labelType: 1, indicatorType: '', boardCodeBK: null, labelName: '3天3板' },
+            { labelType: 2, indicatorType: null, boardCodeBK: 'BK1115', labelName: '跨境电商' }
+         ]
+      },
+      {
+         sc: 'SH000002', rk: 1, rc: 0, histRc: 0,
+         label: [
+            { labelType: 1, indicatorType: '', boardCodeBK: null, labelName: '3天3板' },
+            { labelType: 2, indicatorType: null, boardCodeBK: 'BK1115', labelName: '跨境电商' }
+         ]
+      },
+      {
+         sc: 'SH000003', rk: 1, rc: 0, histRc: 0,
+         label: [
+            { labelType: 1, indicatorType: '', boardCodeBK: null, labelName: '3天3板' },
+            { labelType: 2, indicatorType: null, boardCodeBK: 'BK1115', labelName: '跨境电商' }
+         ]
+      },
+   ];
+}
+
 function utilIsShKc(code) {
    return code.startsWith('sh688');
 }
@@ -90,6 +116,9 @@ const api = {
    tencent: {
       getRt: getRtFromTencent,
       getHistory: getHistoryFromTencent,
+   },
+   eastmoney: {
+      getPopularRanking: getPopularRankingFromEastmoney,
    },
    util: {
       isKc: utilIsShKc,

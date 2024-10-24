@@ -177,6 +177,56 @@ async function getRtFromTencent(codes) {
    }
 }
 
+async function getPopularRankingFromEastmoney() {
+   // UA: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/129.0.0.0 Safari/537.36
+   // host: emappdata.eastmoney.com
+   // origin: https://vipmoney.eastmoney.com
+   // referer: https://vipmoney.eastmoney.com/
+   // POST https://emappdata.eastmoney.com/stockrank/getAllCurrentList
+   // {"appId":"appId01","globalId":"786e4c21-70dc-435a-93bb-38","marketType":"","pageNo":1,"pageSize":100}
+
+   // POST https://emappdata.eastmoney.com/label/getSecurityCodeLabelList
+   // {"appId":"appId01","globalId":"786e4c21-70dc-435a-93bb-label","securityCodes":"SH..., SZ..."}
+   const r = {};
+   const headers = {
+      Host: 'emappdata.eastmoney.com',
+      Origin: 'https://vipmoney.eastmoney.com',
+      Referer: 'https://vipmoney.eastmoney.com',
+      'Content-Type': 'application/json',
+   };
+   try {
+      const url = `https://emappdata.eastmoney.com/stockrank/getAllCurrentList`;
+      const r0 = await fetch(url, {
+         method: 'POST',
+         headers,
+         body: `{"appId":"appId01","globalId":"786e4c21-70dc-435a-93bb-38","marketType":"","pageNo":1,"pageSize":100}`
+      });
+      const json = await r0.json();
+      if (json.code !== 0) throw 'return code is not 0';
+      if (!json.data || !json.data.length) throw 'return no data';
+      r.data = json.data;
+   } catch(err) {
+      return null;
+   }
+   try {
+      const url = `https://emappdata.eastmoney.com/label/getSecurityCodeLabelList`;
+      const r0 = await fetch(url, {
+         method: 'POST',
+         headers,
+         body: `{"appId":"appId01","globalId":"786e4c21-70dc-435a-93bb-label","securityCodes":"${r.data.map(z => z.sc).join(',')}"}`
+      });
+      const json = await r0.json();
+      if (json.code !== 0) throw 'return code is not 0';
+      if (!json.data || !json.data.length) throw 'return no data';
+      const map = {};
+      json.data.forEach(z => { map[z.srcSecurityCode] = z.labelItemList; });
+      r.data.forEach(z => z.label = map[z.sc]);
+   } catch(err) {
+      return null;
+   }
+   return r.data;
+}
+
 /*
  * ref: https://blog.csdn.net/qq_33269520/article/details/80881568
  * 
@@ -254,6 +304,9 @@ api = {
    tencent: {
       getRt: getRtFromTencent,
       getHistory: getHistoryFromTencent,
+   },
+   eastmoney: {
+      getPopularRanking: getPopularRankingFromEastmoney,
    },
    util: {
       isKc: utilIsShKc,
