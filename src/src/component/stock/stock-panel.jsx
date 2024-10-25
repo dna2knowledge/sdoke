@@ -51,7 +51,7 @@ function StockUpdateProgressBar(props) {
 function SideMenu(props) {
    const buttonRef = useRef(null);
    const [anchorElem, setAnchorElem] = useState(null);
-   const { t } = props;
+   const { t, refreshStockList } = props;
    const close = () => setAnchorElem(null);
    const downloadStockList = async () => {
       const list = (await databox.stock.getStockList()) || [];
@@ -60,6 +60,44 @@ function SideMenu(props) {
          `${t('t.stockcode', 'Code')},${t('t.stockname', 'Name')},${t('t.stocktag', 'Tag')}
 ${list.length ? list.map(z => `"${z.code}","${z.name}",${z.area ? `"${z.area}"` : ''}`).join('\n') : t('tip.stock.list.empty', '"No available stocks."')}`
       );
+      close();
+   };
+   const addOneStock = async () => {
+      const line = prompt(t('tip.addonestock', 'Type in a line with stock code, name and category seperated by comma:'));
+      if (!line) return close();
+      const ps = line.split(',');
+      const code = ps[0];
+      const name = ps[1];
+      if (!code || !name) return close();
+      const area = ps[2];
+      const list = (await databox.stock.getStockList()) || [];
+      const old = list.find(z => z.code === code);
+      if (old && old.name === name && (area && old.area === area)) return close();
+      eventbus.emit('loading');
+      if (old) {
+         old.name = name;
+         old.area = area;
+      } else {
+         const item = { code, name };
+         if (area) item.area = area;
+         list.push(item);
+         await databox.stock.getStockHistory(item.code);
+      }
+      await refreshStockList(list);
+      eventbus.emit('loaded');
+      close();
+   };
+   const delOneStock = async () => {
+      const line = prompt(t('tip.delonestock', 'Type code or name of a stock to be removed from stock list:'));
+      if (!line) return close();
+      const list = (await databox.stock.getStockList()) || [];
+      const old = list.find(z => z.code === line || z.name === line);
+      if (!old) return close();
+      if (!confirm(`${t('tip.delonestock-confirm', 'Are you sure to remove the stock:')}: ${old.code} ${old.name}`)) return close();
+      eventbus.emit('loading');
+      list.splice(list.indexOf(old), 1);
+      await refreshStockList(list);
+      eventbus.emit('loaded');
       close();
    };
    return <Box>
@@ -73,6 +111,8 @@ ${list.length ? list.map(z => `"${z.code}","${z.name}",${z.area ? `"${z.area}"` 
          transformOrigin={{ horizontal: 'right', vertical: 'top' }}
          anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
       >
+         <MenuItem onClick={addOneStock}>{t('t.sidemenuitem.add-stock', 'Add/update one stock ...')}</MenuItem>
+         <MenuItem onClick={delOneStock}>{t('t.sidemenuitem.del-stock', 'Remove one stock ...')}</MenuItem>
          <MenuItem onClick={downloadStockList}>{t('t.sidemenuitem.download-list', 'Download stock list ...')}</MenuItem>
       </Menu>
    </Box>;
@@ -92,6 +132,12 @@ export default function StockPanel() {
    const [pinnedStocks, setPinnedStocks] = useState([]);
    const updateButtonRef = useRef(null);
    const delegateClick = useLongPress(updateButtonRef);
+
+   const refreshStockList = async (list) => {
+      statRef.current.stockList = list;
+      await databox.stock.setStockList(list);
+      setData(list.slice(0, sp.autocompleteN));
+   };
 
    useEffect(() => {
       databox.stock.getStockList().then(rawList => {
@@ -364,9 +410,7 @@ export default function StockPanel() {
          a.push(item);
          return a;
       }, []);
-      statRef.current.stockList = list;
-      await databox.stock.setStockList(list);
-      setData(list.slice(0, sp.autocompleteN));
+      await refreshStockList(list);
    });
    const onSearch = (evt) => {
       const val = evt.target.value;
@@ -410,7 +454,7 @@ export default function StockPanel() {
                   </Button>
                </Box>}
             />
-            <SideMenu t={t}/>
+            <SideMenu t={t} refreshStockList={refreshStockList}/>
          </Box>
          <Box><StockUpdateProgressBar/></Box>
          <Box sx={{ maxHeight: '100px', overflowY: 'auto' }}>
