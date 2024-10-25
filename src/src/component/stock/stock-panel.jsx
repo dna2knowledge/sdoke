@@ -3,10 +3,11 @@ import UpdateIcon from '@mui/icons-material/Update';
 import InsightsIcon from '@mui/icons-material/Insights';
 import CloseIcon from '@mui/icons-material/Close';
 import EditIcon from '@mui/icons-material/Edit';
+import MoreVertIcon from '@mui/icons-material/MoreVert';
 import { Box, IconButton } from '@mui/material';
 import {
    Autocomplete, TextField, ButtonGroup, Button, LinearProgress,
-   Tooltip,
+   Tooltip, Menu, MenuItem
 } from '@mui/material';
 import NoData from '$/component/shared/no-data';
 import StockOne from '$/component/stock/stock-one';
@@ -15,6 +16,7 @@ import StockCapitalTrend from '$/component/stock/stock-capital-trend';
 import eventbus from '$/service/eventbus';
 import databox from '$/service/databox';
 import local from '$/service/local';
+import download from '$/util/file-download';
 import { triggerFileSelect, readText } from '$/util/file-reader';
 import useLongPress from '$/component/util/long-press';
 
@@ -43,6 +45,36 @@ function StockUpdateProgressBar(props) {
          <LinearProgress variant="determinate" value={value} />
       </Box>
       <Box sx={{ whiteSpace: 'nowrap', fontSize: '10px' }}>{`${i} / ${n}`}</Box>
+   </Box>;
+}
+
+function SideMenu(props) {
+   const buttonRef = useRef(null);
+   const [anchorElem, setAnchorElem] = useState(null);
+   const { t } = props;
+   const close = () => setAnchorElem(null);
+   const downloadStockList = async () => {
+      const list = (await databox.stock.getStockList()) || [];
+      download(
+         t('t.sidemenuitem.download-filename', `stockList.csv`),
+         `${t('t.stockcode', 'Code')},${t('t.stockname', 'Name')},${t('t.stocktag', 'Tag')}
+${list.length ? list.map(z => `"${z.code}","${z.name}",${z.area ? `"${z.area}"` : ''}`).join('\n') : t('tip.stock.list.empty', '"No available stocks."')}`
+      );
+      close();
+   };
+   return <Box>
+      <Tooltip title={t('t.sidemenu', 'More ...')}>
+         <IconButton ref={buttonRef} onClick={() => setAnchorElem(buttonRef.current)}><MoreVertIcon /></IconButton>
+      </Tooltip>
+      <Menu
+         anchorEl={anchorElem}
+         open={!!anchorElem}
+         onClose={close}
+         transformOrigin={{ horizontal: 'right', vertical: 'top' }}
+         anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
+      >
+         <MenuItem onClick={downloadStockList}>{t('t.sidemenuitem.download-list', 'Download stock list ...')}</MenuItem>
+      </Menu>
    </Box>;
 }
 
@@ -378,6 +410,7 @@ export default function StockPanel() {
                   </Button>
                </Box>}
             />
+            <SideMenu t={t}/>
          </Box>
          <Box><StockUpdateProgressBar/></Box>
          <Box sx={{ maxHeight: '100px', overflowY: 'auto' }}>
