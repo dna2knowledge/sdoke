@@ -56,6 +56,7 @@ const tr = {
       't.weekly': '按周',
       't.monthly': '按月',
       't.yearly': '按年',
+      't.chipdist': '筹码分布',
       't.sidemenu': '更多…',
       't.sidemenuitem.download-list': '下载股票列表…',
       't.sidemenuitem.download-filename': '股票列表.csv',

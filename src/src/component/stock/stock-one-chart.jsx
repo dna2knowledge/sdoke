@@ -3,6 +3,7 @@ import { Box, IconButton, Tooltip } from '@mui/material';
 import DayIcon from '@mui/icons-material/Today';
 import WeekIcon from '@mui/icons-material/DateRange';
 import MonthIcon from '@mui/icons-material/CalendarMonth';
+import LandscapeIcon from '@mui/icons-material/Landscape';
 import StockChartRangeSlider from '$/component/stock/stock-chart-rangeslider';
 import StockChartTooltip from '$/component/stock/stock-chart-tooltip';
 import eventbus from '$/service/eventbus';
@@ -15,6 +16,7 @@ import { useChart, paintBasic, paintIndex } from '$/component/stock/stock-chart-
 // if enable d3: import { useChart, paintBasic, paintIndex } from '$/component/stock/stock-chart-d3';
 
 import { useTranslation } from 'react-i18next';
+import { ChipDistCalculator } from '$/analysis/trend/chipdist';
 
 const nshow = 250;
 function initChartConfig() {
@@ -224,6 +226,17 @@ export default function StockOneChart() {
       reload();
    };
 
+   const onChipDistributionClick = () => {
+      const meta = local.data.view?.one?.meta;
+      if (!meta) return;
+      const h = local.data.view?.one?.raw;
+      if (!h || !h.length) return;
+      const calcObj = new ChipDistCalculator(h);
+      const r = calcObj.calc(h.length-1);
+      console.log(r);
+      // TODO: draw chip distribution on a canvas
+   };
+
    return <Box>
       <Box sx={{ display: 'flex' }}>
          <Box sx={{ flex: '1 0 auto' }}>
@@ -235,6 +248,9 @@ export default function StockOneChart() {
             </Tooltip>
             <Tooltip title={t('t.monthly', 'Monthly')}>
                <IconButton onClick={onMonthClick}><MonthIcon /></IconButton>
+            </Tooltip>
+            <Tooltip title={t('t.chipdist', 'Chip Distributioin')}>
+               <IconButton onClick={onChipDistributionClick}><LandscapeIcon /></IconButton>
             </Tooltip>
          </Box>
          <StockChartRangeSlider />
