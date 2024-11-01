@@ -61,6 +61,7 @@ const tr = {
       't.sidemenuitem.download-list': '下载股票列表…',
       't.sidemenuitem.download-filename': '股票列表.csv',
       't.sidemenuitem.add-stock': '添加/更新股票…',
+      't.sidemenuitem.fixdata': '更正股票数据…',
       'tip.addonestock': '输入股票的代码、名称和分类，用逗号隔开，比如 sh000001,上证指数,指数：',
       't.sidemenuitem.del-stock': '删除股票…',
       'tip.delonestock': '输入股票的代码或名称，比如 sh000001:',
@@ -88,7 +89,8 @@ const tr = {
       'tip.one.loading': '正在加载数据 ',
       'tip.one.nodata': '没有数据；无法获取 {{code}} {{name}} 的数据。',
       'tip.strategy.nodata': '没有数据；无法获取 {{code}} {{name}} 在策略 "{{strategy}}" 下的数据。',
-      'strategy.warn.thisisjustanexample': '选择的策略只用于演示。请到“策略编辑”页面创建您自己的交易策略。'
+      'strategy.warn.thisisjustanexample': '选择的策略只用于演示。请到“策略编辑”页面创建您自己的交易策略。',
+      'stock.fixdata.warn.fail': '无法读取更正的股票数据。',
    },
    strategy: {
       'tip.warn.notsaved': '已经有一个正在编辑的策略；是否要放弃保存，创建一个新策略？',

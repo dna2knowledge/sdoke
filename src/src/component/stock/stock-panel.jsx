@@ -100,6 +100,174 @@ ${list.length ? list.map(z => `"${z.code}","${z.name}",${z.area ? `"${z.area}"` 
       eventbus.emit('loaded');
       close();
    };
+   const fixData = async () => triggerFileSelect().then(async (files) => {
+      close();
+      if (!files || !files.length) return; // user cancel
+      const raw = await readText(files[0]);
+      if (!raw) return eventbus.emit('toast', { severity: 'error', content: t('stock.fixdata.warn.fail', 'Cannot load fixed stock data') });
+      eventbus.emit('loading');
+      const list = raw.split('\n');
+      const head = list.shift().trim();
+      // code, name, tag, date, open, close, high, low, volume, amount, turnover_rate
+      const colmap = {
+         code: -1, name: -1, tag: -1,
+         T: -1, O: -1, C: -1, H: -1, L: -1, V: -1, m: -1, s: -1
+      };
+      head.split(',').forEach((z, i) => {
+         switch(z.toLowerCase()) {
+            case 'code': colmap.code = i; break;
+            case 'name': colmap.name = i; break;
+            case 'tag': colmap.tag = i; break;
+            case 't': case 'ts':
+            case 'date': colmap.T = i; break;
+            case 'o':
+            case 'open': colmap.O = i; break;
+            case 'c':
+            case 'close': colmap.C = i; break;
+            case 'h':
+            case 'high': colmap.H = i; break;
+            case 'l':
+            case 'low': colmap.L = i; break;
+            case 'v': case 'vol':
+            case 'volume': colmap.V = i; break;
+            case 'm':
+            case 'amount': colmap.m = i; break;
+            case 's':
+            case 'turnover_rate': colmap.s = i; break;
+         }
+      });
+      if (colmap.code < 0 && colmap.name < 0) {
+         // TODO: pop up warning for user
+         return;
+      }
+      const stockList = (await databox.stock.getStockList()) || [];
+      const namemap = {};
+      const codemap = {};
+      stockList.forEach(z => {
+         namemap[z.name] = z;
+         codemap[z.code] = z;
+      });
+      // getStockHistoryRaw, setStockHistoryRaw
+      // { code, name, area }
+      // { T, O, C, H, L, V, m, s }
+      const stat = { listUpdated: false, errors: [], lastcode: null, lastdata: null };
+      for (let i = 0, n = list.length; i < n; i++) {
+         const line = list[i] && list[i].trim();
+         if (!line) continue;
+         const ps = line.split(',');
+         const name = ps[colmap.name];
+         const code = ps[colmap.code];
+         const tag = ps[colmap.tag];
+         // TODO: handle error: no name/code
+         if (!name && !code) continue;
+         let item;
+         if (code) {
+            item = codemap[code];
+            if (item && name && name !== item.name) {
+               item.name = name;
+               stat.listUpdated = true;
+            }
+         } else {
+            item = namemap[name];
+         }
+         if (!item) {
+            // TODO: handle error: no name/code
+            if (!code || !name) continue;
+            item = { name, code, area: null };
+            namemap[name] = item;
+            codemap[code] = item;
+            stockList.push(item);
+            stat.listUpdated = true;
+            await databox.stock.getStockHistory(code);
+         }
+         if (tag) {
+            item.area = tag;
+            stat.listUpdated = true;
+         }
+
+         let data = null;
+         if (item.code === stat.lastcode && stat.lastdata) {
+            data = stat.lastdata;
+         } else {
+            data = (await databox.stock.getStockHistoryRaw(item.code)) || [];
+            if (stat.lastcode && stat.lastdata) {
+               await commit();
+            }
+            stat.lastcode = code;
+            stat.lastdata = data;
+         }
+
+         const Traw = ps[colmap.T];
+         if (Traw === '-') {
+            stockList.splice(stockList.indexOf(item), 1);
+            stat.listUpdated = true;
+         }
+         // if no T, it is just to update stock name/tag or add new one
+         if (!Traw) continue;
+         const T = new Date(Traw).getTime();
+         if (!T) continue;
+         const pti = binsearch(data, T);
+         const ptobj = data[pti];
+         const Oraw = ps[colmap.O];
+         const Craw = ps[colmap.C];
+         const Hraw = ps[colmap.H];
+         const Lraw = ps[colmap.L];
+         const Vraw = ps[colmap.V];
+         const mraw = ps[colmap.m];
+         const sraw = ps[colmap.s];
+         if (ptobj && ptobj.T === T) {
+            if (Oraw) ptobj.O = parseFloat(Oraw);
+            if (Craw) ptobj.C = parseFloat(Craw);
+            if (Hraw) ptobj.H = parseFloat(Hraw);
+            if (Lraw) ptobj.L = parseFloat(Lraw);
+            if (Vraw) ptobj.V = parseFloat(Vraw);
+            if (mraw) ptobj.m = parseFloat(mraw);
+            if (sraw) ptobj.s = parseFloat(sraw);
+         } else {
+            // required
+            if (!Oraw || !Craw || !Hraw || !Lraw || !Vraw) continue;
+            const newobj = {
+               T, C: parseFloat(Craw), O: parseFloat(Oraw),
+               H: parseFloat(Hraw), L: parseFloat(Lraw),
+               V: parseInt(Vraw),
+            };
+            if (mraw) newobj.m = parseFloat(mraw);
+            if (sraw) newobj.s = parseFloat(sraw);
+            data.splice(pti, 0, newobj);
+         }
+      }
+      if (stat.lastcode && stat.lastdata) {
+         await commit();
+      }
+      if (stat.listUpdated) await refreshStockList(stockList);
+      eventbus.emit('loaded');
+
+      async function commit() {
+         if (!stat.lastcode || !stat.lastdata) return;
+         await databox.stock.setStockHistoryRaw(stat.lastcode, stat.lastdata);
+         stat.lastcode = null;
+         stat.lastdata = null;
+      }
+
+      function binsearch(data, T) {
+         if (!data.length) return 0;
+         let a = 0, b = data.length-1, m;
+         while (a < b) {
+            m = ~~((a + b)/2);
+            const d = data[m];
+            if (d.T > T) {
+               b = m - 1;
+            } else if (d.T < T) {
+               a = m + 1;
+            } else {
+               return m;
+            }
+         }
+         if (data[a].T === T) return a;
+         if (data[a].T > T) return a;
+         return a + 1;
+      }
+   });
    return <Box>
       <Tooltip title={t('t.sidemenu', 'More ...')}>
          <IconButton ref={buttonRef} onClick={() => setAnchorElem(buttonRef.current)}><MoreVertIcon /></IconButton>
@@ -113,6 +281,7 @@ ${list.length ? list.map(z => `"${z.code}","${z.name}",${z.area ? `"${z.area}"` 
       >
          <MenuItem onClick={addOneStock}>{t('t.sidemenuitem.add-stock', 'Add/update one stock ...')}</MenuItem>
          <MenuItem onClick={delOneStock}>{t('t.sidemenuitem.del-stock', 'Remove one stock ...')}</MenuItem>
+         <MenuItem onClick={fixData}>{t('t.sidemenuitem.fixdata', 'Fix stock data ...')}</MenuItem>
          <MenuItem onClick={downloadStockList}>{t('t.sidemenuitem.download-list', 'Download stock list ...')}</MenuItem>
       </Menu>
    </Box>;
