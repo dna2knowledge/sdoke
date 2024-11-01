@@ -260,6 +260,8 @@ function compileSub(tokens, i, out, stat) {
 
 async function evaluate(expr, data, opt) {
    opt = opt || {};
+   // opt.cache to cache data
+   // opt.cache.input is a special field to hold data from outside
    return await evaluateNode(expr.V[0], data, opt.cache || {});
 }
 async function evaluateNode(expr, data, cache) {
@@ -547,6 +549,7 @@ async function evaluateFuncCall(name, args, data, cache, id) {
          // args = [ts1, ts2, ...], args = [["d", i1, i2], ts1, ...]
          v = [];
          if (!args.length) args = [0];
+         const shift = cache?.input?.shift || 0;
          args.forEach(z => {
             if (Array.isArray(z)) {
                if (z[0] === 'd') {
@@ -558,13 +561,13 @@ async function evaluateFuncCall(name, args, data, cache, id) {
                } else {
                   const n = data.length;
                   z.forEach(y => {
-                     const item = n > y ? data[n+y-1] : null;
+                     const item = n > y+shift ? data[n+y+shift-1] : null;
                      v.push(item ? item[qualified.col] : NaN);
                   });
                }
             } else {
                const n = data.length;
-               const item = n > z ? data[n+z-1] : null;
+               const item = n > z+shift ? data[n+z+shift-1] : null;
                v.push(item ? item[qualified.col] : NaN);
             }
          });
@@ -573,6 +576,7 @@ async function evaluateFuncCall(name, args, data, cache, id) {
       {
          // args = [[ts1, ts2], ...], args = [["d", i1, i2], ...]
          if (args.length === 2) args = [[args[0], args[1]]];
+         const shift = cache?.input?.shift || 0;
          v = [];
          args.forEach(pair => {
             if (!Array.isArray(pair)) {
@@ -590,8 +594,8 @@ async function evaluateFuncCall(name, args, data, cache, id) {
                data.filter(x => x.T >= tsa && x.T <= tsb).forEach(x => v.push(x ? x[qualified.col] : NaN));
             } else {
                const n = data.length;
-               const ia = n - 1 + pair[0];
-               const ib = n - 1 + pair[1];
+               const ia = n - 1 + pair[0] + shift;
+               const ib = n - 1 + pair[1] + shift;
                data.slice(ia < 0 ? 0 : ia, ib < 0 ? 0 : ib+1).forEach(x => v.push(x ? x[qualified.col] : NaN));
             }
          });
