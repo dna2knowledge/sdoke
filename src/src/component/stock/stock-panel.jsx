@@ -152,6 +152,7 @@ ${list.length ? list.map(z => `"${z.code}","${z.name}",${z.area ? `"${z.area}"` 
       // { T, O, C, H, L, V, m, s }
       const stat = { listUpdated: false, errors: [], lastcode: null, lastdata: null };
       for (let i = 0, n = list.length; i < n; i++) {
+         eventbus.emit('loading', `${(i/n*100).toFixed(2)}% (${i}/${n})`);
          const line = list[i] && list[i].trim();
          if (!line) continue;
          const ps = line.split(',');
@@ -229,13 +230,14 @@ ${list.length ? list.map(z => `"${z.code}","${z.name}",${z.area ? `"${z.area}"` 
             const newobj = {
                T, C: parseFloat(Craw), O: parseFloat(Oraw),
                H: parseFloat(Hraw), L: parseFloat(Lraw),
-               V: parseInt(Vraw),
+               V: parseFloat(Vraw),
             };
             if (mraw) newobj.m = parseFloat(mraw);
             if (sraw) newobj.s = parseFloat(sraw);
             data.splice(pti, 0, newobj);
          }
       }
+      eventbus.emit('loading');
       if (stat.lastcode && stat.lastdata) {
          await commit();
       }
