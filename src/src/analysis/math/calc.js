@@ -260,16 +260,17 @@ function compileSub(tokens, i, out, stat) {
 
 async function evaluate(expr, data, opt) {
    opt = opt || {};
+   const internal = {};
    // opt.cache to cache data
    // opt.cache.input is a special field to hold data from outside
-   return await evaluateNode(expr.V[0], data, opt.cache || {});
+   return await evaluateNode(expr.V[0], data, opt.cache || {}, internal);
 }
-async function evaluateNode(expr, data, cache) {
+async function evaluateNode(expr, data, cache, internal) {
    if (!expr) return null;
    if (expr.op) { // operator
       const args = [];
       for (let i = 0, n = expr.V.length; i < n; i++) {
-         args.push(await evaluateNode(expr.V[i], data, cache));
+         args.push(await evaluateNode(expr.V[i], data, cache, internal));
       }
       expr.r = await evaluateOp(expr.op, args, data, cache, expr.id);
       return expr.r;
@@ -278,10 +279,16 @@ async function evaluateNode(expr, data, cache) {
       return expr.r;
    } else if (expr.F) { // function
       const args = [];
+      const skipFirstExpand = expr.v === 'for';
       for (let i = 0, n = expr.A.V.length; i < n; i++) {
-         args.push(await evaluateNode(expr.A.V[i], data, cache));
+         if (i === 0 && skipFirstExpand) {
+            await evaluateNode(expr.A.V[i], data, cache, {});
+            args.push(expr.A.V[i]);
+            continue;
+         }
+         args.push(await evaluateNode(expr.A.V[i], data, cache, internal));
       }
-      expr.r = await evaluateFuncCall(expr.v, args, data, cache, expr.id);
+      expr.r = await evaluateFuncCall(expr.v, args, data, cache, expr.id, internal);
       return expr.r;
    } else if ('v' in expr) { // literal
       if (typeof(expr.v) === 'number') {
@@ -292,7 +299,7 @@ async function evaluateNode(expr, data, cache) {
          return expr.r;
       }
    } else if ('V' in expr) { // (...)
-      expr.r = await evaluateNode(expr.V[0], data, cache);
+      expr.r = await evaluateNode(expr.V[0], data, cache, internal);
       if (expr.id) cache[expr.id] = expr.r;
       return expr.r;
    } else return null;
@@ -518,7 +525,7 @@ async function evaluateQualifier(name, data, cache) {
    qualified.func = cmd || `get${qualified.col}`;
    return qualified;
 }
-async function evaluateFuncCall(name, args, data, cache, id) {
+async function evaluateFuncCall(name, args, data, cache, id, internal) {
    if (cache[id]) return cache[id];
    let v = null;
    if (!name) return null;
@@ -549,7 +556,7 @@ async function evaluateFuncCall(name, args, data, cache, id) {
          // args = [ts1, ts2, ...], args = [["d", i1, i2], ts1, ...]
          v = [];
          if (!args.length) args = [0];
-         const shift = cache?.input?.shift || 0;
+         const shift = (cache?.input?.shift || 0) + (internal?.for || 0);
          args.forEach(z => {
             if (Array.isArray(z)) {
                if (z[0] === 'd') {
@@ -576,7 +583,7 @@ async function evaluateFuncCall(name, args, data, cache, id) {
       {
          // args = [[ts1, ts2], ...], args = [["d", i1, i2], ...]
          if (args.length === 2) args = [[args[0], args[1]]];
-         const shift = cache?.input?.shift || 0;
+         const shift = (cache?.input?.shift || 0) + (internal?.for || 0);
          v = [];
          args.forEach(pair => {
             if (!Array.isArray(pair)) {
@@ -846,6 +853,25 @@ async function evaluateFuncCall(name, args, data, cache, id) {
       case 'log':
       case 'math.log':
          v = evaluateOp('_log', [args[0], args[1]], data, cache, id); break;
+      case 'for': {
+         args = evaluateFlatFuncCallArgs(args);
+         const node = args[0];
+         const end = parseInt(args[1] === null || args[1] === undefined ? 1 : args[1]);
+         const start = parseInt(args[2] === null || args[2] === undefined ? 1 : args[2]);
+         const step = parseInt(args[3] === null || args[3] === undefined ? 1 : args[3]);
+         v = [];
+         if ((start < end && step <= 0 ) || (start > end && step >= 0)) {
+            // keep empty
+         } else {
+            for (let i = start; i <= end; i += step) {
+               const clonedCache = Object.assign({}, cache);
+               traverseCleanCacheInNode4For(node, clonedCache);
+               const one = await evaluateNode(node, data, clonedCache, Object.assign({}, internal, { for: i }));
+               v.push(one);
+            }
+         }
+         break;
+      }
       case 'debug':
          console.log('[debug] calc -', args);
          v = args; break;
@@ -1090,7 +1116,8 @@ async function evaluateFuncCallType(name, args, cache, id) {
       case 'leastsquare':
       case 'math.leastsquare':
       case 'range':
-         v = TYPE.ARRAY; break;
+      case 'for':
+            v = TYPE.ARRAY; break;
       case 'flat':
          v = Math.max(...args); if (v < 0) v = TYPE.UNKNOWN; break;
       case 'pi':
@@ -1175,6 +1202,26 @@ function evaluateOpType(op, vals, cache, id) {
       return op2T;
    } else {
       return op1T > op2T ? op1T : op2T;
+   }
+}
+
+function traverseCleanCacheInNode4For(node, cache) {
+   if (!node) return;
+   if (node.ref) return;
+   let V = null;
+   if (Array.isArray(node)) {
+      V = node;
+   } else if (node.V) {
+      V = node.V;
+   } else if (node.A && node.A.V) {
+      V = node.A.V;
+   }
+   if (!V) return;
+   V.forEach(z => {
+      traverseCleanCacheInNode4For(z, cache);
+   });
+   if (node.id) {
+      delete cache[node.id];
    }
 }
 
