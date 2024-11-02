@@ -872,6 +872,8 @@ async function evaluateFuncCall(name, args, data, cache, id, internal) {
          }
          break;
       }
+      case 'hold':
+         v = args; break;
       case 'debug':
          console.log('[debug] calc -', args);
          v = args; break;
@@ -1186,6 +1188,7 @@ async function evaluateFuncCallType(name, args, cache, id) {
       case 'log':
       case 'math.log':
          v = evaluateOpType('_log', [args[0], args[1]], cache, id); break;
+      case 'hold':
       case 'debug':
          v = args; break;
       default:
