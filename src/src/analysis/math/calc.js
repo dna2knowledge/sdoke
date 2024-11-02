@@ -267,6 +267,8 @@ async function evaluate(expr, data, opt) {
 }
 async function evaluateNode(expr, data, cache, internal) {
    if (!expr) return null;
+   if (!cache.refmap) cache.refmap = {};
+   if (expr.id && !expr.ref) cache.refmap[expr.id] = expr;
    if (expr.op) { // operator
       const args = [];
       for (let i = 0, n = expr.V.length; i < n; i++) {
@@ -275,14 +277,13 @@ async function evaluateNode(expr, data, cache, internal) {
       expr.r = await evaluateOp(expr.op, args, data, cache, expr.id);
       return expr.r;
    } else if (expr.ref) { // ref
-      expr.r = await evaluateRef(cache, expr.id);
+      expr.r = await evaluateRef(cache, expr.id, data, internal);
       return expr.r;
    } else if (expr.F) { // function
       const args = [];
       const skipFirstExpand = expr.v === 'for';
       for (let i = 0, n = expr.A.V.length; i < n; i++) {
          if (i === 0 && skipFirstExpand) {
-            await evaluateNode(expr.A.V[i], data, cache, {});
             args.push(expr.A.V[i]);
             continue;
          }
@@ -325,9 +326,12 @@ function evaluateConstant(name, cache) {
    cache[name] = v;
    return v;
 }
-async function evaluateRef(cache, id) {
-   if (cache[id]) return cache[id];
-   return null;
+async function evaluateRef(cache, id, data, internal) {
+   if (cache[id] === undefined) {
+      // if ref not cached, re-calc to get a value
+      return await evaluateNode(cache.refmap[id], data, cache, internal);
+   }
+   return cache[id];
 }
 function evaluateFlatFuncCallArgs(args) {
    const r = [];
@@ -1210,7 +1214,10 @@ function evaluateOpType(op, vals, cache, id) {
 
 function traverseCleanCacheInNode4For(node, cache) {
    if (!node) return;
-   if (node.ref) return;
+   if (node.ref) {
+      delete cache[node.id];
+      return;
+   }
    let V = null;
    if (Array.isArray(node)) {
       V = node;
