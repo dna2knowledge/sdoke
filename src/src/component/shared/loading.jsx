@@ -4,6 +4,7 @@ import eventbus from '$/service/eventbus';
 
 function Loading () {
    const [show, setShow] = useState(false);
+   const [text, setText] = useState('');
    useEffect(() => {
       eventbus.on('loading', handleLoading);
       eventbus.on('loaded', handleLoaded);
@@ -11,7 +12,8 @@ function Loading () {
          eventbus.off('loading', handleLoading);
          eventbus.off('loaded', handleLoaded);
       };
-      function handleLoading() {
+      function handleLoading(newText) {
+         setText(newText || '');
          setShow(true);
       }
       function handleLoaded() {
@@ -35,6 +37,7 @@ function Loading () {
       <Box sx={{
          zIndex: '1001',
          display: 'flex',
+         flexDirection: 'column',
          position: 'fixed',
          width: '100vw',
          height: '100vh',
@@ -43,7 +46,10 @@ function Loading () {
          userSelect: 'none',
          top: '0',
          left: '0',
-      }}><CircularProgress /></Box>
+      }}>
+         <CircularProgress />
+         {text ? <Box>{text}</Box> : null}
+      </Box>
    </Box>);
 }
 
