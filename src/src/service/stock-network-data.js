@@ -177,7 +177,7 @@ async function getRtFromTencent(codes) {
    }
 }
 
-async function getPopularRankingFromEastmoney() {
+async function getPopularRankingFromEastmoney(code) {
    // UA: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/129.0.0.0 Safari/537.36
    // host: emappdata.eastmoney.com
    // origin: https://vipmoney.eastmoney.com
@@ -194,6 +194,30 @@ async function getPopularRankingFromEastmoney() {
       Referer: 'https://vipmoney.eastmoney.com',
       'Content-Type': 'application/json',
    };
+
+   if (code) {
+      // POST https://emappdata.eastmoney.com/stockrank/getCurrentList
+      // {"appId":"appId01","globalId":"786e4c21-70dc-435a-93bb-38","marketType":"","securityCode":"SH.../SZ..."}
+      // POST https://emappdata.eastmoney.com/stockrank/getHisList
+      // {"appId":"appId01","globalId":"786e4c21-70dc-435a-93bb-38","marketType":"","srcSecurityCode":"SH.../SZ...", "yearType": 2}
+      try {
+         // const url = `https://emappdata.eastmoney.com/stockrank/getCurrentList`
+         const url = `https://emappdata.eastmoney.com/stockrank/getHisList`;
+         const r0 = await fetch(url, {
+            method: 'POST',
+            headers,
+            body: `{"appId":"appId01","globalId":"786e4c21-70dc-435a-93bb-38","marketType":"","srcSecurityCode":"${code.toUpperCase()}","yearType":2}`
+         });
+         const json = await r0.json();
+         if (json.code !== 0) throw 'return code is not 0';
+         if (!json.data || !json.data.length) throw 'return no data';
+         const last = json.data[json.data.length-1];
+         r.data = [{ sc: code, rc: 0, hisRc: 0, rk: last.rank, history: json.data }];
+      } catch(err) {
+         return null;
+      }
+   }
+
    try {
       const url = `https://emappdata.eastmoney.com/stockrank/getAllCurrentList`;
       const r0 = await fetch(url, {

@@ -65,7 +65,19 @@ async function getRtFromTencent(codes) {
    }
 }
 
-async function getPopularRankingFromEastmoney() {
+async function getPopularRankingFromEastmoney(code) {
+   if (code) {
+      return [{
+         sc: code.toUpperCase(), rk: 1, rc: 0, histRc: 0,
+         history: [
+            { calcTime: '2024-11-01', rank: 5 },
+            { calcTime: '2024-11-02', rank: 4 },
+            { calcTime: '2024-11-03', rank: 3 },
+            { calcTime: '2024-11-04', rank: 2 },
+            { calcTime: '2024-11-05', rank: 1 },
+         ]
+      },]
+   }
    return [
       {
          sc: 'SH000001', rk: 1, rc: 0, histRc: 0,
