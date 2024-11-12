@@ -49,9 +49,9 @@ checkAcitveToday();
 const stockApi = {
     getTradeActive: () => stat.active,
     getStockList: () => db.get("stock.list"),
-    setStockList: (list) => db.set("stock.list", list),
+    setStockList: (list) => list ? db.set("stock.list", list) : db.del("stock.list"),
     getPinnedStockList: () => db.get("stock.list.pinned"),
-    setPinnedStockList: (list) => db.set("stock.list.pinned", list),
+    setPinnedStockList: (list) => list ? db.set("stock.list.pinned", list) : db.del("stock.list.pinned"),
     getStockRealtime: (codes) => stockNet.tencent.getRt(codes),
     updateStockHistory: async (code) => {
         const key = `stock.one.${code}.history`;
@@ -85,7 +85,7 @@ const stockApi = {
         return newh;
     },
     getStockHistoryRaw: (code) => db.get(`stock.one.${code}.history`),
-    setStockHistoryRaw: (code, list) => db.set(`stock.one.${code}.history`, list),
+    setStockHistoryRaw: (code, list) => list ? db.set(`stock.one.${code}.history`, list) : db.del(`stock.one.${code}.history`),
     getStockHistory: async (code, endDateTs) => {
         if (!code) return null;
         const key = `stock.one.${code}.history`;
@@ -109,7 +109,7 @@ const stockApi = {
         return history;
     },
     getStockStrategyList: () => db.get("stock.strategy.list"),
-    setStockStrategyList: (list) => db.set("stock.strategy.list", list),
+    setStockStrategyList: (list) => list ? db.set("stock.strategy.list", list) : db.del("stock.strategy.list"),
     getStockStrategy: async (name) => {
       const list = await stockApi.getStockStrategyList();
       return list.find(z => z.name === name);
@@ -125,13 +125,13 @@ const stockApi = {
       return item;
     },
     getStockTradeYears: () => db.get('stock.trade.list.years'),
-    setStockTradeYears: (list) => db.set('stock.trade.list.years', list),
+    setStockTradeYears: (list) => list ? db.set('stock.trade.list.years', list) : db.del('stock.trade.list.years'),
     getStockTradeList: (year) => db.get(`stock.trade.list.${year}`),
-    setStockTradeList: (year, list) => db.set(`stock.trade.list.${year}`, list),
-    getStockTradeWatchYears: () => db.get('stock.tradewatch.list.years'),
-    setStockTradeWatchYears: (list) => db.set('stock.tradewatch.list.years', list),
-    getStockTradeWatchList: (year) => db.get(`stock.tradewatch.list.${year}`),
-    setStockTradeWatchList: (year, list) => db.set(`stock.tradewatch.list.${year}`, list),
+    setStockTradeList: (year, list) => list ? db.set(`stock.trade.list.${year}`, list) : db.del(`stock.trade.list.${year}`),
+    //getStockTradeWatchYears: () => db.get('stock.tradewatch.list.years'),
+    //setStockTradeWatchYears: (list) => db.set('stock.tradewatch.list.years', list),
+    //getStockTradeWatchList: (year) => db.get(`stock.tradewatch.list.${year}`),
+    //setStockTradeWatchList: (year, list) => db.set(`stock.tradewatch.list.${year}`, list),
 };
 
 export default stockApi;
