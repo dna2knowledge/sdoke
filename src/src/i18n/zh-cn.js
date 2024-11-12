@@ -44,6 +44,8 @@ const tr = {
       't.high': '最高',
       't.vol': '成交量',
       't.turnover': '换手率',
+      't.incrate': '涨幅',
+      't.maxrate': '振幅',
       't.gain.u': '盈利',
       't.loss.u': '亏损',
       't.indexarea': '指标',

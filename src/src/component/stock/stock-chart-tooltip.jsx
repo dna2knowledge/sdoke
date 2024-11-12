@@ -19,8 +19,25 @@ function buildInfo(container, info) {
    a(container, a(o('div'), txt(o('span'), config.util.getDateStr(info.T))));
    a(container, a(o('div'), txt(o('span'), `${t('t.open', 'open')}: ${info.O.toFixed(2)}`)));
    a(container, a(o('div'), txt(o('span'), `${t('t.close', 'close')}: ${info.C.toFixed(2)}`)));
+
+   const incrate_span = o('span');
+   const lastC = isNaN(info.last?.C) ? info.O : info.last.C;
+   const incrate = (info.C - lastC)/lastC*100;
+   incrate_span.style.fontWeight = 'bold';
+   if (incrate === 0) {
+      incrate_span.style.color = 'gray';
+   } else if (incrate < 0) {
+      incrate_span.style.color = 'green';
+   } else {
+      incrate_span.style.color = 'red';
+   }
+   a(container, a(txt(o('div'), `${t('t.incrate', 'gain/loss:')}: `), txt(incrate_span, `${incrate.toFixed(2)}%`)));
+
    a(container, a(o('div'), txt(o('span'), `${t('t.low', 'low')}: ${info.L.toFixed(2)}`)));
    a(container, a(o('div'), txt(o('span'), `${t('t.high', 'high')}: ${info.H.toFixed(2)}`)));
+   const maxrate_span = o('span'); 
+   maxrate_span.style.fontWeight = 'bold';
+   a(container, a(txt(o('div'), `${t('t.maxrate', 'amp')}: `), txt(maxrate_span, `${((info.H - info.L)/info.O*100).toFixed(2)}%`)));
    a(container, a(o('div'), txt(o('span'), `${t('t.vol', 'vol')}: ${info.V.toFixed(2)}`)));
    if (!isNaN(info.s)) a(container, a(o('div'), txt(o('span'), `${t('t.turnover', 'turnover')}: ${info.s.toFixed(2)}`)));
    if (info && !isNaN(info.stg)) {
@@ -67,8 +84,10 @@ export function onCursorMove(evt, data, canvasWidthFn, t) {
    if (data.i === i) return;
    data.i = i;
    const one = data.data?.raw?.[i];
+   const last = data.data?.raw?.[i-1];
    if (one) {
       const info = {...one};
+      info.last = last;
       info.t = t;
       info.x = evt.clientX;
       info.y = evt.clientY;
