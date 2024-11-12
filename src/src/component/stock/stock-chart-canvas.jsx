@@ -122,7 +122,7 @@ export function paintBasic(canvas, data) {
       });
    }
 
-   vis.forEach(item => paintIndexOne(pen, item.vis, min, max, shiftw, lx, h0, n, item.color));
+   vis.forEach(item => paintIndexOne(pen, item.vis, min, max, shiftw - lx/2, lx, h0, n, item.color));
 }
 
 function paintIndexOne(pen, visOne, min, max, shiftw, lx, h1, n, color) {

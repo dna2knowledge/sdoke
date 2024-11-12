@@ -91,7 +91,7 @@ export function paintBasic(svg, data) {
    candlestick.append('rect').attr('width', lx).attr('height', vyh).attr('x', x).attr('y', vytop).attr('fill', '#ddd');
    candlestick.append('line').attr('x1', xmid).attr('y1', ymin).attr('x2', xmid).attr('y2', ymax).attr('stroke', color).attr('stroke-width', 1);
    candlestick.append('rect').attr('width', lx).attr('height', yh).attr('x', x).attr('y', ytop).attr('rx', 1).attr('stroke', color).attr('fill', color);
-   vis.forEach(item => paintIndexOne(candlestick, item.vis, min, max, wc, shiftw, lx, h0, n, item.color));
+   vis.forEach(item => paintIndexOne(candlestick, item.vis, min, max, wc, shiftw - lx/2, lx, h0, n, item.color));
 }
 
 function paintIndexOne(g, visOne, min, max, wc, shiftw, lx, h1, n, color) {
