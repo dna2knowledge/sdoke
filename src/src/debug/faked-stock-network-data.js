@@ -103,6 +103,11 @@ async function getPopularRankingFromEastmoney(code) {
    ];
 }
 
+async function getNearMarkerDateFromEastmoney(date) { return null; }
+async function getF10EhHolderFromEastmoney(code, date) { return null; }
+async function getNorthOrgHolderFromEastmoney(code, date) { return null; }
+async function getHolderBasicInfoFromEastmoney(holderId, date) { return null; }
+
 function utilIsShKc(code) {
    return code.startsWith('sh688');
 }
