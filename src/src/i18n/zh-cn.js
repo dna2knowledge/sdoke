@@ -199,6 +199,7 @@ const tr = {
       'tip.stock.autocomplete': '股票代码或者名称',
       'tip.stock.list.empty': '没有符合条件的股票',
       'edit.warn.remove': '确定删除这则交易记录：',
+      't.monitor.trade': '条件监测',
    },
    about: {
       't.name': '应用名称',

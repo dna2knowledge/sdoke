@@ -8,8 +8,10 @@ import AddRoadIcon from '@mui/icons-material/AddRoad';
 import RemoveRoadIcon from '@mui/icons-material/RemoveRoad';
 import EditRoadIcon from '@mui/icons-material/EditRoad';
 import TaskIcon from '@mui/icons-material/Task';
+import MonitorHeartIcon from '@mui/icons-material/MonitorHeart';
 import CloseIcon from '@mui/icons-material/Close';
 import StockTradeTimeline from '$/component/stock/stock-trade-timeline';
+import StockTradeRtMonitor from '$/component/stock/stock-trade-rt-monitor';
 import eventbus from '$/service/eventbus';
 import databox from '$/service/databox';
 import config from '$/component/stock/stock-trade-config';
@@ -412,11 +414,13 @@ export default function StockTrade() {
          </Select>
          <Tooltip title={t('t.refresh', 'Refresh')}><IconButton onClick={onUpdateClick}><UpdateIcon /></IconButton></Tooltip>
          <Tooltip title={t('t.add.trade', 'Add Trade')}><IconButton onClick={onAddClick}><AddRoadIcon /></IconButton></Tooltip>
+         <Tooltip title={t('t.monitor.trade', 'Monitoring')}><IconButton onClick={() => eventbus.emit('stock.trade.mointor.edit')}><MonitorHeartIcon /></IconButton></Tooltip>
       </Box>
       {/* TODO: summary of this year */}
       <Box sx={{ flex: '1 0 auto', marginBottom: '10px', height: '0px', width: '100%', overflow: 'auto' }}>
          <StockTradeTimeline data={data}/>
       </Box>
       <EditDialog data={editSelected} open={editOpen} onClose={onEditDialogClose}/>
+      <StockTradeRtMonitor />
    </Box>;
 }
