@@ -261,9 +261,12 @@ function compileSub(tokens, i, out, stat) {
 async function evaluate(expr, data, opt) {
    opt = opt || {};
    const internal = {};
+   const cache = opt.cache || {};
    // opt.cache to cache data
    // opt.cache.input is a special field to hold data from outside
-   return await evaluateNode(expr.V[0], data, opt.cache || {}, internal);
+   // opt.value to provide value outside with var name like { t1: 1, t2: 2 }
+   if (opt.value) cache.value = opt.value;
+   return await evaluateNode(expr.V[0], data, cache, internal);
 }
 async function evaluateNode(expr, data, cache, internal) {
    if (!expr) return null;
@@ -307,6 +310,7 @@ async function evaluateNode(expr, data, cache, internal) {
 }
 function evaluateConstant(name, cache) {
    if (cache[name]) return cache[name];
+   if (cache.value && (name in cache.value)) return cache.value[name];
    let v = null;
    switch(name) {
       case 'pi':
