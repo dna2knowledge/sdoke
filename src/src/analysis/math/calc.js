@@ -10,6 +10,7 @@ import rsiIndex from '$/analysis/index/rsi';
 import cciIndex from '$/analysis/index/cci';
 import wrIndex from '$/analysis/index/wr';
 import bollMdIndex, { boll_val as bollValIndex } from '$/analysis/index/boll';
+import { ChipDistCalculator } from '$/analysis/trend/chipdist';
 
 export const version = '0.1';
 const dayms = 24 * 3600 * 1000;
@@ -725,6 +726,29 @@ async function evaluateFuncCall(name, args, data, cache, id, internal) {
          args = evaluateFlatFuncCallArgs(args);
          v = args.slice();
          break; }
+      case 'chipdist': {
+         // chipdist(index(-20, 0))
+         if (!data) { v = []; break; }
+         const resolver = new ChipDistCalculator(data);
+         const n = data.length;
+         const shift = (cache?.input?.shift || 0) + (internal?.for || 0);
+         args = evaluateFlatFuncCallArgs(args);
+         v = args.map(z => {
+            const index = n - 1 + shift + z;
+            if (index >= n || index < 0) return 0;
+            const obj = data[index];
+            const chipdist = resolver.calc(index);
+            if (!chipdist) return 0;
+            const xsum = chipdist.x.reduce((a, b) => a+b, 0);
+            if (xsum === 0) return 0;
+            let x0sum = 0;
+            chipdist.y.forEach((z, i) => {
+               if (z > obj.C) return;
+               x0sum += chipdist.x[i];
+            });
+            return x0sum / xsum;
+         });
+         break; }
       case 'flat':
          v = flatList(args); break;
       // 1
@@ -1126,6 +1150,7 @@ async function evaluateFuncCallType(name, args, cache, id) {
       case 'leastsquare':
       case 'math.leastsquare':
       case 'range':
+      case 'chipdist':
       case 'for':
             v = TYPE.ARRAY; break;
       case 'flat':
