@@ -6,6 +6,7 @@ import MonthIcon from '@mui/icons-material/CalendarMonth';
 import LandscapeIcon from '@mui/icons-material/Landscape';
 import StockChartRangeSlider from '$/component/stock/stock-chart-rangeslider';
 import StockChartTooltip from '$/component/stock/stock-chart-tooltip';
+import StockOneChipdist from '$/component/stock/stock-one-chipdist';
 import eventbus from '$/service/eventbus';
 import local from '$/service/local';
 import pickHSLColor from '$/util/color-hsl-pick'
@@ -16,7 +17,6 @@ import { useChart, paintBasic, paintIndex } from '$/component/stock/stock-chart-
 // if enable d3: import { useChart, paintBasic, paintIndex } from '$/component/stock/stock-chart-d3';
 
 import { useTranslation } from 'react-i18next';
-import { ChipDistCalculator } from '$/analysis/trend/chipdist';
 
 const nshow = 250;
 function initChartConfig() {
@@ -231,10 +231,9 @@ export default function StockOneChart() {
       if (!meta) return;
       const h = local.data.view?.one?.raw;
       if (!h || !h.length) return;
-      const calcObj = new ChipDistCalculator(h);
-      const r = calcObj.calc(h.length-1);
-      console.log(r);
-      // TODO: draw chip distribution on a canvas
+      eventbus.emit('stock.one.chipdist', {
+         meta, data: h,
+      });
    };
 
    return <Box>
@@ -257,5 +256,6 @@ export default function StockOneChart() {
       </Box>
       {ChartImpl}
       <StockChartTooltip />
+      <StockOneChipdist />
    </Box>;
 }

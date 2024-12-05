@@ -115,7 +115,7 @@ ChipDistCalculator.prototype.calc = function (index) {
    result.x = xdata;
    result.y = yrange;
    result.benefitPart = result.getBenefitPart(currentprice);
-   result.avgCost = getCostByChip(totalChips * 0.5).toFixed(2);
+   result.avgCost = getCostByChip(totalChips * 0.5);
    result.percentChips = {
        '90': result.computePercentChips(0.9),
        '70': result.computePercentChips(0.7)
