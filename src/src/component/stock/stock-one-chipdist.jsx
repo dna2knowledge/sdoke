@@ -27,6 +27,10 @@ function paintChipdist(canvas, data, index, t) {
    pen.fillStyle = 'white';
    pen.fillRect(0, 0, w, h);
 
+   pen.save();
+   pen.translate(0, h);
+   pen.scale(1, -1);
+
    if (stat.ymin === stat.ymax) {
       // only one point
       return;
@@ -57,42 +61,49 @@ function paintChipdist(canvas, data, index, t) {
    pen.fillStyle = 'rgba(0, 0, 255, 0.3)';
    const cx = w * (chipdist.C - stat.ymin) / ydm;
    pen.fillRect(cx-1, 0, 2, h);
+   pen.restore();
 
    pen.fillStyle = 'black';
    pen.font = '14px Arial';
    let label = `${stat.ymin}`;
-   pen.fillText(label, 5, h-5);
+   pen.fillText(label, 5, 15);
    label = `${stat.ymax}`;
    let rect = pen.measureText(label);
-   pen.fillText(label, w-rect.width-5, h-5);
+   pen.fillText(label, w-rect.width-5, 15);
 
    const avgrate = getRate(chipdist, chipdist.avgCost);
    const crate = getRate(chipdist, chipdist.C);
-   const text = `${t('t.chipdist.close', 'Last')}: ${chipdist.C.toFixed(2)} (${crate}%) | ${t('t.chipdist.avg', 'Avg')}: ${chipdist.avgCost.toFixed(2)} (${avgrate}%)`;
-   eventbus.emit('stock.chipdist.status.overall', text);
+   let text = `${chipdist.C.toFixed(2)} (${crate}%)`;
+   eventbus.emit('stock.chipdist.status.last', text);
+   text = `${chipdist.avgCost.toFixed(2)} (${avgrate}%)`;
+   eventbus.emit('stock.chipdist.status.avg', text);
    eventbus.emit('stock.chipdist.status.point', '');
 }
 
-function StockChipDistStatus() {
-   const [overall, setOverall] = useState('');
+function StockChipDistStatus(props) {
+   const { t } = props;
+   const [last, setLast] = useState('');
+   const [avg, setAvg] = useState('');
    const [point, setPoint] = useState('');
    useEffect(() => {
-      eventbus.on('stock.chipdist.status.overall', handleOverall);
+      eventbus.on('stock.chipdist.status.last', handleLast);
+      eventbus.on('stock.chipdist.status.avg', handleAvg);
       eventbus.on('stock.chipdist.status.point', handlePoint);
       return () => {
-         eventbus.off('stock.chipdist.status.overall', handleOverall);
+         eventbus.off('stock.chipdist.status.last', handleLast);
+         eventbus.off('stock.chipdist.status.avg', handleAvg);
          eventbus.off('stock.chipdist.status.point', handlePoint);
       };
 
-      function handleOverall(text) {
-         setOverall(text);
-      }
-
-      function handlePoint(text) {
-         setPoint(text);
-      }
+      function handleLast(text) { setLast(text); }
+      function handleAvg(text) { setAvg(text); }
+      function handlePoint(text) { setPoint(text); }
    });
-   return <Box>{overall} {point}</Box>;
+   return <Box sx={{ '.blue': { color: 'blue' }, '.red': { color: 'red' }, }}>{
+      last ? <span><span className="blue">{t('t.chipdist.close', 'Last')}</span>: {last}</span> : null
+   }&nbsp;{
+      avg ? <span><span className="red">{t('t.chipdist.avg', 'Avg')}</span>: {avg}</span> : null
+   }&nbsp;{point}</Box>;
 }
 
 export default function StockOneChipdist(props) {
@@ -101,7 +112,6 @@ export default function StockOneChipdist(props) {
    const [open, setOpen] = useState(false);
    const [data, setData] = useState(null);
    const canvasRef = useRef(null);
-   const eventBinder = useRef(null);
    const close = () => setOpen(false);
 
    const cts = data?.chipdist ? new Date(data.chipdist[index].T) : null;
@@ -186,6 +196,6 @@ export default function StockOneChipdist(props) {
          </Box>
       </Box> : null}
       <canvas ref={canvasRef} onMouseMove={handleMousemove}>(not support canvas)</canvas>
-      <StockChipDistStatus />
+      <StockChipDistStatus t={t} />
    </Box></Drawer>;
 }
