@@ -256,6 +256,6 @@ export default function StockOneChart() {
       </Box>
       {ChartImpl}
       <StockChartTooltip />
-      <StockOneChipdist />
+      <StockOneChipdist t={t}/>
    </Box>;
 }

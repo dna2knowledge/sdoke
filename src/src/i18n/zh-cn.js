@@ -93,6 +93,8 @@ const tr = {
       'tip.strategy.nodata': '没有数据；无法获取 {{code}} {{name}} 在策略 "{{strategy}}" 下的数据。',
       'strategy.warn.thisisjustanexample': '选择的策略只用于演示。请到“策略编辑”页面创建您自己的交易策略。',
       'stock.fixdata.warn.fail': '无法读取更正的股票数据。',
+      't.chipdist.close': '最近',
+      't.chipdist.avg': '平均',
    },
    strategy: {
       'tip.warn.notsaved': '已经有一个正在编辑的策略；是否要放弃保存，创建一个新策略？',

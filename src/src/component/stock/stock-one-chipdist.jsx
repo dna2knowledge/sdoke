@@ -14,7 +14,7 @@ function getRate(data, p) {
    return Math.round(x0sum / xsum * 100000)/1000;
 }
 
-function paintChipdist(canvas, data, index) {
+function paintChipdist(canvas, data, index, t) {
    if (!canvas) return;
    const stat = data.stat;
    const chipdist = data.chipdist[index];
@@ -34,7 +34,7 @@ function paintChipdist(canvas, data, index) {
 
    const ydm = stat.ymax - stat.ymin;
    pen.strokeStyle = 'black';
-   pen.fillStyle = 'rgba(0, 0, 0, 0.3)';
+   pen.fillStyle = 'rgba(256, 215, 0, 0.8)';
    pen.beginPath();
    pen.moveTo(0, 0);
    let px = w * (chipdist.y[0] - stat.ymin) / ydm, py = h * chipdist.x[0]/stat.xmax;
@@ -58,18 +58,50 @@ function paintChipdist(canvas, data, index) {
    const cx = w * (chipdist.C - stat.ymin) / ydm;
    pen.fillRect(cx-1, 0, 2, h);
 
+   pen.fillStyle = 'black';
+   pen.font = '14px Arial';
+   let label = `${stat.ymin}`;
+   pen.fillText(label, 5, h-5);
+   label = `${stat.ymax}`;
+   let rect = pen.measureText(label);
+   pen.fillText(label, w-rect.width-5, h-5);
+
    const avgrate = getRate(chipdist, chipdist.avgCost);
    const crate = getRate(chipdist, chipdist.C);
-   const text = `${chipdist.C.toFixed(2)} (${crate}%) v.s. ${chipdist.avgCost.toFixed(2)} (${avgrate}%)`;
-   pen.fillStyle = 'black';
-   pen.fillText(text, 10, h - 10);
+   const text = `${t('t.chipdist.close', 'Last')}: ${chipdist.C.toFixed(2)} (${crate}%) | ${t('t.chipdist.avg', 'Avg')}: ${chipdist.avgCost.toFixed(2)} (${avgrate}%)`;
+   eventbus.emit('stock.chipdist.status.overall', text);
+   eventbus.emit('stock.chipdist.status.point', '');
 }
 
-export default function StockOneChipdist() {
+function StockChipDistStatus() {
+   const [overall, setOverall] = useState('');
+   const [point, setPoint] = useState('');
+   useEffect(() => {
+      eventbus.on('stock.chipdist.status.overall', handleOverall);
+      eventbus.on('stock.chipdist.status.point', handlePoint);
+      return () => {
+         eventbus.off('stock.chipdist.status.overall', handleOverall);
+         eventbus.off('stock.chipdist.status.point', handlePoint);
+      };
+
+      function handleOverall(text) {
+         setOverall(text);
+      }
+
+      function handlePoint(text) {
+         setPoint(text);
+      }
+   });
+   return <Box>{overall} {point}</Box>;
+}
+
+export default function StockOneChipdist(props) {
+   const { t } = props;
    const [index, setIndex] = useState(0);
    const [open, setOpen] = useState(false);
    const [data, setData] = useState(null);
    const canvasRef = useRef(null);
+   const eventBinder = useRef(null);
    const close = () => setOpen(false);
 
    const cts = data?.chipdist ? new Date(data.chipdist[index].T) : null;
@@ -77,9 +109,25 @@ export default function StockOneChipdist() {
    const onChangeIndex = (evt) => {
       setIndex(evt.target.value);
    };
+   const handleMousemove = (evt) => {
+      if (!data) return;
+      let x;
+      if ('offsetX' in evt) {
+         x = evt.offsetX;
+      } else {
+         x = evt.clientX - evt.target.offsetLeft;
+      }
+      const w = canvasRef.current.offsetWidth;
+      if (x < 0 || x > w) return;
+      const stat = data.stat;
+      const dm = stat.ymax - stat.ymin;
+      const p = dm * x / w + stat.ymin;
+      const r = getRate(data.chipdist[index], p);
+      eventbus.emit('stock.chipdist.status.point', `| ${p.toFixed(2)} (${r}%)`);
+   };
 
    useEffect(() => {
-      paintChipdist(canvasRef.current, data, index);
+      paintChipdist(canvasRef.current, data, index, t);
    }, [index, canvasRef]);
 
    useEffect(() => {
@@ -119,7 +167,7 @@ export default function StockOneChipdist() {
             setIndex(0);
             setData(obj);
             setOpen(true);
-            setTimeout(() => paintChipdist(canvasRef.current, obj, 0));
+            setTimeout(() => paintChipdist(canvasRef.current, obj, 0, t));
             eventbus.emit('loaded');
          })();
       }
@@ -137,6 +185,7 @@ export default function StockOneChipdist() {
             <Slider valueLabelDisplay="off" min={0} max={59} value={index} onChange={onChangeIndex}/>
          </Box>
       </Box> : null}
-      <canvas ref={canvasRef}>(not support canvas)</canvas>
+      <canvas ref={canvasRef} onMouseMove={handleMousemove}>(not support canvas)</canvas>
+      <StockChipDistStatus />
    </Box></Drawer>;
 }
