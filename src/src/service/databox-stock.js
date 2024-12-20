@@ -53,6 +53,10 @@ const stockApi = {
     getPinnedStockList: () => db.get("stock.list.pinned"),
     setPinnedStockList: (list) => list ? db.set("stock.list.pinned", list) : db.del("stock.list.pinned"),
     getStockRealtime: (codes) => stockNet.tencent.getRt(codes),
+    tranformRealtimeItem: (rt) => ({
+      O: rt.O, C: rt.C, L: rt.L, H: rt.H,
+      V: rt.V, m: rt.m, s: rt.s, T: rt.T,
+    }),
     updateStockHistory: async (code) => {
         const key = `stock.one.${code}.history`;
         if (stat.progress[key]) return await stat.progress[key].promise;

@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from "react";
-import { Box, Drawer, Slider } from "@mui/material";
+import { Box, Drawer, Slider, IconButton } from "@mui/material";
 import { ChipDistCalculator } from '$/analysis/trend/chipdist';
+import RefreshIcon from '@mui/icons-material/Refresh';
+import stockApi from "$/service/databox-stock";
 import eventbus from '$/service/eventbus';
 import local from '$/service/local';
 
@@ -151,10 +153,16 @@ export default function StockOneChipdist(props) {
          if (!evt || !evt.meta || !evt.data || !evt.data.length) return;
          eventbus.emit('loading');
          (async () => {
-            const h = evt.data;
+            const h = evt.data.slice();
+            const rts = await stockApi.getStockRealtime([evt.meta.code]);
+            if (rts && rts.length) {
+               const rt = stockApi.tranformRealtimeItem(rts[0]);
+               if (h[0].T === rt.T) h.pop();
+               h.push(rt);
+            }
             const calcObj = new ChipDistCalculator(h);
             const last = h[h.length - 1];
-            const obj = { calc: calcObj, chipdist: [], latestTs: new Date(last.T) };
+            const obj = { calc: calcObj, chipdist: [], latestTs: new Date(last.T), raw: evt };
             obj.stat = { xmin: Infinity, xmax: -Infinity, ymin: Infinity, ymax: -Infinity };
             for (let i = 0, n = h.length; i < 60 && i < n; i++) {
                await ((async () => {
@@ -190,6 +198,9 @@ export default function StockOneChipdist(props) {
       canvas: { width: '100%', height: '200px' },
    }}>
       {data ? <Box sx={{ display: 'flex' }}>
+         <Box><IconButton size="small" onClick={() => eventbus.emit('stock.one.chipdist', data.raw)} sx={{ marginTop: '-2px' }}>
+            <RefreshIcon />
+         </IconButton></Box>
          <Box sx={{ width: '110px', lineHeight: '30px' }}>{currentDate}</Box>
          <Box sx={{ flex: '1 0 auto' }}>
             <Slider valueLabelDisplay="off" min={0} max={59} value={index} onChange={onChangeIndex}/>
