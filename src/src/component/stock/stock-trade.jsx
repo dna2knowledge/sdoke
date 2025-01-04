@@ -372,20 +372,24 @@ export default function StockTrade() {
       setEditSelected(null);
       setEditOpen(true)
    };
-   const onEditDialogClose = (item) => {
+   const onEditDialogClose = async (item) => {
       setEditOpen(false);
       if (!item || !data?.Ts) return;
+      const year = new Date(item.T).getFullYear();
+      const yearList = await databox.stock.getStockTradeList(year);
       const origin = item.origin;
       delete item.origin;
       if (origin) {
          const index = origin.index || data.Ts.length;
+         const item0 = yearList.find(z => z.id === origin.id);
+         if (item0) yearList.splice(yearList.indexOf(item0), 1, item);
          data.Ts.splice(index, 1, item);
       } else {
          data.Ts.push(item);
+         item.id = yearList.reduce((a, x) => a > x ? a : x, 0) + 1;
       }
       // TODO: check year
-      const year = new Date(item.T).getFullYear();
-      databox.stock.setStockTradeList(year, data.Ts);
+      databox.stock.setStockTradeList(year, yearList);
       if (!years.includes(year)) {
          const currentYear = new Date().getFullYear();
          for (let y = currentYear; y >= year; y--) {
