@@ -26,13 +26,13 @@ function paintHistory(canvas, w0, h0, year, item, history) {
       canvas.parentNode.parentNode.style.top = '';
    }
    if (history.length !== hi0.length && history.length) {
-      partial.st = hi0[1];
+      partial.st = hi0[0];
       partial.ed = hi0[hi0.length-1];
       if (new Date(partial.st.T).getFullYear() === year) partial.st = null;
       if (new Date(partial.ed.T).getFullYear() === year) partial.ed = null;
       const resizeH = (
          Math.floor(
-            (new Date(history[history.length-1].T).getTime() - new Date(history[1].T).getTime())/config.dayms
+            (tsb - new Date(history[0].T).getTime())/config.dayms
          ) * config.dh
       ) + (partial.st ? config.dh : 0);
       canvas.height = `${resizeH}`;
@@ -43,6 +43,11 @@ function paintHistory(canvas, w0, h0, year, item, history) {
          canvas.parentNode.parentNode.style.top = `${10}px`;
       }
       h0 = resizeH;
+   } else {
+      canvas.height = `${h0}`;
+      canvas.style.height = `${h0}px`;
+      canvas.parentNode.style.height = `${h0}px`;
+      canvas.parentNode.parentNode.style.height = `${h0 + config.th1}px`;
    }
    const pen = canvas.getContext('2d');
    pen.fillStyle = 'white';

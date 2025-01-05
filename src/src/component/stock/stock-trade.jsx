@@ -281,7 +281,7 @@ export default function StockTrade() {
       (async () => {
          const r = await getTradeData(year);
          setYears(r.years);
-         setData({ Y: year, Ts: r.trades });
+         setData({ Y: year, Ts: r.trades ? [...r.trades] : [] });
       })();
    }, [year]);
 
@@ -375,8 +375,8 @@ export default function StockTrade() {
    const onEditDialogClose = async (item) => {
       setEditOpen(false);
       if (!item || !data?.Ts) return;
-      const year = new Date(item.T).getFullYear();
-      const yearList = await databox.stock.getStockTradeList(year);
+      const year0 = new Date(item.T).getFullYear();
+      const yearList = (await databox.stock.getStockTradeList(year0)) || [];
       const origin = item.origin;
       delete item.origin;
       if (origin) {
@@ -385,14 +385,15 @@ export default function StockTrade() {
          if (item0) yearList.splice(yearList.indexOf(item0), 1, item);
          data.Ts.splice(index, 1, item);
       } else {
-         data.Ts.push(item);
-         item.id = yearList.reduce((a, x) => a > x ? a : x, 0) + 1;
+         item.id = yearList.reduce((a, x) => a < x.id ? x.id : a, 0) + 1;
+         yearList.push(item);
+         if (year === year0) data.Ts.push(item);
       }
       // TODO: check year
-      databox.stock.setStockTradeList(year, yearList);
-      if (!years.includes(year)) {
+      databox.stock.setStockTradeList(year0, yearList);
+      if (!years.includes(year0)) {
          const currentYear = new Date().getFullYear();
-         for (let y = currentYear; y >= year; y--) {
+         for (let y = currentYear; y >= year0; y--) {
             if (!years.includes(y)) years.push(y);
          }
          years.sort((a, b) => b - a);
