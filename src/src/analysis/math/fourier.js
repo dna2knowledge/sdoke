@@ -231,11 +231,23 @@ const complexMagnitude = function (c)
     return Math.sqrt(c[0]*c[0] + c[1]*c[1]);
 };
 
+const complexPhase = function (c)
+{
+   return Math.atan2(c[1], c[0]);
+};
+
+const complexPhaseNorm = function (c)
+{
+   return Math.cos(complexPhase(c));
+}
+
 api.complex = {
     add: complexAdd,
     subtract: complexSubtract,
     multiply: complexMultiply,
-    magnitude: complexMagnitude
+    magnitude: complexMagnitude,
+    phase: complexPhase,
+    phaseNorm: complexPhaseNorm,
 };
 
 // fft util
