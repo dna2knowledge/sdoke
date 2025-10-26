@@ -4,6 +4,7 @@ import InsightsIcon from '@mui/icons-material/Insights';
 import CloseIcon from '@mui/icons-material/Close';
 import EditIcon from '@mui/icons-material/Edit';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
+import BookmarksIcon from '@mui/icons-material/Bookmarks';
 import { Box, IconButton } from '@mui/material';
 import {
    Autocomplete, TextField, ButtonGroup, Button, LinearProgress,
@@ -13,6 +14,7 @@ import NoData from '$/component/shared/no-data';
 import StockOne from '$/component/stock/stock-one';
 import StockOneStrategy from '$/component/stock/stock-one-strategy';
 import StockCapitalTrend from '$/component/stock/stock-capital-trend';
+import StockFavorite from '$/component/stock/stock-favorite';
 import eventbus from '$/service/eventbus';
 import databox from '$/service/databox';
 import local from '$/service/local';
@@ -299,8 +301,6 @@ export default function StockPanel() {
    const [query, setQuery] = useState('');
    const [selected, setSelected] = useState(null);
    const statRef = useRef({});
-   statRef.current.pinnedStocks = statRef.current.pinnedStocks || [];
-   const [pinnedStocks, setPinnedStocks] = useState([]);
    const updateButtonRef = useRef(null);
    const delegateClick = useLongPress(updateButtonRef);
 
@@ -316,45 +316,19 @@ export default function StockPanel() {
          statRef.current.stockList = rawList || [];
          setData(statRef.current.stockList.slice(0, sp.autocompleteN));
       });
-      databox.stock.getPinnedStockList().then(rawList => {
-         if (!rawList) return;
-         statRef.current.pinnedStocks = rawList;
-         setPinnedStocks([...rawList]);
-      });
    }, []);
 
    useEffect(() => {
       eventbus.comp.register('comp.stock.stock-panel');
-      eventbus.on('stock.pinned.add', onStockPinnedAdd);
-      eventbus.on('stock.pinned.remove', onStockPinnedRemove);
       eventbus.on('stock.pinned.click', onStockPinnedClick);
       eventbus.on('stock.data.redownload', onStockDataRedownload);
 
       return () => {
          eventbus.comp.unregister('comp.stock.stock-panel');
-         eventbus.off('stock.pinned.add', onStockPinnedAdd);
-         eventbus.off('stock.pinned.remove', onStockPinnedRemove);
          eventbus.off('stock.pinned.click', onStockPinnedClick);
          eventbus.off('stock.data.redownload', onStockDataRedownload);
       };
 
-      function onStockPinnedAdd(data) {
-         if (!data) return;
-         const one = statRef.current.pinnedStocks.find(z => z.code === data.code);
-         if (!one) {
-            statRef.current.pinnedStocks.push(data);
-            setPinnedStocks([...statRef.current.pinnedStocks]);
-            databox.stock.setPinnedStockList(statRef.current.pinnedStocks);
-         }
-      }
-      function onStockPinnedRemove(data) {
-         const one = statRef.current.pinnedStocks.find(z => z.code === data.code);
-         if (!one) return;
-         const i = statRef.current.pinnedStocks.indexOf(one);
-         statRef.current.pinnedStocks.splice(i, 1);
-         setPinnedStocks([...statRef.current.pinnedStocks]);
-         databox.stock.setPinnedStockList(statRef.current.pinnedStocks);
-      }
       function onStockPinnedClick(data) {
          setSelected(data && data.code);
          if (local.data.view) {
@@ -373,7 +347,7 @@ export default function StockPanel() {
          eventbus.emit('loaded');
          onStockPinnedClick(data);
       }
-   }, [data, pinnedStocks, selected]);
+   }, [data, selected]);
 
    const onUpdateClick = async () => {
       if (!local.data.updateStockProgress) local.data.updateStockProgress = {};
@@ -569,6 +543,9 @@ export default function StockPanel() {
       }
       eventbus.emit('stock.analysis.captr');
    };
+   const onFavClick = () => {
+      eventbus.emit('stock.pinned.open');
+   };
    const onUpdateStockList = () => triggerFileSelect().then(async (files) => {
       if (!files || !files.length) return; // user cancel
       const raw = await readText(files[0]);
@@ -608,6 +585,7 @@ export default function StockPanel() {
          <Box sx={{ display: 'flex', width: '100%', mb: '10px' }}>
             <Tooltip title={t('t.update.history', 'Update history')}><IconButton ref={updateButtonRef} type="button" sx={{ p: '10px' }}><UpdateIcon /></IconButton></Tooltip>
             <Tooltip title={t('t.do.captr', 'Capital Trend')}><IconButton onClick={onInsightClick} type="button" sx={{ p: '10px' }}><InsightsIcon /></IconButton></Tooltip>
+            <Tooltip title={t('t.bookmarks', 'Bookmarks')}><IconButton onClick={onFavClick} type="button" sx={{ p: '10px' }}><BookmarksIcon /></IconButton></Tooltip>
             <Autocomplete sx={{ ml: 1, flex: '1 0 auto', '.MuiInputBase-input': { height: '10px' } }} disablePortal
                options={data || []}
                getOptionLabel={option => `${option.code} ${option.name}${option.area ? ` (${option.area})` : ''}`}
@@ -628,9 +606,7 @@ export default function StockPanel() {
             <SideMenu t={t} refreshStockList={refreshStockList}/>
          </Box>
          <Box><StockUpdateProgressBar/></Box>
-         <Box sx={{ maxHeight: '100px', overflowY: 'auto' }}>
-            {pinnedStocks.map((meta, i) => <StockButton key={i} data={meta} isStarred={true} />)}
-         </Box>
+         <StockFavorite open={true} t={t} />
          {selected ? null : <NoData>
             {t('tip.stock.no.selected', 'No Data; please search and select one stock or')} <Button
                sx={{ marginLeft: '5px' }} variant="contained"
@@ -642,16 +618,4 @@ export default function StockPanel() {
          <StockCapitalTrend />
        </Box>
    </Box>;
-}
-
-function StockButton(props) {
-   const { data, isStarred } = props;
-   return <ButtonGroup size="small">
-      <Button size="small" onClick={() => eventbus.emit('stock.pinned.click', data)}>
-         {data.code} - {data.name}
-      </Button>
-      <Button size="small" onClick={() => eventbus.emit('stock.pinned.remove', data)}>
-         <CloseIcon />
-      </Button>
-   </ButtonGroup>;
 }

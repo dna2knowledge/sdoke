@@ -66,7 +66,7 @@ export default function StockOne() {
          <Box sx={{ textAlign: 'center', width: '100%' }}>
             <Tooltip title={t('t.add.fav', 'Add to favorite')}><IconButton
                sx={{ width: '12px', height: '12px' }}
-               onClick={() => eventbus.emit('stock.pinned.add', meta)}
+               onClick={() => eventbus.emit('stock.pinned.add', {tag: '-', item: meta})}
             ><BookmarkAddIcon /></IconButton></Tooltip> {meta.code} {meta.name}
             {meta.area ? ` (${meta.area})` : null}
             <Tooltip title={t('t.one.redownload', 'Re-download data')}>
