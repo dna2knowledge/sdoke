@@ -34,6 +34,7 @@ const TagDrawer = ({ data: initialData, t }) => {
   const [draggedOverIndex, setDraggedOverIndex] = useState(null);
   
   const touchItem = useRef(null);
+  const itemRefs = useRef({});
 
   const onClose = () => setOpen(false);
   const commit = (data) => databox.stock.setPinnedStockList(data);
@@ -77,6 +78,53 @@ const TagDrawer = ({ data: initialData, t }) => {
         }
      }
   });
+
+  // Add this useEffect to handle touch events with passive: false
+  useEffect(() => {
+    const handleTouchMovePassive = (e) => {
+      if (touchItem.current) {
+        e.preventDefault();
+        const touch = e.touches[0];
+        const element = document.elementFromPoint(touch.clientX, touch.clientY);
+        
+        if (element) {
+          // Check if over a tag
+          const tagElement = element.closest('[data-tag]');
+          if (tagElement) {
+            const tag = tagElement.getAttribute('data-tag');
+            setDraggedOverTag(tag);
+            setDraggedOverIndex(null);
+          } else {
+            // Check if over an item
+            const itemElement = element.closest('[data-item-index]');
+            if (itemElement) {
+              const index = parseInt(itemElement.getAttribute('data-item-index'));
+              setDraggedOverIndex(index);
+              setDraggedOverTag(null);
+            } else {
+              setDraggedOverTag(null);
+              setDraggedOverIndex(null);
+            }
+          }
+        }
+      }
+    };
+
+    // Add listeners to all draggable items
+    Object.values(itemRefs.current).forEach(element => {
+      if (element) {
+        element.addEventListener('touchmove', handleTouchMovePassive, { passive: false });
+      }
+    });
+
+    return () => {
+      Object.values(itemRefs.current).forEach(element => {
+        if (element) {
+          element.removeEventListener('touchmove', handleTouchMovePassive);
+        }
+      });
+    };
+  }, [data, selectedTag]);
 
   // Add new tag
   const handleAddTag = () => {
@@ -228,6 +276,8 @@ const TagDrawer = ({ data: initialData, t }) => {
     }
 
     touchItem.current = null;
+    setDraggedOverTag(null);
+    setDraggedOverIndex(null);
   };
 
   const handleDragEnd = () => {
@@ -284,7 +334,7 @@ const TagDrawer = ({ data: initialData, t }) => {
                   <ListItem
                     key={tagName}
                     data-tag={tagName}
-                    button
+                    button="true"
                     selected={selectedTag === tagName}
                     onClick={() => setSelectedTag(tagName)}
                     onDragOver={(e) => handleDragOverTag(e, tagName)}
@@ -342,6 +392,7 @@ const TagDrawer = ({ data: initialData, t }) => {
                   {data[selectedTag]?.map((item, index) => (
                     <Paper
                       key={item.code}
+                      ref={(el) => itemRefs.current[`${selectedTag}-${item.code}`] = el}
                       data-item-index={index}
                       draggable
                       onClick={() => eventbus.emit('stock.pinned.click', item)}
@@ -350,7 +401,6 @@ const TagDrawer = ({ data: initialData, t }) => {
                       onDrop={(e) => handleDropOnItem(e, index)}
                       onDragEnd={handleDragEnd}
                       onTouchStart={(e) => handleTouchStart(e, item, selectedTag)}
-                      onTouchMove={handleTouchMove}
                       onTouchEnd={handleTouchEnd}
                       elevation={draggedOverIndex === index ? 4 : 1}
                       sx={{
