@@ -56,7 +56,7 @@ export default function StockSearchByFourier() {
    const updateData = async () => {
       const domain = local.data.searchFourierDomain || 'fav';
       eventbus.emit('loading');
-      const rawList = domain === 'fav' ? (await databox.stock.getPinnedStockList()) : (await databox.stock.getStockList());
+      const rawList = domain === 'fav' ? ((await databox.stock.getPinnedStockList()) || {})['-'] : (await databox.stock.getStockList());
       const opt = {
          progressFn: (i, n, meta) => eventbus.emit('stock.search.fourier.progress', { i, n, meta })
       };
